@@ -1,0 +1,98 @@
+<!doctype html>
+<html class=fill>
+	<head>
+		<meta http-equiv="content-type" content="text/html;charset=utf-8">
+		<link rel="stylesheet" type="text/css" href="style.css">
+		<link rel="stylesheet" type="text/css" href="lib/codemirror.css">
+		<link rel="stylesheet" type="text/css" href="lib/javascript.css">
+		<link rel="shortcut icon" type="image/png" href="images/icon18.png">
+		<script type="text/javascript" src="lib/codemirror-compressed.js"></script>
+		<script type="text/javascript" src="lib/jszip.js"></script>
+		<script type="text/javascript" src="lib/jszip-deflate.js"></script>
+		<title class=i18n>Options - Violentmonkey</title>
+	</head>
+	<body class=fill>
+		<div id=main>
+			<div id=header class=main>
+				<h1 class=i18n>Options - Violentmonkey</h1>
+				<div class=left>
+					<button id=bNew class=i18n>New</button>
+					<a href=http://userscripts.org target=_blank class=i18n>Get more scripts from userscripts.org</a>
+				</div>
+				<div class=right>
+					<a id=bUpdate class=i18n href=#>Check all for updates</a>
+					<button id=bAdvanced class=i18n>Advanced</button>
+				</div>
+				<div class=x></div>
+			</div>
+			<fieldset id=fMain class=main>
+				<legend><span class=i18n>Installed Scripts</span> <input type=checkbox id=cDetail><label for=cDetail class=i18n>Show details</label></legend>
+				<div id=sList></div>
+			</fieldset>
+			<div id=footer class="i18n main">Designed by Gerald</div>
+		</div>
+		<div id=overlay class=hide></div>
+		<div id=editor class="float hide">
+			<h2 class="i18n inline">Script Editor</h2>
+			<button id=bcustom class=i18n>Custom meta data</button>
+			<textarea id=eCode></textarea>
+			<div class=left><input type=checkbox id=eUpdate><label for=eUpdate class=i18n>Allow update</label></div>
+			<div class=right>
+				<button id=eSave class=i18n>Save</button>
+				<button id=eSaveClose class=i18n>Save and Close</button>
+				<button id=eClose class=i18n>Close</button>
+			</div>
+		</div>
+		<div id=meta class="float hide">
+			<div><label class=i18n for=mName>Name: </label><input type=text id=mName></div>
+			<div><label class=i18n for=mURL>Homepage: </label><input type=text id=mURL></div>
+			<fieldset>
+				<legend class=i18n>Includes</legend>
+				<div><input type=checkbox id=cInclude><label for=cInclude class=i18n>Keep original include rules</label></div>
+				<label class=i18n>Custom include rules:</label>
+				<textarea id=mInclude></textarea>
+			</fieldset>
+			<fieldset>
+				<legend class=i18n>Matches</legend>
+				<div><input type=checkbox id=cMatch><label for=cMatch class=i18n>Keep original match rules</label></div>
+				<label class=i18n>Custom match rules:</label>
+				<textarea id=mMatch></textarea>
+			</fieldset>
+			<fieldset>
+				<legend class=i18n>Excludes</legend>
+				<div><input type=checkbox id=cExclude><label for=cExclude class=i18n>Keep original exclude rules</label></div>
+				<label class=i18n>Custom exclude rules:</label>
+				<textarea id=mExclude></textarea>
+			</fieldset>
+			<div class=right><button id=mOK class=i18n>OK</button> <button id=mCancel class=i18n>Cancel</button></div>
+		</div>
+		<div id=export class="float hide">
+			<h2 class=i18n>Data Export</h2>
+			<label class=i18n>Installed Scripts</label>
+			<div class=right>
+				<button id=bSelect class=i18n>All/None</button>
+			</div>
+			<div id=xList class=list></div>
+			<div class=right>
+				<button id=bExport></button>
+				<button id=bClose class=i18n>Close</button>
+			</div>
+		</div>
+		<div id=advanced class="float hide">
+			<h2 class=i18n>Advanced</h2>
+			<div><input type=checkbox id=cInstall><label for=cInstall class=i18n>Allow installing .user.js files</label></div>
+			<div>
+				<label class=i18n>Search URL: </label><span class=i18n>Search hint</span> <button id=bDefSearch class=i18n>Default</button><br>
+				<textarea id=tSearch></textarea>
+			</div>
+			<fieldset>
+				<legend class=i18n>Data</legend>
+				<button id=aExport class=i18n>Export to zip file</button><br>
+				<button id=aVacuum class=i18n>Vacuum data</button> <span class=i18n>Vacuum hint</span>
+			</fieldset>
+			<div class=right><button id=aClose class=i18n>Close</button></div>
+		</div>
+	</body>
+</html>
+<script src="common.js"></script>
+<script src="options.js"></script>
