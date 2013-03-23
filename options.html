@@ -2,11 +2,16 @@
 <html class=fill>
 	<head>
 		<meta http-equiv="content-type" content="text/html;charset=utf-8">
-		<link rel="stylesheet" type="text/css" href="style.css">
-		<link rel="stylesheet" type="text/css" href="lib/codemirror.css">
-		<link rel="stylesheet" type="text/css" href="lib/javascript.css">
-		<link rel="shortcut icon" type="image/png" href="images/icon18.png">
-		<script type="text/javascript" src="lib/codemirror-compressed.js"></script>
+		<link rel="stylesheet" type="text/css" href="style.css" />
+		<link rel="stylesheet" type="text/css" href="lib/codemirror.css" />
+		<link rel="shortcut icon" type="image/png" href="icons/icon_32.png" />
+		<script type="text/javascript" src="lib/codemirror.js"></script>
+		<script type="text/javascript" src="lib/javascript.js"></script>
+		<script type="text/javascript" src="lib/continuecomment.js"></script>
+		<script type="text/javascript" src="lib/matchbrackets.js"></script>
+		<script type="text/javascript" src="lib/match-highlighter.js"></script>
+		<script type="text/javascript" src="lib/search.js"></script>
+		<script type="text/javascript" src="lib/searchcursor.js"></script>
 		<script type="text/javascript" src="lib/jszip.js"></script>
 		<script type="text/javascript" src="lib/jszip-deflate.js"></script>
 		<title class=i18n>Options - Violentmonkey</title>
@@ -27,14 +32,13 @@
 			</div>
 			<fieldset id=fMain class=main>
 				<legend><span class=i18n>Installed Scripts</span> <input type=checkbox id=cDetail><label for=cDetail class=i18n>Show details</label></legend>
-				<div id=sList></div>
+				<div id=sList><span class="hint i18n">Loading...</span></div>
 			</fieldset>
-			<div id=footer class="i18n main">Designed by Gerald</div>
+			<div id=footer class=main><span class=i18n>Violentmonkey link</span> - <span class=i18n>Designed by Gerald</span> - 2013</div>
 		</div>
 		<div id=overlay class=hide></div>
 		<div id=editor class="float hide">
-			<h2 class="i18n inline">Script Editor</h2>
-			<button id=bcustom class=i18n>Custom meta data</button>
+			<h2 class="i18n inline">Script Editor</h2><button id=custom class=i18n>Custom meta data</button>
 			<textarea id=eCode></textarea>
 			<div class=left><input type=checkbox id=eUpdate><label for=eUpdate class=i18n>Allow update</label></div>
 			<div class=right>
@@ -46,6 +50,15 @@
 		<div id=meta class="float hide">
 			<div><label class=i18n for=mName>Name: </label><input type=text id=mName></div>
 			<div><label class=i18n for=mURL>Homepage: </label><input type=text id=mURL></div>
+			<label>
+				<span class=i18n>Run at: </span>
+				<select id=mRunAt>
+					<option class=i18n value=default>default</option>
+					<option value=start>document-start</option>
+					<option value=body>document-body</option>
+					<option value=end>document-end</option>
+				</select>
+			</label>
 			<fieldset>
 				<legend class=i18n>Includes</legend>
 				<div><input type=checkbox id=cInclude><label for=cInclude class=i18n>Keep original include rules</label></div>
@@ -83,12 +96,15 @@
 			<div><input type=checkbox id=cInstall><label for=cInstall class=i18n>Allow installing .user.js files</label></div>
 			<div>
 				<label class=i18n>Search URL: </label><span class=i18n>Search hint</span> <button id=bDefSearch class=i18n>Default</button><br>
-				<textarea id=tSearch></textarea>
+				<textarea id=tSearch></textarea><br>
+				<label class=i18n>Global excludes: </label><span class=i18n>Global exclude hint</span><br>
+				<textarea id=tExclude></textarea>
 			</div>
 			<fieldset>
 				<legend class=i18n>Data</legend>
-				<button id=aExport class=i18n>Export to zip file</button><br>
-				<button id=aVacuum class=i18n>Vacuum data</button> <span class=i18n>Vacuum hint</span>
+				<button id=aExport class=i18n>Export to zip file</button>
+				<div id=dImport><button class=i18n>Import from zip file</button><input type=file id=aImport></div><br>
+				<button id=aVacuum class=i18n>Vacuum data</button><span class=i18n>Vacuum hint</span> <button id=aClear class=i18n>Clear all data!</button>
 			</fieldset>
 			<div class=right><button id=aClose class=i18n>Close</button></div>
 		</div>

@@ -13,7 +13,6 @@ h2.inline+*{margin-left:20px;}
 #footer{text-align:center;}
 .left{float:left;}
 .right{float:right;}
-.tab{margin-left:20px;}
 .menu,.x{clear:both;margin:0;padding:0;}
 .hide{display:none;}
 fieldset{border-radius:5px;border:1px solid gray;padding:0;}
@@ -21,6 +20,7 @@ legend{margin-left:10px;}
 #sList{overflow-x:hidden;overflow-y:auto;margin:10px 0;min-height:1px;}
 #sList>div{display:block;padding:10px;border-top:1px dashed gray;overflow:hidden;height:80px;position:relative;}
 #sList>div:last-child{border-bottom:1px dashed gray;}
+#sList>.hint{position:fixed;top:40%;left:40%;right:40%;border:2px solid silver;border-radius:5px;padding:20px;z-index:9999;box-shadow:5px 10px 15px rgba(0,0,0,0.4);text-align:center;}
 #sList.simple>div{height:50px;}
 #sList .version,#sList .author{margin-left:20px;color:gray;font-style:italic;}
 #sList.simple .author{display:none;}
@@ -28,6 +28,8 @@ legend{margin-left:10px;}
 #sList .update{position:absolute;right:10px;top:10px;}
 #sList .message{color:gray;position:absolute;bottom:10px;left:50px;}
 #sList .disabled{color:gray;background:silver;}
+#sList .disabled a{color:gray;}
+#sList .disabled img{-webkit-filter:grayscale(100%);}
 #sList .icon{width:32px;height:32px;margin:2px;position:absolute;}
 #sList .name{font-weight:bold;line-height:150%;display:inline-block;max-width:400px;margin-left:40px;}
 #sList .descrip{margin-left:40px;}
@@ -42,14 +44,18 @@ legend{margin-left:10px;}
 textarea{width:100%;border:none;margin:0;padding:0;}
 #advanced{padding:20px;}
 #advanced fieldset{padding:10px;margin:10px;}
+#advanced fieldset>*{display:inline-block;}
 #advanced legend{margin:0;}
+#tExclude{min-height:100px;}
 .list{background:white;overflow-x:hidden;overflow-y:auto;}
 .list>div{display:block;padding:2px 10px;cursor:pointer;border-bottom:1px dashed lightgray;}
 .list .selected{background:gray;color:white;}
 #export .list{width:400px;height:420px;}
-.menu>label{cursor:pointer;padding:5px;display:block;}
-.menu>label:hover{background:gray;color:gold;}
-.menu>label.disabled{color:gray;}
-.menu>label.disabled:hover{color:silver;}
-.menu>label span{display:inline-block;width:20px;}
+.menu>div{cursor:pointer;padding:5px;display:block;}
+.menu>div:hover{background:gray;color:gold;}
+.menu>div.disabled{color:gray;}
+.menu>div.disabled:hover{color:silver;}
+.menu>div span{display:inline-block;width:20px;}
 .menu>hr{border:none;border-top:1px dashed gray;}
+#dImport{position:relative;}
+#aImport{display:block;position:absolute;width:100%;height:100%;cursor:default;opacity:0;top:0;left:0;}

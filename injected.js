@@ -24,18 +24,26 @@ function utf8decode (utftext) {
 
 // Messages
 var id=Date.now()+Math.random().toString().substr(1);
-function post(topic,data){rt.post(topic,{source:id,origin:window.location.href,data:data});}
+function post(topic,data,o){
+	if(!o) o={};
+	if(!o.source) o.source=id;
+	if(!o.origin) o.origin=window.location.href;
+	o.data=data;
+	rt.post(topic,o);
+}
+function setPopup(){post('SetPopup',[menu,ids]);}
 rt.listen(id,function(o,c){
-	if(o.topic=='Command') {c=command[o.data];if(c) c();}
+	if(o.topic=='FoundScript') loadScript(o);
+	else if(o.topic=='Command') {c=command[o.data];if(c) c();}
 	else if(o.topic=='ConfirmInstall') confirmInstall(o.data);
 	else if(o.topic=='ShowMessage') showMessage(o.data);
 });
-function setPopup(){post('SetPopup',[menu,scr]);}
 function showMessage(data){
 	var d=document.createElement('div');
-	d.setAttribute('style','position:fixed;top:40%;left:40%;right:40%;border-radius:5px;background:orange;padding:20px;z-index:9999;box-shadow:5px 10px 15px rgba(0,0,0,0.4);transition:opacity 1s linear;opacity:0;text-align:left;');
-	d.innerHTML=data;
-	document.body.appendChild(d);
+	d.setAttribute('style','position:fixed;border-radius:5px;background:orange;padding:20px;z-index:9999;box-shadow:5px 10px 15px rgba(0,0,0,0.4);transition:opacity 1s linear;opacity:0;text-align:left;');
+	document.body.appendChild(d);d.innerHTML=data;
+	d.style.top=(window.innerHeight-d.offsetHeight)/2+'px';
+	d.style.left=(window.innerWidth-d.offsetWidth)/2+'px';
 	function close(){document.body.removeChild(d);delete d;}
 	d.onclick=close;	// close immediately
 	setTimeout(function(){d.style.opacity=1;},1);	// fade in
@@ -43,11 +51,24 @@ function showMessage(data){
 }
 function confirmInstall(data){
 	if(!data||!confirm(data)) return;
-	if(installCallback) installCallback(); else {
-		var id=Date.now()+Math.random().toString().substr(1);
-		_data.temp[id]=document.body.innerText;_data.save();
-		post('ParseScript',{id:id});
-	}
+	if(installCallback) installCallback(); else post('ParseScript',{code:document.body.innerText});
+}
+if(window===window.top) {
+	window.addEventListener('message',function(e){
+		e=e.data;
+		if(e) switch(e.topic) {
+			case 'VM_FrameScripts':
+				e.data.forEach(function(i){if(!_ids[i]){_ids[i]=1;ids.push(i);}});
+				post('GetPopup');
+				break;
+			case 'VM_GetPopup':
+				setPopup();
+				break;
+			case 'VM_FindFrameScripts':
+				post('FindScript',window.location.href,e.data);
+				break;
+		}
+	},false);
 }
 
 // For UserScripts installation
@@ -71,8 +92,7 @@ var p=document.createElement('p');
 p.setAttribute('onclick','return window;');
 var unsafeWindow=p.onclick();
 delete p;
-unsafeWindow[guid+'GetPopup']=setPopup;
-var start=[],body=[],end=[],cache={},scr=[],menu=[],command={},elements;
+var start=[],body=[],end=[],cache,values,ids=[],_ids={},menu=[],command={},elements;
 function run_code(c){
 	var w=new wrapper(c),require=c.meta.require||[],i,r,code=[];
 	elements.forEach(function(i){code.push(i+'=window.'+i);});
@@ -84,7 +104,7 @@ function run_code(c){
 	code.push(c.code);
 	code.push('})();');
 	this.code=code.join('\n');
-	try{with(w) eval(this.code);}catch(e){console.log(e+'\n'+e.stack);}
+	try{with(w) eval(this.code);}catch(e){console.log('Error running script: '+(c.custom.name||c.meta.name||c.id)+'\n'+e+'\n'+e.stack);}
 }
 function runStart(){while(start.length) new run_code(start.shift());}
 function runBody(){
@@ -94,37 +114,40 @@ function runBody(){
 	}
 }
 function runEnd(){while(end.length) new run_code(end.shift());}
-function loadScript(){
+function loadScript(o){
 	var l;
-	scr.forEach(function(i){
-		if((i=_data.map[i])&&i.enabled) {
-			switch(i.meta['run-at']){
+	(ids=o.ids).forEach(function(i){
+		_ids[i]=1;i=o.map[i];
+		if(i&&i.enabled) {
+			switch(i.custom['run-at']||i.meta['run-at']){
 				case 'document-start': l=start;break;
 				case 'document-body': l=body;break;
 				default: l=end;
 			}
 			l.push(i);
-			if(i.meta.require) i.meta.require.forEach(function(i){var r=_data.cache[i];if(r) cache[i]=utf8decode(r);});
 		}
 	});
+	cache=o.cache;
+	values=o.values;
+	if(window!==window.top) unsafeExecute('window.top.postMessage({topic:"VM_FrameScripts",data:'+JSON.stringify(ids)+'},"*");');
 	runStart();
 	window.addEventListener('DOMNodeInserted',runBody,true);
 	window.addEventListener('DOMContentLoaded',runEnd,false);
 	runBody();
 	if(document.readyState=='complete') runEnd();
-	rt.post('GetPopup');
+	post('GetPopup');
 }
 function propertyToString(){return 'Property for Violentmonkey: designed by Gerald';}
 function wrapper(c){
-	var t=this,values=c.values;if(!values) c.values=values={};elements=[];
+	var t=this,value=values[c.id];if(!value) value={};elements=[];
 	function addProperty(name,prop){t[name]=prop;t[name].toString=propertyToString;elements.push(name);}
 	var resources=c.meta.resources||{};
 	addProperty('unsafeWindow',unsafeWindow);
 	// GM functions
 	// Reference: http://wiki.greasespot.net/Greasemonkey_Manual:API
-	addProperty('GM_deleteValue',function(key){delete values[key];_data.save();});
+	addProperty('GM_deleteValue',function(key){delete value[key];post('SetValue',{id:c.id,data:value});});
 	addProperty('GM_getValue',function(key,def){
-		var v=values[key];
+		var v=value[key];
 		if(v==null) return def;
 		def=v.substr(1);
 		switch(v[0]){
@@ -135,7 +158,7 @@ function wrapper(c){
 	});
 	addProperty('GM_listValues',function(){
 		var v=[],i;
-		for(i in values) v.push(i);
+		for(i in value) v.push(i);
 		return v;
 	});
 	addProperty('GM_setValue',function(key,val){
@@ -144,9 +167,9 @@ function wrapper(c){
 			case 'boolean':val='b'+val;break;
 			default:val='s'+val;
 		}
-		values[key]=val;_data.save();
+		value[key]=val;post('SetValue',{id:c.id,data:value});
 	});
-	function getCache(name){for(var i in resources) if(name==i) return _data.cache[resources[i]];}
+	function getCache(name){for(var i in resources) if(name==i) return cache[resources[i]];}
 	addProperty('GM_getResourceText',function(name){
 		var b=getCache(name);
 		if(b) b=utf8decode(b);
@@ -158,9 +181,10 @@ function wrapper(c){
 		return b;
 	});
 	addProperty('GM_addStyle',function(css){
+		if(!document.head) return;
 		var v=document.createElement('style');
 		v.innerHTML=css;
-		(document.head||document.documentElement).appendChild(v);
+		document.head.appendChild(v);
 		return v;
 	});
 	addProperty('GM_log',console.log);
@@ -172,19 +196,18 @@ function wrapper(c){
 		req.open(details.method,details.url,!details.synchronous,details.user,details.password);
 		if(details.headers) for(var i in details.headers) req.setRequestHeader(i,details.headers[i]);
 		if(details.overrideMimeType) req.overrideMimeType(details.overrideMimeType);
-		req.onload=req.onreadystatechange=callback;
+		['abort','error','load','progress','readystatechange','timeout'].forEach(function(i){req['on'+i]=callback;});
 		req.send(details.data||'');
 		return req;
 	});
 	addProperty('VM_info',{version:0.1});
 	// functions and properties
 	function wrapFunction(o,i,c){
-		var f=function(){var r=o[i].apply(o,arguments);if(c) r=c(r);return r;};
-		return f;
+		return function(){var r=o[i].apply(o,arguments);if(c) r=c(r);return r;};
 	}
 	function wrapWindow(w){return w==window?t:w;}
 	function wrapItem(i,nowrap){
-	       	try{	// avoid reading protected data*/
+		try{	// avoid reading protected data*/
 			if(typeof window[i]=='function') {
 				if(nowrap) t[i]=window[i];
 				else t[i]=wrapFunction(window,i,wrapWindow);
@@ -198,33 +221,5 @@ function wrapper(c){
 	Object.getOwnPropertyNames(window).forEach(wrapItem);
 	for(n in window.Window.prototype) wrapItem(n);
 }
-function testURL(url,e){
-	function str2RE(s){return s.replace(/(\.|\?|\/)/g,'\\$1').replace(/\*/g,'.*?');}
-	function reg(s,w){	// w: forced wildcard mode
-		if(!w&&/^\/.*\/$/.test(s)) return RegExp(s.slice(1,-1));	// Regular-expression
-		return RegExp('^'+str2RE(s)+'$');	// String with wildcards
-	}
-	function match_test(s){
-		var m=s.match(r);
-		if(m&&u) for(var i=0;i<3;i++) if(!reg(m[i],1).test(u[i])) {m=0;break;}
-		return !!m;
-	}
-	var f=true,i,inc=[],exc=[],mat=[],r=/(.*?):\/\/([^\/]*)\/(.*)/,u=url.match(r);
-	if(e.custom._include!=false&&e.meta.include) inc=inc.concat(e.meta.include);
-	if(e.custom.include) inc=inc.concat(e.custom.include);
-	if(e.custom._match!=false&&e.meta.match) mat=mat.concat(e.meta.match);
-	if(e.custom.match) mat=mat.concat(e.custom.match);
-	if(e.custom._exclude!=false&&e.meta.exclude) exc=exc.concat(e.meta.exclude);
-	if(e.custom.exclude) exc=exc.concat(e.custom.exclude);
-	if(mat.length) {for(i=0;i<mat.length;i++) if(f=match_test(mat[i])) break;}	// @match
-	else for(i=0;i<inc.length;i++) if(f=reg(inc[i]).test(url)) break;	// @include
-	if(f) for(i=0;i<exc.length;i++) if(!(f=!reg(exc[i]).test(url))) break;	// @exclude
-	return f;
-}
-(function(url){
-	scr=[];
-	if(url.substr(0,5)!='data:') _data.ids.forEach(function(i){
-		if(testURL(url,_data.map[i])) scr.push(i);
-	});
-	if(_data.data.isApplied) loadScript();
-})(window.location.href);
+if(window!==window.top) unsafeExecute('window.top.postMessage({topic:"VM_FindFrameScripts",data:{source:"'+id+'",origin:window.location.href}},"*");');
+else post('FindScript',window.location.href);
