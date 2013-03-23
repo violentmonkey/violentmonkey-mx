@@ -189,7 +189,9 @@ function wrapper(c){
 	});
 	addProperty('GM_log',console.log);
 	addProperty('GM_openInTab',function(url){window.open(url);});
-	addProperty('GM_registerMenuCommand',function(cap,func,acc){menu.push([cap,acc]);command[cap]=func;});
+	addProperty('GM_registerMenuCommand',function(cap,func,acc){
+		menu.push([cap,acc]);command[cap]=func;post('GetPopup');
+	});
 	addProperty('GM_xmlhttpRequest',function(details){
 		function callback(e){var c=details['on'+e.type];if(c) c(req);}
 		var req=new XMLHttpRequest();
