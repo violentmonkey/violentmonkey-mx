@@ -31,8 +31,14 @@ function menuScript(i) {
 	}});
 }
 function getPopup(){
-	if(!getPopup.cancel) br.executeScript('unsafeExecute(\'window.top.postMessage({topic:"VM_GetPopup"},"*");\');');
+	getPopup.flag++;	// avoid frequent asking for popup menu
+	setTimeout(function(){
+		if(!--getPopup.flag) {
+			br.executeScript('unsafeExecute(\'window.top.postMessage({topic:"VM_GetPopup"},"*");\');');
+		}
+	},200);
 }
+getPopup.flag=0;
 function load(o){
 	pT.innerHTML=pB.innerHTML=cT.innerHTML=cB.innerHTML='';C.classList.add('hide');P.classList.remove('hide');
 	addItem(_('Manage scripts'),true,{holder:pT,symbol:'➤',onclick:function(){
@@ -78,8 +84,5 @@ br.onBrowserEvent=function(o){
 	}
 };
 rt.onAppEvent=function(o){
-	if(o.type=='ACTION_SHOW') {
-		pB.style.pixelHeight=innerHeight-pB.offsetTop;
-		getPopup.cancel=true;
-	} else if(o.type=='ACTION_HIDE') getPopup.cancel=false;
+	if(o.type=='ACTION_SHOW') pB.style.pixelHeight=innerHeight-pB.offsetTop;
 };
