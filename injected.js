@@ -144,7 +144,9 @@ function wrapper(c){
 	// functions and properties
 	function wrapFunction(o,i,c){
 		var f=function(){
-			var r=Function.apply.apply(o[i],[o,arguments]);
+			var r;
+			try{r=Function.apply.apply(o[i],[o,arguments]);}
+			catch(e){console.log('Error calling '+i+': \n'+e.stack);}
 			if(c) r=c(r);return r;
 		};
 		f.__proto__=o[i];f.prototype=o[i].prototype;
@@ -154,19 +156,23 @@ function wrapper(c){
 	function wrapItem(i){
 		try{	// avoid reading protected data*/
 			if(typeof window[i]=='function') {
-				if(!(i in t)) t[i]=wrapFunction(window,i,wrapWindow);
+				if(itemWrapper) t[i]=itemWrapper(window,i,wrapWindow);
+				else t[i]=window[i];
 			} else {
 				t.__defineGetter__(i,function(){return wrapWindow(window[i]);});
 				t.__defineSetter__(i,function(v){window[i]=v;});
 			}
 		}catch(e){}
 	}
-	['eval','Date','Array','RegExp','String','Math','Number','Audio','Image'].forEach(function(i){t[i]=window[i];});	// no wrap
-	for(n=window;n;n=Object.getPrototypeOf(n)) Object.getOwnPropertyNames(n).forEach(wrapItem);
+	var itemWrapper=null;
+	Object.getOwnPropertyNames(window).forEach(wrapItem);
+	itemWrapper=wrapFunction;
+	for(n=Object.getPrototypeOf(window);n;n=Object.getPrototypeOf(n)) Object.getOwnPropertyNames(n).forEach(wrapItem);
 
 	function addProperty(name,prop){t[name]=prop;t[name].toString=propertyToString;elements.push(name);}
 	var resources=c.meta.resources||{};elements=[];
 	addProperty('unsafeWindow',unsafeWindow);
+	addProperty('XMLHttpRequest',unsafeWindow.XMLHttpRequest);
 	// GM functions
 	// Reference: http://wiki.greasespot.net/Greasemonkey_Manual:API
 	addProperty('GM_deleteValue',function(key){delete value[key];post('SetValue',{id:c.id,data:value});});

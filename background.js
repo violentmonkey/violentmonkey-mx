@@ -197,7 +197,7 @@ function parseScript(o,d,c){
 		}
 		if(i<0){t='add';r.message=_('Script installed.');i=ids.length;}
 		c.meta=meta;c.code=d.code;
-		if(o&&!/^(file|data):/.test(o.origin)&&!c.meta.homepage) c.custom.homepage=o.origin;
+		if(o&&!c.meta.homepage&&!c.custom.homepage&&!/^(file|data):/.test(o.origin)) c.custom.homepage=o.origin;
 		saveScript(c);
 		meta.require.forEach(fetchCache);	// @require
 		for(d in meta.resources) fetchCache(meta.resources[d]);	// @resource
