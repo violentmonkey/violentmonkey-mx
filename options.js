@@ -223,55 +223,34 @@ xE.onclick=function(){
 X.close=$('bClose').onclick=closeDialog;
 
 // Update checker
-function canUpdate(o,n){
-	o=(o||'').split('.');n=(n||'').split('.');
-	var r=/(\d*)([a-z]*)(\d*)([a-z]*)/i;
-	while(o.length&&n.length) {
-		var vo=o.shift().match(r),vn=n.shift().match(r);
-		vo.shift();vn.shift();	// origin string
-		vo[0]=parseInt(vo[0]||0,10);
-		vo[2]=parseInt(vo[2]||0,10);
-		vn[0]=parseInt(vn[0]||0,10);
-		vn[2]=parseInt(vn[2]||0,10);
-		while(vo.length&&vn.length) {
-			var eo=vo.shift(),en=vn.shift();
-			if(eo!=en) return eo<en;
-		}
-	}
-	return n.length;
-}
+var updatequeue={};
+rt.listen('UpdateCallback',function(o){
+	var f=updatequeue[o.id];
+	delete updatequeue[o.id];
+	if(f) f(o.data);
+});
 function check(i){
 	var l=L.childNodes[i],s=map[ids[i]],o=l.querySelector('[data=update]'),m=l.querySelector('.message');
 	m.innerHTML=_('Checking for updates...');
 	o.classList.add('hide');
 	function update(){
 		m.innerHTML=_('Updating...');
-		req=new window.XMLHttpRequest();
-		req.open('GET', s.meta.downloadURL, true);
-		req.onload=function(){
-			rt.listen('UpdatedScript'+s.id,function(r){if(r) m.innerHTML=r;});
-			rt.post('ParseScript',{source:'UpdatedScript'+s.id,data:{status:req.status,code:req.responseText,id:s.id}});
+		updatequeue[s.id]=function(r){
+			if(r) m.innerHTML=r;
 			o.classList.remove('hide');
 		};
-		req.send();
+		rt.post('ParseScript',{id:s.id,url:s.meta.downloadURL});
 	}
-	var req=new window.XMLHttpRequest();
-	req.open('GET', s.meta.updateURL, true);
-	req.onload=function(){
-		try {
-			rt.listen('ParsedMeta'+s.id,function(r){
-				if(canUpdate(s.meta.version,r.version)) return update();
-				m.innerHTML=_('No update found.');
-				o.classList.remove('hide');
-			});
-			rt.post('ParseMeta',{source:'ParsedMeta'+s.id,code:req.responseText});
-		} catch(e) {
-			m.innerHTML=_('Failed fetching update information.');
-			console.log(e);
+	function callback(u){
+		if(u>0) update();
+		else {
+			if(u<0) m.innerHTML=_('Failed fetching update information.');
+			else m.innerHTML=_('No update found.');
 			o.classList.remove('hide');
 		}
-	};
-	req.send();
+	}
+	updatequeue[s.id]=callback;
+	rt.post('CheckUpdate',{id:s.id,data:{version:s.meta.version,url:s.meta.updateURL}});
 }
 
 // Script Editor
@@ -304,7 +283,7 @@ function edit(i){
 }
 function eSave(){
 	E.scr.update=U.checked;E.scr.custom.homepage=H.value;
-	rt.post('ParseScript',{source:'ModifiedScript',data:{code:T.getValue(),id:E.scr.id}});
+	rt.post('ParseScript',{id:s.scr.id,code:T.getValue()});
 	eS.disabled=eSC.disabled=true;
 }
 function eClose(){switchTo(N);E.cur=E.scr=null;}

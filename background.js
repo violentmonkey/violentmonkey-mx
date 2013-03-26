@@ -113,7 +113,34 @@ function testURL(url,e){
 	if(f) for(i=0;i<exc.length;i++) if(!(f=!autoReg(exc[i]).test(url))) break;	// @exclude
 	return f;
 }
-rt.listen('ParseMeta',function(o){rt.post(o.source,parseMeta(o.code));});
+function canUpdate(o,n){
+	o=(o||'').split('.');n=(n||'').split('.');
+	var r=/(\d*)([a-z]*)(\d*)([a-z]*)/i;
+	while(o.length&&n.length) {
+		var vo=o.shift().match(r),vn=n.shift().match(r);
+		vo.shift();vn.shift();	// origin string
+		vo[0]=parseInt(vo[0]||0,10);
+		vo[2]=parseInt(vo[2]||0,10);
+		vn[0]=parseInt(vn[0]||0,10);
+		vn[2]=parseInt(vn[2]||0,10);
+		while(vo.length&&vn.length) {
+			var eo=vo.shift(),en=vn.shift();
+			if(eo!=en) return eo<en;
+		}
+	}
+	return n.length;
+}
+rt.listen('CheckUpdate',function(o){
+	fetchURL(o.data.url,function(){
+		if(this.status!=200) o.data=-1;
+		else {
+			var r=parseMeta(this.responseText);
+			if(canUpdate(o.data.version,r.version)) o.data=1;
+			else o.data=0;
+		}
+		rt.post('UpdateCallback',o);
+	});
+});
 rt.listen('NewScript',function(o){rt.post('GotScript',newScript(true));});
 rt.listen('SaveScript',saveScript);
 rt.listen('EnableScript',function(o,e){
@@ -178,8 +205,8 @@ function fetchCache(url){
 
 function parseScript(o,d,c){
 	if(o&&!d) d=o.data;
-	var r={error:0,message:(!o||o.source!='ModifiedScript')&&_('Script updated.')},t='update',i,c;
-	if(d.status&&d.status!=200) {r.error=-1;r.message=_('Error fetching script!');}
+	var r=_('Script updated.'),t='update',i,c,m;
+	if(d.status&&d.status!=200) r=_('Error fetching script!');
 	else {
 		var meta=parseMeta(d.code);
 		if(!c&&!d.id) {
@@ -195,19 +222,17 @@ function parseScript(o,d,c){
 		} else {
 			if(!c) c=map[d.id];i=ids.indexOf(d.id);
 		}
-		if(i<0){t='add';r.message=_('Script installed.');i=ids.length;}
+		if(i<0){t='add';r=_('Script installed.');i=ids.length;}
 		c.meta=meta;c.code=d.code;
 		if(o&&!c.meta.homepage&&!c.custom.homepage&&!/^(file|data):/.test(o.origin)) c.custom.homepage=o.origin;
 		saveScript(c);
 		meta.require.forEach(fetchCache);	// @require
-		for(d in meta.resources) fetchCache(meta.resources[d]);	// @resource
+		for(m in meta.resources) fetchCache(meta.resources[m]);	// @resource
 		if(meta.icon) fetchCache(meta.icon);	// @icon
+		updateItem(t,i,c,r);
 	}
-	if(o) {
-		if(r.message&&!/^UpdatedScript/.test(o.source)) rt.post(o.source,{topic:'ShowMessage',data:r.message});
-		else if(r.error) rt.post(o.source,r.message);
-	}
-	if(!r.error) updateItem(t,i,c,r.message);
+	if(o) rt.post(o.source,{topic:'ShowMessage',data:r});
+	else if(d.id&&d.status) rt.post('UpdateCallback',{id:d.id,data:d.status!=200&&r});
 }
 rt.listen('ImportZip',function(b){
 	var z=new JSZip();
@@ -230,7 +255,12 @@ rt.listen('ImportZip',function(b){
 	rt.post('ShowMessage',format(_('$1 item(s) are imported.'),count));
 });
 
-rt.listen('ParseScript',parseScript);
+rt.listen('ParseScript',function(o){
+	if(o.url) fetchURL(o.url,function(){
+		parseScript(null,{status:this.status,id:o.id,code:this.responseText});
+	}); else if(o.source) parseScript(o);
+	else parseScript(null,o);
+});
 rt.listen('InstallScript',function(o){
 	if(!o.data) {
 		if(getItem('installFile')) rt.post(o.source,{topic:'ConfirmInstall',data:_('Do you want to install this UserScript?')});
