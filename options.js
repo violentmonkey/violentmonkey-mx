@@ -283,7 +283,7 @@ function edit(i){
 }
 function eSave(){
 	E.scr.update=U.checked;E.scr.custom.homepage=H.value;
-	rt.post('ParseScript',{id:s.scr.id,code:T.getValue()});
+	rt.post('ParseScript',{id:E.scr.id,code:T.getValue()});
 	eS.disabled=eSC.disabled=true;
 }
 function eClose(){switchTo(N);E.cur=E.scr=null;}

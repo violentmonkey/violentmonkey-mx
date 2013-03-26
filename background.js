@@ -229,7 +229,7 @@ function parseScript(o,d,c){
 		meta.require.forEach(fetchCache);	// @require
 		for(m in meta.resources) fetchCache(meta.resources[m]);	// @resource
 		if(meta.icon) fetchCache(meta.icon);	// @icon
-		updateItem(t,i,c,r);
+		updateItem(t,i,c,o&&r);
 	}
 	if(o) rt.post(o.source,{topic:'ShowMessage',data:r});
 	else if(d.id&&d.status) rt.post('UpdateCallback',{id:d.id,data:d.status!=200&&r});
