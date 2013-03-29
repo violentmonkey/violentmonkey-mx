@@ -34,6 +34,7 @@
 function init(){
 	getItem('showDetails',true);
 	getItem('installFile',true);
+	getItem('compress',true);
 	isApplied=getItem('isApplied',true);
 	getString('search',_('Search$1'));
 	ids=getItem('ids',[]);map={};gExc=getItem('gExc',[]);
