@@ -48,8 +48,8 @@
 			</div>
 		</div>
 		<div id=meta class="float hide">
-			<div><label class=i18n for=mName>Name: </label><input type=text id=mName></div>
-			<div><label class=i18n for=mURL>Homepage: </label><input type=text id=mURL></div>
+			<label><span class=i18n>Name: </span><input type=text id=mName></label>
+			<label><span class=i18n>Homepage: </span><input type=text id=mURL></label>
 			<label>
 				<span class=i18n>Run at: </span>
 				<select id=mRunAt>
@@ -67,7 +67,7 @@
 			</fieldset>
 			<fieldset>
 				<legend class=i18n>Matches</legend>
-				<div><input type=checkbox id=cMatch><label for=cMatch class=i18n>Keep original match rules</label></div>
+				<label><input type=checkbox id=cMatch><span class=i18n>Keep original match rules</span></label>
 				<label class=i18n>Custom match rules:</label>
 				<textarea id=mMatch></textarea>
 			</fieldset>
@@ -94,11 +94,12 @@
 		</div>
 		<div id=advanced class="float hide">
 			<h2 class=i18n>Advanced</h2>
-			<div><input type=checkbox id=cInstall><label for=cInstall class=i18n>Allow installing .user.js files</label></div>
+			<label><input type=checkbox id=cInstall><span class=i18n>Allow installing .user.js files</span></label>
+			<label><input type=checkbox id=cUpdate><span class=i18n>Automatically check scripts for updates every day</span></label>
 			<div>
-				<label class=i18n>Search URL: </label><span class=i18n>Search hint</span> <button id=bDefSearch class=i18n>Default</button><br>
+				<span class=i18n>Search URL: </span><span class=i18n>Search hint</span> <button id=bDefSearch class=i18n>Default</button><br>
 				<textarea id=tSearch></textarea><br>
-				<label class=i18n>Global excludes: </label><span class=i18n>Global exclude hint</span><br>
+				<span class=i18n>Global excludes: </span><span class=i18n>Global exclude hint</span><br>
 				<textarea id=tExclude></textarea>
 			</div>
 			<fieldset>

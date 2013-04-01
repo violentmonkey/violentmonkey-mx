@@ -23,7 +23,15 @@ function getIcon(n){
 	var i=cache[n.meta.icon];
 	return i?'data:image/x;base64,'+i:'icons/icon_64.png';
 }
-function loadItem(d,n,m){
+function modifyItem(d,r){
+	if(r) {
+		if(r.message) d.querySelector('.message').innerHTML=r.message;
+		with(d.querySelector('.update'))
+			if(r.hideUpdate) classList.add('hide');
+			else classList.remove('hide');
+	}
+}
+function loadItem(d,n,r){
 	if(typeof n=='string') return;
 	d.innerHTML='<img class=icon src="'+getIcon(n)+'">'
 	+'<a class="name ellipsis" target=_blank></a>'
@@ -49,7 +57,7 @@ function loadItem(d,n,m){
 	}
 	if(n.meta.author) d.querySelector('.author').innerText=_('Author: ')+n.meta.author;
 	with(d.querySelector('.descrip')) innerText=title=n.meta.description||'';
-	if(m) d.querySelector('.message').innerHTML=m;
+	modifyItem(d,r);
 }
 function addItem(n){
 	var d=document.createElement('div');
@@ -94,7 +102,7 @@ L.onclick=function(e){
 			updateMove(L.childNodes[i]);
 			break;
 		case 'update':
-			check(i);
+			rt.post('CheckUpdate',i);
 			break;
 		case 'up':
 			if(p.previousSibling) moveUp(i,p);
@@ -109,9 +117,7 @@ rt.listen('GotScript',function(o){
 	updateMove(o);updateMove(o.previousSibling);
 });
 $('bNew').onclick=function(){rt.post('NewScript');};
-$('bUpdate').onclick=function(){
-	for(var i=0;i<ids.length;i++) if(allowUpdate(map[ids[i]])) check(i);
-};
+$('bUpdate').onclick=function(){rt.post('CheckUpdateAll');};
 $('cDetail').onchange=function(){L.classList.toggle('simple');rt.post('SetOption',{key:'showDetails',data:this.checked});};
 var panel=N;
 function switchTo(D){
@@ -224,37 +230,6 @@ xE.onclick=function(){
 };
 X.close=$('bClose').onclick=closeDialog;
 
-// Update checker
-var updatequeue={};
-rt.listen('UpdateCallback',function(o){
-	var f=updatequeue[o.id];
-	delete updatequeue[o.id];
-	if(f) f(o.data);
-});
-function check(i){
-	var l=L.childNodes[i],s=map[ids[i]],o=l.querySelector('[data=update]'),m=l.querySelector('.message');
-	m.innerHTML=_('Checking for updates...');
-	o.classList.add('hide');
-	function update(){
-		m.innerHTML=_('Updating...');
-		updatequeue[s.id]=function(r){
-			if(r) m.innerHTML=r;
-			o.classList.remove('hide');
-		};
-		rt.post('ParseScript',{id:s.id,url:s.meta.downloadURL});
-	}
-	function callback(u){
-		if(u>0) update();
-		else {
-			if(u<0) m.innerHTML=_('Failed fetching update information.');
-			else m.innerHTML=_('No update found.');
-			o.classList.remove('hide');
-		}
-	}
-	updatequeue[s.id]=callback;
-	rt.post('CheckUpdate',{id:s.id,data:{version:s.meta.version,url:s.meta.updateURL}});
-}
-
 // Script Editor
 var E=$('editor'),U=$('eUpdate'),H=$('mURL'),M=$('meta'),I=$('mName'),
     mI=$('mInclude'),mE=$('mExclude'),mM=$('mMatch'),
@@ -285,7 +260,7 @@ function edit(i){
 }
 function eSave(){
 	E.scr.update=U.checked;E.scr.custom.homepage=H.value;
-	rt.post('ParseScript',{id:E.scr.id,code:T.getValue()});
+	rt.post('ParseScript',{id:E.scr.id,code:T.getValue(),message:''});
 	eS.disabled=eSC.disabled=true;
 }
 function eClose(){switchTo(N);E.cur=E.scr=null;}
@@ -347,17 +322,19 @@ rt.listen('GotOptions',function(o){
 	ids.forEach(function(i){addItem(map[i]);});
 	updateMove(L.firstChild);updateMove(L.lastChild);
 	$('cInstall').checked=JSON.parse(o.installFile);
+	$('cUpdate').checked=JSON.parse(o.autoUpdate);
 	$('tSearch').value=o.search;
 	$('tExclude').value=o.gExc.join('\n');
 	if(!($('cDetail').checked=JSON.parse(o.showDetails))) L.classList.add('simple');
 	$('cCompress').checked=JSON.parse(o.compress);
 });
-rt.post('GetOptions',{installFile:0,search:0,showDetails:0,compress:0});
-rt.listen('UpdateItem',function(o){
-	var i=o.data,p=L.childNodes[i],n=o.obj;map[n.id]=n;
-	switch(o.cmd){
-		case 'add':ids.push(n.id);addItem(n);updateMove(L.childNodes[i-1]);break;
-		case 'update':loadItem(p,n,o.message);break;
+rt.post('GetOptions',{installFile:0,search:0,showDetails:0,compress:0,autoUpdate:0});
+rt.listen('UpdateItem',function(r){
+	if(r.obj) map[r.obj.id]=r.obj;
+	switch(r.status){
+		case 1:addItem(r.obj);updateMove(L.childNodes[r.item-1]);break;
+		case 2:modifyItem(L.childNodes[r.item],r);break;
+		default:loadItem(L.childNodes[r.item],r.obj,r);
 	}
-	updateMove(L.childNodes[i]);
+	updateMove(L.childNodes[r.item]);
 });

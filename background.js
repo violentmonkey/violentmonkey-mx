@@ -35,6 +35,7 @@ function init(){
 	getItem('showDetails',true);
 	getItem('installFile',true);
 	getItem('compress',true);
+	getItem('autoUpdate',true);
 	isApplied=getItem('isApplied',true);
 	getString('search',_('Search$1'));
 	ids=getItem('ids',[]);map={};gExc=getItem('gExc',[]);
@@ -88,7 +89,6 @@ function removeScript(i){
 	delete map[i];
 	localStorage.removeItem('vm:'+i);
 }
-function updateItem(t,i,o,m){rt.post('UpdateItem',{cmd:t,data:i,obj:o,message:m});}
 
 function str2RE(s){return s.replace(/(\.|\?|\/)/g,'\\$1').replace(/\*/g,'.*?');}
 function autoReg(s,w){	// w: forced wildcard mode
@@ -131,23 +131,38 @@ function canUpdate(o,n){
 	}
 	return n.length;
 }
-rt.listen('CheckUpdate',function(o){
-	fetchURL(o.data.url,function(){
-		if(this.status!=200) o.data=-1;
-		else {
-			var r=parseMeta(this.responseText);
-			if(canUpdate(o.data.version,r.version)) o.data=1;
-			else o.data=0;
+function allowUpdate(n){return n.update&&n.meta.updateURL&&n.meta.downloadURL;}
+function checkUpdate(i){
+	var o=map[ids[i]],r={item:i,hideUpdate:1,status:2};
+	if(!allowUpdate(o)) return;
+	function update(){
+		r.message=_('Updating...');rt.post('UpdateItem',r);
+		fetchURL(o.meta.downloadURL,function(){
+			parseScript(null,{status:this.status,code:this.responseText},o);
+		});
+	}
+	r.message=_('Checking for updates...');rt.post('UpdateItem',r);
+	fetchURL(o.meta.updateURL,function(){
+		try{
+			var m=parseMeta(this.responseText);
+			if(canUpdate(o.meta.version,m.version)) return update();
+			r.message=_('No update found.');
+		}catch(e){
+			r.message=_('Failed fetching update information.');
 		}
-		rt.post('UpdateCallback',o);
+		delete r.hideUpdate;
+		rt.post('UpdateItem',r);
 	});
-});
+}
+function checkUpdateAll(){for(var i=0;i<ids.length;i++) checkUpdate(i);}
+rt.listen('CheckUpdate',checkUpdate);
+rt.listen('CheckUpdateAll',checkUpdateAll);
 rt.listen('NewScript',function(o){rt.post('GotScript',newScript(true));});
 rt.listen('SaveScript',saveScript);
 rt.listen('EnableScript',function(o,e){
 	if(o.id) {
 		e=map[o.id];e.enabled=o.data;saveScript(e);
-		updateItem('update',ids.indexOf(o.id),o);
+		rt.post('UpdateItem',{item:ids.indexOf(o.id),obj:o,status:0});
 	} else setItem('isApplied',isApplied=o.data);
 });
 rt.listen('SetValue',function(o){setItem('val:'+getNameURI(map[o.data.id]),o.data.data);});
@@ -206,8 +221,8 @@ function fetchCache(url){
 
 function parseScript(o,d,c){
 	if(o&&!d) d=o.data;
-	var r=_('Script updated.'),t='update',i,c,m;
-	if(d.status&&d.status!=200) r=_('Error fetching script!');
+	var r={status:0,message:'message' in d?d.message:_('Script updated.')},i;
+	if(d.status&&d.status!=200) {r.status=-1;r.message=_('Error fetching script!');}
 	else {
 		var meta=parseMeta(d.code);
 		if(!c&&!d.id) {
@@ -221,19 +236,18 @@ function parseScript(o,d,c){
 			} else i=-1;
 			if(i<0) c=newScript(); else c=map[ids[i]];
 		} else {
-			if(!c) c=map[d.id];i=ids.indexOf(d.id);
+			if(!c) c=map[d.id];i=ids.indexOf(c.id);
 		}
-		if(i<0){t='add';r=_('Script installed.');i=ids.length;}
-		c.meta=meta;c.code=d.code;
+		if(i<0){r.status=1;r.message=_('Script installed.');i=ids.length;}
+		c.meta=meta;c.code=d.code;r.item=i;r.obj=c;
 		if(o&&!c.meta.homepage&&!c.custom.homepage&&!/^(file|data):/.test(o.origin)) c.custom.homepage=o.origin;
 		saveScript(c);
 		meta.require.forEach(fetchCache);	// @require
-		for(m in meta.resources) fetchCache(meta.resources[m]);	// @resource
+		for(d in meta.resources) fetchCache(meta.resources[d]);	// @resource
 		if(meta.icon) fetchCache(meta.icon);	// @icon
-		updateItem(t,i,c,o&&r);
 	}
-	if(o) rt.post(o.source,{topic:'ShowMessage',data:r});
-	else if(d.id&&d.status) rt.post('UpdateCallback',{id:d.id,data:d.status!=200&&r});
+	if(o) rt.post(o.source,{topic:'ShowMessage',data:r.message});
+	rt.post('UpdateItem',r);
 }
 rt.listen('ImportZip',function(b){
 	var z=new JSZip();
@@ -296,3 +310,13 @@ br.onBrowserEvent=function(o){
 			}
 	}
 };
+
+function autoCheck(){	// check for updates automatically in 20 seconds
+	var n=Date.now(),lastUpdate=getItem('lastUpdate',0);
+	if(n-lastUpdate>864e5) {
+		setItem('lastUpdate',lastUpdate=n);
+		checkUpdateAll();
+	}
+	setTimeout(autoCheck,36e5);
+}
+if(getItem('autoUpdate')) setTimeout(autoCheck,20000);

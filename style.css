@@ -15,6 +15,7 @@ h2.inline+*{margin-left:20px;}
 .right{float:right;}
 .menu,.x{clear:both;margin:0;padding:0;}
 .hide{display:none;}
+#meta label,#advanced label{display:block;}
 fieldset{border-radius:5px;border:1px solid gray;padding:0;}
 legend{margin-left:10px;}
 #sList{overflow-x:hidden;overflow-y:auto;margin:10px 0;min-height:1px;}
