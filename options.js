@@ -165,6 +165,7 @@ window.addEventListener('DOMContentLoaded',function(){
 var A=$('advanced');
 $('bAdvanced').onclick=function(){showDialog(A);};
 $('cInstall').onchange=function(){rt.post('SetOption',{key:'installFile',data:this.checked});};
+$('cUpdate').onchange=function(){rt.post('SetOption',{key:'cUpdate',data:this.checked});};
 $('bDefSearch').onclick=function(){$('tSearch').value=_('Search$1');};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
 $('aImport').onchange=function(e){
