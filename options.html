@@ -31,7 +31,7 @@
 				<div class=x></div>
 			</div>
 			<fieldset id=fMain class=main>
-				<legend><span class=i18n>Installed Scripts</span> <input type=checkbox id=cDetail><label for=cDetail class=i18n>Show details</label></legend>
+				<legend><span class=i18n>Installed Scripts</span> <label><input type=checkbox id=cDetail><span class=i18n>Show details</span></label></legend>
 				<div id=sList><span class="hint i18n">Loading...</span></div>
 			</fieldset>
 			<div id=footer class=main><span class=i18n>Violentmonkey link</span> - <span class=i18n>Designed by Gerald</span> - 2013</div>
@@ -40,7 +40,7 @@
 		<div id=editor class="float hide">
 			<h2 class="i18n inline">Script Editor</h2><button id=custom class=i18n>Custom meta data</button>
 			<textarea id=eCode></textarea>
-			<div class=left><input type=checkbox id=eUpdate><label for=eUpdate class=i18n>Allow update</label></div>
+			<label class=left><input type=checkbox id=eUpdate><span class=i18n>Allow update</span></label>
 			<div class=right>
 				<button id=eSave class=i18n>Save</button>
 				<button id=eSaveClose class=i18n>Save and Close</button>
@@ -61,7 +61,7 @@
 			</label>
 			<fieldset>
 				<legend class=i18n>Includes</legend>
-				<div><input type=checkbox id=cInclude><label for=cInclude class=i18n>Keep original include rules</label></div>
+				<label><input type=checkbox id=cInclude><span class=i18n>Keep original include rules</span></label>
 				<label class=i18n>Custom include rules:</label>
 				<textarea id=mInclude></textarea>
 			</fieldset>
@@ -73,7 +73,7 @@
 			</fieldset>
 			<fieldset>
 				<legend class=i18n>Excludes</legend>
-				<div><input type=checkbox id=cExclude><label for=cExclude class=i18n>Keep original exclude rules</label></div>
+				<label><input type=checkbox id=cExclude><span class=i18n>Keep original exclude rules</span></label>
 				<label class=i18n>Custom exclude rules:</label>
 				<textarea id=mExclude></textarea>
 			</fieldset>

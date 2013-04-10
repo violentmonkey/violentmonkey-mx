@@ -38,10 +38,10 @@ function init(){
 	getItem('autoUpdate',true);
 	isApplied=getItem('isApplied',true);
 	getString('search',_('Search$1'));
-	ids=getItem('ids',[]);map={};gExc=getItem('gExc',[]);
-	ids.forEach(function(i){
-		i=map[i]=getItem('vm:'+i);
-		if(!i.meta) i.meta={name:'Unknown'};
+	ids=[];map={};gExc=getItem('gExc',[]);
+	getItem('ids',[]).forEach(function(i){
+		var o=getItem('vm:'+i);
+		if(o) {ids.push(i);map[i]=o;}
 	});
 }
 var isApplied,ids,map,gExc;
