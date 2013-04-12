@@ -14,39 +14,59 @@
 		<script type="text/javascript" src="lib/searchcursor.js"></script>
 		<script type="text/javascript" src="lib/jszip.js"></script>
 		<script type="text/javascript" src="lib/jszip-deflate.js"></script>
+		<script type="text/javascript" src="lib/jszip-inflate.js"></script>
+		<script type="text/javascript" src="lib/jszip-load.js"></script>
 		<title class=i18n>Options - Violentmonkey</title>
 	</head>
 	<body class=fill>
-		<div id=main>
-			<div id=header class=main>
-				<h1 class=i18n>Options - Violentmonkey</h1>
-				<div class=left>
-					<button id=bNew class=i18n>New</button>
-					<a href=http://userscripts.org target=_blank class=i18n>Get more scripts from userscripts.org</a>
-				</div>
-				<div class=right>
-					<a id=bUpdate class=i18n href=#>Check all for updates</a>
-					<button id=bAdvanced class=i18n>Advanced</button>
-				</div>
-				<div class=x></div>
-			</div>
-			<fieldset id=fMain class=main>
-				<legend><span class=i18n>Installed Scripts</span> <label><input type=checkbox id=cDetail><span class=i18n>Show details</span></label></legend>
-				<div id=sList><span class="hint i18n">Loading...</span></div>
-			</fieldset>
-			<div id=footer class=main><span class=i18n>Violentmonkey link</span> - <span class=i18n>Designed by Gerald</span> - 2013</div>
-		</div>
+		<table id=main class=frame>
+			<tr><td><h1 class="i18n center">Options - Violentmonkey</h1></td></tr>
+			<tr>
+				<td>
+					<div class=left>
+						<button id=bNew class=i18n>New</button>
+						<a href=http://userscripts.org target=_blank class=i18n>Get more scripts from userscripts.org</a>
+					</div>
+					<div class=right>
+						<a id=bUpdate class=i18n href=#>Check all for updates</a>
+						<button id=bAdvanced class=i18n>Advanced</button>
+					</div>
+					<div class=x></div>
+				</td>
+			</tr>
+			<tr class=expand>
+				<td class=expandr>
+					<div class=expanda>
+						<fieldset>
+							<legend>
+								<span class=i18n>Installed Scripts</span>
+								<label><input type=checkbox id=cDetail><span class=i18n>Show details</span></label>
+							</legend>
+							<div id=sList><span class="hint i18n">Loading...</span></div>
+						</fieldset>
+					</div>
+				</td>
+			</tr>
+			<tr><td class=center><span class=i18n>Violentmonkey link</span> - <span class=i18n>Designed by Gerald</span> - 2013</td></tr>
+		</table>
 		<div id=overlay class=hide></div>
-		<div id=editor class="float hide">
-			<h2 class="i18n inline">Script Editor</h2><button id=custom class=i18n>Custom meta data</button>
-			<textarea id=eCode></textarea>
-			<label class=left><input type=checkbox id=eUpdate><span class=i18n>Allow update</span></label>
-			<div class=right>
-				<button id=eSave class=i18n>Save</button>
-				<button id=eSaveClose class=i18n>Save and Close</button>
-				<button id=eClose class=i18n>Close</button>
-			</div>
-		</div>
+		<table id=editor class="frame hide">
+			<tr>
+				<td><h2 class=i18n>Script Editor</h2></td>
+				<td class=buttons><button id=bcustom class=i18n>Custom meta data</button></td>
+			</tr>
+			<tr class=expand><td colspan=2 class=expandr><textarea id=eCode class=expanda></textarea></td></tr>
+			<tr>
+				<td colspan=2>
+					<label class=left><input type=checkbox id=eUpdate><span class=i18n>Allow update</span></label>
+					<div class=right>
+						<button id=eSave class=i18n>Save</button>
+						<button id=eSaveClose class=i18n>Save and Close</button>
+						<button id=eClose class=i18n>Close</button>
+					</div>
+				</td>
+			</tr>
+		</table>
 		<div id=meta class="float hide">
 			<label><span class=i18n>Name: </span><input type=text id=mName></label>
 			<label><span class=i18n>Homepage: </span><input type=text id=mURL></label>
@@ -62,26 +82,26 @@
 			<fieldset>
 				<legend class=i18n>Includes</legend>
 				<label><input type=checkbox id=cInclude><span class=i18n>Keep original include rules</span></label>
-				<label class=i18n>Custom include rules:</label>
+				<span class=i18n>Custom include rules:</span>
 				<textarea id=mInclude></textarea>
 			</fieldset>
 			<fieldset>
 				<legend class=i18n>Matches</legend>
 				<label><input type=checkbox id=cMatch><span class=i18n>Keep original match rules</span></label>
-				<label class=i18n>Custom match rules:</label>
+				<span class=i18n>Custom match rules:</span>
 				<textarea id=mMatch></textarea>
 			</fieldset>
 			<fieldset>
 				<legend class=i18n>Excludes</legend>
 				<label><input type=checkbox id=cExclude><span class=i18n>Keep original exclude rules</span></label>
-				<label class=i18n>Custom exclude rules:</label>
+				<span class=i18n>Custom exclude rules:</span>
 				<textarea id=mExclude></textarea>
 			</fieldset>
 			<div class=right><button id=mOK class=i18n>OK</button> <button id=mCancel class=i18n>Cancel</button></div>
 		</div>
 		<div id=export class="float hide">
 			<h2 class=i18n>Data Export</h2>
-			<label class=i18n>Installed Scripts</label>
+			<span class=i18n>Installed Scripts</span>
 			<div class=right>
 				<button id=bSelect class=i18n>All/None</button>
 			</div>
