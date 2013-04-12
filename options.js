@@ -145,10 +145,6 @@ O.onclick=function(){
 function confirmCancel(dirty){
 	return !dirty||confirm(_('Modifications are not saved!'));
 }
-function bindChange(e,d){
-	function change(){d.forEach(function(i){i.dirty=true;});}
-	e.forEach(function(i){i.onchange=change;});
-}
 initFont();
 window.addEventListener('DOMContentLoaded',function(){
 	var nodes=document.querySelectorAll('.i18n'),c,s,i,j;
@@ -227,29 +223,29 @@ xE.onclick=function(){
 X.close=$('bClose').onclick=closeDialog;
 
 // Script Editor
-var E=$('editor'),U=$('eUpdate'),H=$('mURL'),M=$('meta'),I=$('mName'),
+var E=$('editor'),U=$('eUpdate'),H=$('mURL'),R=$('mRunAt'),M=$('meta'),I=$('mName'),
     mI=$('mInclude'),mE=$('mExclude'),mM=$('mMatch'),
-    cI=$('cInclude'),cE=$('cExclude'),cM=$('cMatch'),T=null,
-		eS=$('eSave'),eSC=$('eSaveClose');
+    cI=$('cInclude'),cE=$('cExclude'),cM=$('cMatch'),
+		eS=$('eSave'),eSC=$('eSaveClose'),T;
 CodeMirror.keyMap.vm={
 	'Esc':'close',
 	'Ctrl-S':'save',
 	'fallthrough':'default'
 };
+T=CodeMirror.fromTextArea($('eCode'),{
+	lineNumbers:true,
+	matchBrackets:true,
+	mode:'text/typescript',
+	lineWrapping:true,
+	indentUnit:4,
+	indentWithTabs:true,
+	extraKeys:{"Enter":"newlineAndIndentContinueComment"},
+	keyMap:'vm'
+});
+T.on('change',function(){eS.disabled=eSC.disabled=T.isClean();});
 function edit(i){
 	switchTo(E);E.scr=map[ids[i]];E.cur=L.childNodes[i];
 	U.checked=E.scr.update;H.value=E.scr.custom.homepage||'';
-	if(!T) T=CodeMirror.fromTextArea($('eCode'),{
-		lineNumbers:true,
-		matchBrackets:true,
-		mode:'text/typescript',
-		lineWrapping:true,
-		indentUnit:4,
-		indentWithTabs:true,
-		extraKeys:{"Enter":"newlineAndIndentContinueComment"},
-		keyMap:'vm'
-	});
-	T.on('change',function(){eS.disabled=eSC.disabled=T.isClean();});
 	T.setValue(E.scr.code);T.markClean();T.getDoc().clearHistory();
 	eS.disabled=eSC.disabled=true;T.focus();
 }
@@ -259,7 +255,9 @@ function eSave(){
 	eS.disabled=eSC.disabled=true;
 }
 function eClose(){switchTo(N);E.cur=E.scr=null;}
-bindChange([U,H],[E]);
+U.onchange=E.markDirty=function(){eS.disabled=eSC.disabled=false;};
+function metaChange(){M.dirty=true;}
+[I,H,R,mI,mM,mE,cI,cM,cE].forEach(function(i){i.onchange=metaChange;});
 $('bcustom').onclick=function(){
 	var e=[],c=E.scr.custom;M.dirty=false;
 	showDialog(M,10);fillWidth(I);fillWidth(H);
@@ -278,7 +276,6 @@ $('bcustom').onclick=function(){
 	cE.checked=c._exclude!=false;
 	mE.value=(c.exclude||e).join('\n');
 };
-bindChange([I,H,mI,mM,mE,cI,cM,cE],[M]);
 M.close=function(){if(confirmCancel(M.dirty)) closeDialog();};
 $('mCancel').onclick=closeDialog;
 $('mOK').onclick=function(){
