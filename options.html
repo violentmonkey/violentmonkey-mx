@@ -12,10 +12,6 @@
 		<script type="text/javascript" src="lib/match-highlighter.js"></script>
 		<script type="text/javascript" src="lib/search.js"></script>
 		<script type="text/javascript" src="lib/searchcursor.js"></script>
-		<script type="text/javascript" src="lib/jszip.js"></script>
-		<script type="text/javascript" src="lib/jszip-deflate.js"></script>
-		<script type="text/javascript" src="lib/jszip-inflate.js"></script>
-		<script type="text/javascript" src="lib/jszip-load.js"></script>
 		<title class=i18n>Options - Violentmonkey</title>
 	</head>
 	<body class=fill>
@@ -102,11 +98,15 @@
 		<div id=export class="float hide">
 			<h2 class=i18n>Data Export</h2>
 			<span class=i18n>Installed Scripts</span>
-			<div class=right>
-				<button id=bSelect class=i18n>All/None</button>
+			<div id=xOptions class=right>
+				<a class=i18n>Export Options</a>
+				<div>
+					<label><input type=checkbox id=cCompress><span class=i18n>Compress</span></label>
+					<label><input type=checkbox id=cWithData><span class=i18n>Export script data</span></label>
+				</div>
 			</div>
 			<div id=xList class=list></div>
-			<label class=left><input type=checkbox id=cCompress><span class=i18n>Compress</span></label>
+			<div class=left><button id=bSelect class=i18n>All/None</button></div>
 			<div class=right>
 				<button id=bExport></button>
 				<button id=bClose class=i18n>Close</button>

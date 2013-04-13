@@ -181,7 +181,7 @@ A.close=$('aClose').onclick=function(){
 };
 
 // Export
-var X=$('export'),xL=$('xList'),xE=$('bExport'),xC=$('cCompress');
+var X=$('export'),xL=$('xList'),xE=$('bExport'),xC=$('cCompress'),xD=$('cWithData');
 function xLoad() {
 	xL.innerHTML='';xE.disabled=false;xE.innerHTML=_('Export');
 	ids.forEach(function(i){
@@ -192,6 +192,7 @@ function xLoad() {
 	});
 }
 xC.onchange=function(){rt.post('SetOption',{key:'compress',data:this.checked});};
+xD.onchange=function(){rt.post('SetOption',{key:'withData',data:this.checked});};
 xL.onclick=function(e){
 	var t=e.target;
 	if(t.parentNode!=this) return;
@@ -203,24 +204,15 @@ $('bSelect').onclick=function(){
 	v=i<c.length;
 	for(i=0;i<c.length;i++) if(v) c[i].classList.add('selected'); else c[i].classList.remove('selected');
 };
+X.close=$('bClose').onclick=closeDialog;
 xE.onclick=function(){
 	this.disabled=true;this.innerHTML=_('Exporting...');
-	var z=new JSZip(),n,_n,names={},c,i,j,vm={};
+	var i,c=[];
 	for(i=0;i<ids.length;i++)
-		if(xL.childNodes[i].classList.contains('selected')) {
-			c=map[ids[i]];
-			n=_n=c.custom.name||c.meta.name||'Noname';j=0;
-			while(names[n]) n=_n+(++j);names[n]=1;n+='.user.js';
-			z.file(n,c.code);
-			vm[n]={id:ids[i],custom:c.custom,enabled:c.enabled,update:c.update};
-		}
-	z.file('ViolentMonkey',JSON.stringify(vm));
-	c={};if(xC.checked) c.compression='DEFLATE';
-	n=z.generate(c);
-	window.open('data:application/zip;base64,'+n);
-	X.close();
+		if(xL.childNodes[i].classList.contains('selected')) c.push(ids[i]);
+	rt.post('ExportZip',{deflate:xC.checked,withData:xD.checked,data:c});
 };
-X.close=$('bClose').onclick=closeDialog;
+rt.listen('Exported',function(o){X.close();window.open('data:application/zip;base64,'+o);});
 
 // Script Editor
 var E=$('editor'),U=$('eUpdate'),H=$('mURL'),R=$('mRunAt'),M=$('meta'),I=$('mName'),
@@ -317,9 +309,17 @@ rt.listen('GotOptions',function(o){
 	$('tSearch').value=o.search;
 	$('tExclude').value=o.gExc.join('\n');
 	if(!($('cDetail').checked=JSON.parse(o.showDetails))) L.classList.add('simple');
-	$('cCompress').checked=JSON.parse(o.compress);
+	xC.checked=JSON.parse(o.compress);
+	xD.checked=JSON.parse(o.withData);
 });
-rt.post('GetOptions',{installFile:0,search:0,showDetails:0,compress:0,autoUpdate:0});
+rt.post('GetOptions',{
+	installFile:0,
+	search:0,
+	showDetails:0,
+	compress:0,
+	withData:0,
+	autoUpdate:0
+});
 rt.listen('UpdateItem',function(r){
 	if(r.obj) map[r.obj.id]=r.obj;
 	switch(r.status){

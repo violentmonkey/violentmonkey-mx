@@ -35,6 +35,7 @@ function init(){
 	getItem('showDetails',true);
 	getItem('installFile',true);
 	getItem('compress',true);
+	getItem('withData',true);
 	getItem('autoUpdate',true);
 	isApplied=getItem('isApplied',true);
 	getString('search',_('Search$1'));
@@ -253,12 +254,12 @@ rt.listen('ImportZip',function(b){
 	var z=new JSZip();
 	try{z.load(b,{base64:true});}catch(e){rt.post('ShowMessage',_('Error loading zip file.'));return;}
 	var vm=z.file('ViolentMonkey'),count=0;
-	if(vm) try{vm=JSON.parse(vm.asText());}catch(e){console.log('Error parsing ViolentMonkey configuration.');}
+	if(vm) try{vm=JSON.parse(vm.asText());}catch(e){vm={};console.log('Error parsing ViolentMonkey configuration.');}
 	z.file(/\.user\.js$/).forEach(function(o){
 		if(o.dir) return;
 		var c=null,v,i;
 		try{
-			if(vm&&(v=vm[o.name])) {
+			if(v=vm[o.name]) {
 				c=map[v.id];
 				if(c) for(i in v) c[i]=v[i];
 				else c=v;
@@ -267,7 +268,25 @@ rt.listen('ImportZip',function(b){
 			count++;
 		}catch(e){console.log('Error importing data: '+o.name+'\n'+e);}
 	});
+	if(vm.values) for(z in vm.values) setItem('val:'+z,vm.values[z]);
 	rt.post('ShowMessage',format(_('$1 item(s) are imported.'),count));
+});
+rt.listen('ExportZip',function(o){
+	var z=new JSZip(),n,_n,names={},values={},vm={};
+	o.data.forEach(function(c){
+		var j=0;c=map[c];
+		n=_n=c.custom.name||c.meta.name||'Noname';
+		while(names[n]) n=_n+'_'+(++j);names[n]=1;n+='.user.js';
+		z.file(n,c.code);
+		vm[n]={id:c.id,custom:c.custom,enabled:c.enabled,update:c.update};
+		n=getNameURI(c);
+		if(o.withData&&(_n=getItem('val:'+n))) values[n]=_n;
+	});
+	if(o.withData) vm.values=values;
+	z.file('ViolentMonkey',JSON.stringify(vm));
+	vm={};if(o.deflate) vm.compression='DEFLATE';
+	n=z.generate(vm);
+	rt.post('Exported',n);
 });
 
 rt.listen('ParseScript',function(o){
