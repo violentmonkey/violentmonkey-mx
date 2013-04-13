@@ -12,8 +12,22 @@
  * cache:url	BinaryString
  */
 
+// Check Maxthon version
+(function(v){
+	function older(a,b,c,d){
+		a=a.split('.');b=b.split('.');c=d=0;
+		while(a.length||b.length){
+			c=parseInt(a.shift())||0;
+			d=parseInt(b.shift())||0;
+			if(c!=d) break;
+		}
+		return c<d;
+	}
+	if(older(v,'4.0.3.5000')) br.tabs.newTab({url:rt.getPrivateUrl()+'oldversion.html',activate:true});
+})(window.external.mxVersion);
+
 // Initiate settings
-(function(){	// Upgrade data
+(function(){	// Upgrade data from Violentmonkey 1, irreversibly
 	var k,v=rt.storage.getConfig('data'),o;
 	if(v) try{
 		rt.storage.setConfig('data',null);

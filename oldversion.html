@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html;charset=utf-8">
+		<link rel="stylesheet" type="text/css" href="style.css" />
+		<title class=i18n>Obsolete Maxthon</title>
+		<style>
+			body{width:600px;margin:50px auto;padding:20px;border:1px solid gray;border-radius:10px;box-shadow:5px 10px 15px rgba(0,0,0,0.4);}
+			.keyword{color:olive;font-weight:bold;}
+		</style>
+	</head>
+	<body>
+		<h1><font color=red class=i18n>Warning: </font><span class=i18n>Obsolete Maxthon</span></h1>
+		<div class=i18n>Warning message</div>
+	</body>
+</html>
+<script src=common.js></script>
+<script>
+initFont();
+window.addEventListener('DOMContentLoaded',function(){
+	var nodes=document.querySelectorAll('.i18n'),c,s,i,j;
+	for(i=0;i<nodes.length;i++) nodes[i].innerHTML=_(nodes[i].innerHTML);
+},true);
+</script>
