@@ -23,7 +23,13 @@
 		}
 		return c<d;
 	}
-	if(older(v,'4.0.3.5000')) br.tabs.newTab({url:rt.getPrivateUrl()+'oldversion.html',activate:true});
+	if(older(v,'4.0.3.5000')) {
+		mx.locale();
+		var v=mx.getSystemLocale(),o=['en','zh-cn'],i=o.indexOf(v);if(i<0) v=o[0];
+		br.tabs.newTab({url:rt.getPrivateUrl()+'oldversion/'+v+'.html',activate:true});
+		console.log(mx.getSystemLocale());
+		consold.log(rt.getPrivateUrl()+'oldversion/'+v+'.html');
+	}
 })(window.external.mxVersion);
 
 // Initiate settings
