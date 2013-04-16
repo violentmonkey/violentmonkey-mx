@@ -14,6 +14,8 @@
 
 // Check Maxthon version
 (function(v){
+	if(getString('warnObsolete')) return;
+	setString('warnObsolete','1');
 	function older(a,b,c,d){
 		a=a.split('.');b=b.split('.');c=d=0;
 		while(a.length||b.length){
@@ -27,8 +29,6 @@
 		mx.locale();
 		var v=mx.getSystemLocale(),o=['en','zh-cn'],i=o.indexOf(v);if(i<0) v=o[0];
 		br.tabs.newTab({url:rt.getPrivateUrl()+'oldversion/'+v+'.html',activate:true});
-		console.log(mx.getSystemLocale());
-		consold.log(rt.getPrivateUrl()+'oldversion/'+v+'.html');
 	}
 })(window.external.mxVersion);
 
@@ -152,28 +152,34 @@ function canUpdate(o,n){
 	}
 	return n.length;
 }
-function allowUpdate(n){return n.update&&n.meta.updateURL&&n.meta.downloadURL;}
 function checkUpdate(i){
 	var o=map[ids[i]],r={item:i,hideUpdate:1,status:2};
-	if(!allowUpdate(o)) return;
+	if(!o.update) return;
 	function update(){
-		r.message=_('Updating...');rt.post('UpdateItem',r);
-		fetchURL(o.meta.downloadURL,function(){
-			parseScript(null,{status:this.status,code:this.responseText},o);
+		var u=o.custom.downloadURL||o.meta.downloadURL;
+		if(u) {
+			r.message=_('Updating...');
+			fetchURL(u,function(){
+				parseScript(null,{status:this.status,code:this.responseText},o);
+			});
+		} else r.message='<span class=new>'+_('New version found.')+'</span>';
+		rt.post('UpdateItem',r);
+	}
+	var u=o.custom.updateURL||o.meta.updateURL;
+	if(u) {
+		r.message=_('Checking for updates...');rt.post('UpdateItem',r);
+		fetchURL(u,function(){
+			try{
+				var m=parseMeta(this.responseText);
+				if(canUpdate(o.meta.version,m.version)) return update();
+				r.message=_('No update found.');
+			}catch(e){
+				r.message=_('Failed fetching update information.');
+			}
+			delete r.hideUpdate;
+			rt.post('UpdateItem',r);
 		});
 	}
-	r.message=_('Checking for updates...');rt.post('UpdateItem',r);
-	fetchURL(o.meta.updateURL,function(){
-		try{
-			var m=parseMeta(this.responseText);
-			if(canUpdate(o.meta.version,m.version)) return update();
-			r.message=_('No update found.');
-		}catch(e){
-			r.message=_('Failed fetching update information.');
-		}
-		delete r.hideUpdate;
-		rt.post('UpdateItem',r);
-	});
 }
 function checkUpdateAll(){for(var i=0;i<ids.length;i++) checkUpdate(i);}
 rt.listen('CheckUpdate',checkUpdate);

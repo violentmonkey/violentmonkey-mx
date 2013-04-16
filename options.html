@@ -65,17 +65,24 @@
 			</tr>
 		</table>
 		<div id=meta class="float hide">
-			<label><span class=i18n>Name: </span><input type=text id=mName></label>
-			<label><span class=i18n>Homepage: </span><input type=text id=mURL></label>
-			<label>
-				<span class=i18n>Run at: </span>
-				<select id=mRunAt>
-					<option class=i18n value=default>default</option>
-					<option value=start>document-start</option>
-					<option value=body>document-body</option>
-					<option value=end>document-end</option>
-				</select>
-			</label>
+			<table>
+				<tr>
+					<td title="@name" class=i18n>Name:</td><td class=expand><input type=text id=mName></td>
+					<td title="@run-at" class=i18n>Run at:</td><td>
+						<select id=mRunAt>
+							<option class=i18n value=default>default</option>
+							<option value=start>document-start</option>
+							<option value=body>document-body</option>
+							<option value=end>document-end</option>
+						</select>
+					</td>
+				</tr>
+				<tr title="@homepage"><td class=i18n>Homepage:</td><td colspan=3 class=expand><input type=text id=mHomepage></td></tr>
+			</table>
+			<table>
+				<tr title="@updateURL"><td class=i18n>Update URL:</td><td class=expand><input type=text id=mUpdateURL></td></tr>
+				<tr title="@downloadURL"><td class=i18n>Download URL:</td><td class=expand><input type=text id=mDownloadURL></td></tr>
+			</table>
 			<fieldset>
 				<legend class=i18n>Includes</legend>
 				<label><input type=checkbox id=cInclude><span class=i18n>Keep original include rules</span></label>
