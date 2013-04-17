@@ -237,7 +237,7 @@ function edit(i){
 	eS.disabled=eSC.disabled=true;T.focus();
 }
 function eSave(){
-	E.scr.update=U.checked;E.scr.custom.homepage=H.value;
+	E.scr.update=U.checked;
 	rt.post('ParseScript',{id:E.scr.id,code:T.getValue(),message:''});
 	eS.disabled=eSC.disabled=true;
 }
