@@ -14,12 +14,6 @@ function initFont(){
 	s.innerHTML=_('__font');
 	document.head.appendChild(s);
 }
-function unsafeExecute(scr){
-	var p=document.createElement("script");
-	p.innerHTML=scr;
-	document.documentElement.appendChild(p);
-	document.documentElement.removeChild(p);
-}
 
 function getString(key,def){
 	var v=localStorage.getItem(key);
@@ -35,8 +29,4 @@ function getItem(key,def){
 function setItem(key,val){
 	localStorage.setItem(key,JSON.stringify(val));
 	return val;
-}
-function getNameURI(i){
-	var ns=i.meta.namespace||'',n=i.meta.name||'',k=escape(ns)+':'+escape(n)+':';
-	if(!ns&&!n) k+=i.id;return k;
 }

@@ -23,7 +23,13 @@ function utf8decode (utftext) {
 }
 
 // Messages
-var id=Date.now()+Math.random().toString().substr(1);
+var rt=window.external.mxGetRuntime(),id=Date.now()+Math.random().toString().substr(1);
+function unsafeExecute(scr){
+	var p=document.createElement("script");
+	p.innerHTML=scr;
+	document.documentElement.appendChild(p);
+	document.documentElement.removeChild(p);
+}
 function post(topic,data,o){
 	if(!o) o={};
 	if(!o.source) o.source=id;

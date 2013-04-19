@@ -11,6 +11,10 @@
  * val:nameURI	Dict
  * cache:url	BinaryString
  */
+function getNameURI(i){
+	var ns=i.meta.namespace||'',n=i.meta.name||'',k=escape(ns)+':'+escape(n)+':';
+	if(!ns&&!n) k+=i.id;return k;
+}
 
 // Check Maxthon version
 (function(v){
