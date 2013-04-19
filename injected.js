@@ -104,7 +104,12 @@ function run_code(c){
 	code.push(c.code);
 	code.push('})();');
 	this.code=code.join('\n');
-	try{with(w) eval(this.code);}catch(e){console.log('Error running script: '+(c.custom.name||c.meta.name||c.id)+'\n'+e+'\n'+e.stack);}
+	try{with(w) eval(this.code);}catch(e){
+		i=e.stack.lastIndexOf('\n    at run_code.eval');
+		if(i>0) e.stack=e.stack.substr(0,i).replace(/eval at run_code \(mxaddon-pkg:[^\)]*\), /g,'');
+		e.message='Error running script: '+(c.custom.name||c.meta.name||c.id);
+		console.log(e+'\n'+e.stack);
+	}
 }
 function runStart(){while(start.length) new run_code(start.shift());}
 function runBody(){

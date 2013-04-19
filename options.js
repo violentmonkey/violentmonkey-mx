@@ -239,7 +239,7 @@ function edit(i){
 function eSave(){
 	E.scr.update=U.checked;
 	rt.post('ParseScript',{id:E.scr.id,code:T.getValue(),message:''});
-	eS.disabled=eSC.disabled=true;
+	T.markClean();eS.disabled=eSC.disabled=true;
 }
 function eClose(){switchTo(N);E.cur=E.scr=null;}
 U.onchange=E.markDirty=function(){eS.disabled=eSC.disabled=false;};
