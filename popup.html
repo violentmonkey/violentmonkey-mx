@@ -5,15 +5,23 @@
 		<link rel="stylesheet" type="text/css" href="style.css" />
 		<title>Popup Menu - Violentmonkey</title>
 	</head>
-	<body class=fill>
-		<div id=popup>
-			<div class="top menu"></div>
-			<div class="bot menu"></div>
-		</div>
-		<div id=commands class=hide>
-			<div class="top menu"></div>
-			<div class="bot menu"></div>
-		</div>
+	<body class=popup>
+		<table id=popup>
+			<tr><td class=menu></td></tr>
+			<tr class=expand>
+				<td class=expandr>
+					<div class="expanda menu"></div>
+				</td>
+			</tr>
+		</table>
+		<table id=commands class=hide>
+			<tr><td class=menu></td></tr>
+			<tr class=expand>
+				<td class=expandr>
+					<div class="expanda menu"></div>
+				</td>
+			</tr>
+		</table>
 	</body>
 </html>
 <script src="common.js"></script>
