@@ -54,7 +54,6 @@ function getNameURI(i){
 		setString('search',v.search);
 	}catch(e){}
 })();
-
 function init(){
 	getItem('showDetails',true);
 	getItem('installFile',true);
@@ -66,7 +65,10 @@ function init(){
 	ids=[];map={};gExc=getItem('gExc',[]);
 	getItem('ids',[]).forEach(function(i){
 		var o=getItem('vm:'+i);
-		if(o) {ids.push(i);map[i]=o;}
+		if(o) {
+			if(!o.meta) o.meta=newMeta();	// fix unknown bugs
+			ids.push(i);map[i]=o;
+		}
 	});
 }
 var isApplied,ids,map,gExc;

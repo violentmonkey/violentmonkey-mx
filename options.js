@@ -1,6 +1,7 @@
 function $(i){return document.getElementById(i);}
 var N=$('main'),L=$('sList'),O=$('overlay'),ids,map={};
 function split(t){return t.replace(/^\s+|\s+$/g,'').split(/\s*\n\s*/).filter(function(e){return e;});}
+rt.listen('ShowMessage',function(o){alert(o);});
 
 // Main options
 function updateMove(d){
@@ -161,7 +162,6 @@ $('aImport').onchange=function(e){
 		r.readAsBinaryString(f);
 	}
 };
-rt.listen('ShowMessage',function(o){alert(o);});
 $('aVacuum').onclick=function(){rt.post('Vacuum');};
 rt.listen('Cleared',function(){window.location.reload();});
 $('aClear').onclick=function(){
