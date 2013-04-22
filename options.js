@@ -24,7 +24,6 @@ function modifyItem(d,r){
 	}
 }
 function loadItem(d,n,r){
-	if(typeof n=='string') return;
 	d.innerHTML='<img class=icon src="'+getIcon(n)+'">'
 	+'<a class="name ellipsis" target=_blank></a>'
 	+'<span class=author></span>'
@@ -104,7 +103,7 @@ L.onclick=function(e){
 			break;
 	}
 };
-rt.listen('GotScript',function(o){
+rt.listen('AddScript',function(o){
 	ids.push(o.id);o=addItem(map[o.id]=o);
 	updateMove(o);updateMove(o.previousSibling);
 });
@@ -151,7 +150,7 @@ window.addEventListener('DOMContentLoaded',function(){
 var A=$('advanced');
 $('bAdvanced').onclick=function(){showDialog(A);};
 $('cInstall').onchange=function(){rt.post('SetOption',{key:'installFile',data:this.checked});};
-$('cUpdate').onchange=function(){rt.post('SetOption',{key:'cUpdate',data:this.checked});};
+$('cUpdate').onchange=function(){rt.post('AutoUpdate',this.checked);};
 $('bDefSearch').onclick=function(){$('tSearch').value=_('Search$1');};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
 $('aImport').onchange=function(e){
@@ -231,17 +230,20 @@ T=CodeMirror.fromTextArea($('eCode'),{
 	keyMap:'vm'
 });
 T.on('change',function(){eS.disabled=eSC.disabled=T.isClean();});
-function edit(i){
-	switchTo(E);E.scr=map[ids[i]];E.cur=L.childNodes[i];U.checked=E.scr.update;
-	T.setValue(E.scr.code);T.markClean();T.getDoc().clearHistory();
+rt.listen('GotScript',function(o){
+	switchTo(E);E.scr=o;U.checked=o.update;
+	T.setValue(o.code);T.markClean();T.getDoc().clearHistory();
 	eS.disabled=eSC.disabled=true;T.focus();
+});
+function edit(i){
+	E.cur=L.childNodes[i];rt.post('GetScript',map[ids[i]].id);
 }
 function eSave(){
 	E.scr.update=U.checked;
 	rt.post('ParseScript',{id:E.scr.id,code:T.getValue(),message:''});
 	T.markClean();eS.disabled=eSC.disabled=true;
 }
-function eClose(){switchTo(N);E.cur=E.scr=null;}
+function eClose(){T.setValue('');switchTo(N);}
 U.onchange=E.markDirty=function(){eS.disabled=eSC.disabled=false;};
 function metaChange(){M.dirty=true;}
 [mN,mH,mR,mU,mD,mI,mM,mE,cI,cM,cE].forEach(function(i){i.onchange=metaChange;});
@@ -300,6 +302,7 @@ CodeMirror.commands.close=E.close=$('eClose').onclick=function(){if(confirmCance
 // Load at last
 var ids,map,cache;
 rt.listen('GotOptions',function(o){
+try{	// debug
 	ids=o.ids;map=o.map;cache=o.cache;L.innerHTML='';
 	ids.forEach(function(i){addItem(map[i]);});
 	updateMove(L.firstChild);updateMove(L.lastChild);
@@ -310,6 +313,7 @@ rt.listen('GotOptions',function(o){
 	if(!($('cDetail').checked=JSON.parse(o.showDetails))) L.classList.add('simple');
 	xC.checked=JSON.parse(o.compress);
 	xD.checked=JSON.parse(o.withData);
+}catch(e){alert(e.stack);}
 });
 rt.post('GetOptions',{
 	installFile:0,

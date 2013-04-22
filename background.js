@@ -15,6 +15,7 @@ function getNameURI(i){
 	var ns=i.meta.namespace||'',n=i.meta.name||'',k=escape(ns)+':'+escape(n)+':';
 	if(!ns&&!n) k+=i.id;return k;
 }
+function getMeta(j){return {id:j.id,custom:j.custom,meta:j.meta,enabled:j.enabled,update:j.update};}
 
 // Check Maxthon version
 (function(v){
@@ -59,8 +60,9 @@ function init(){
 	getItem('installFile',true);
 	getItem('compress',true);
 	getItem('withData',true);
-	getItem('autoUpdate',true);
+	autoUpdate=getItem('autoUpdate',true);
 	isApplied=getItem('isApplied',true);
+	lastUpdate=getItem('lastUpdate',0);
 	getString('search',_('Search$1'));
 	ids=[];map={};gExc=getItem('gExc',[]);
 	getItem('ids',[]).forEach(function(i){
@@ -71,7 +73,7 @@ function init(){
 		}
 	});
 }
-var isApplied,ids,map,gExc;
+var isApplied,ids,map,gExc,lastUpdate,autoUpdate;
 init();
 
 rt.listen('Clear',function(){localStorage.clear();init();rt.post('Cleared');});
@@ -187,10 +189,13 @@ function checkUpdate(i){
 		});
 	}
 }
-function checkUpdateAll(){for(var i=0;i<ids.length;i++) checkUpdate(i);}
+function checkUpdateAll(){
+	setItem('lastUpdate',lastUpdate=Date.now());
+	for(var i=0;i<ids.length;i++) checkUpdate(i);
+}
 rt.listen('CheckUpdate',checkUpdate);
 rt.listen('CheckUpdateAll',checkUpdateAll);
-rt.listen('NewScript',function(o){rt.post('GotScript',newScript(true));});
+rt.listen('NewScript',function(o){rt.post('AddScript',newScript(true));});
 rt.listen('SaveScript',saveScript);
 rt.listen('EnableScript',function(o,e){
 	if(o.id) {
@@ -272,7 +277,7 @@ function parseScript(o,d,c){
 			if(!c) c=map[d.id];i=ids.indexOf(c.id);
 		}
 		if(i<0){r.status=1;r.message=_('Script installed.');i=ids.length;}
-		c.meta=meta;c.code=d.code;r.item=i;r.obj=c;
+		c.meta=meta;c.code=d.code;r.item=i;r.obj=getMeta(c);
 		if(o&&!c.meta.homepage&&!c.custom.homepage&&!/^(file|data):/.test(o.origin)) c.custom.homepage=o.origin;
 		saveScript(c);
 		meta.require.forEach(fetchCache);	// @require
@@ -334,12 +339,18 @@ rt.listen('InstallScript',function(o){
 });
 
 rt.listen('GetOptions',function(o){
-	var i,j,cache={};
+	var i,j;
+try{	// debug
 	for(i in o) o[i]=getString(i);
-	for(i in map) (i=map[i].meta.icon)&&!(i in cache)&&(j=getString('cache:'+i))&&(cache[i]=btoa(j));
-	o.ids=ids;o.map=map;o.cache=cache;o.gExc=gExc;
+	o.ids=ids;o.map={};o.cache={};o.gExc=gExc;
+	for(i in map) {
+		o.map[i]=getMeta(j=map[i]);
+		(i=j.meta.icon)&&!(i in o.cache)&&(j=getString('cache:'+i))&&(o.cache[i]=btoa(j));
+	}
 	rt.post('GotOptions',o);
+}catch(e){rt.post('ShowMessage',e.stack);}
 });
+rt.listen('GetScript',function(o){rt.post('GotScript',map[o]);});
 rt.listen('SetOption',function(o){
 	var v=(typeof o.data=='string'?setString:setItem)(o.key,o.data);
 	if(o.wkey) window[o.wkey]=v;
@@ -362,12 +373,17 @@ br.onBrowserEvent=function(o){
 	}
 };
 
-function autoCheck(){	// check for updates automatically in 20 seconds
-	var n=Date.now(),lastUpdate=getItem('lastUpdate',0);
-	if(n-lastUpdate>864e5) {
-		setItem('lastUpdate',lastUpdate=n);
-		checkUpdateAll();
+function autoCheck(o){	// check for updates automatically in 20 seconds
+	function check(){
+		if(autoUpdate) {
+			if(Date.now()-lastUpdate>864e5) checkUpdateAll();
+			setTimeout(check,36e5);
+		} else checking=false;
 	}
-	setTimeout(autoCheck,36e5);
+	if(!checking) {checking=true;setTimeout(check,o||0);}
 }
-if(getItem('autoUpdate')) setTimeout(autoCheck,20000);
+var checking=false;
+if(autoUpdate) autoCheck(2e4);
+rt.listen('AutoUpdate',function(o){
+	if(setItem('autoUpdate',autoUpdate=o)) autoCheck();
+});

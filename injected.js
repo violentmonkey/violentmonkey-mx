@@ -61,8 +61,7 @@ function confirmInstall(data){
 }
 if(window===window.top) {
 	window.addEventListener('message',function(e){
-		e=e.data;
-		if(e) switch(e.topic) {
+		if(e=e.data) switch(e.topic) {
 			case 'VM_FrameScripts':
 				e.data.forEach(function(i){if(!_ids[i]){_ids[i]=1;ids.push(i);}});
 				post('GetPopup');
@@ -85,10 +84,11 @@ if(/\.user\.js$/.test(window.location.href)) (function(){
 	}
 	if(document.readyState!='complete') window.addEventListener('load',install,false);
 	else install();
-})(); else if(window.location.host=='userscripts.org') window.addEventListener('click',function(e){
-	if(/\.user\.js$/.test(e.target.href)) {
+})(); else if(['userscripts.org','j.mozest.com'].indexOf(window.location.host)>=0) window.addEventListener('click',function(e){
+	var o=e.target;while(o&&o.tagName!='A') o=o.parentNode;
+	if(o&&/\.user\.js$/.test(o.href)) {
 		e.preventDefault();
-		installCallback=function(){post('InstallScript',e.target.href);};
+		installCallback=function(){post('InstallScript',o.href);};
 		post('InstallScript');
 	}
 },false);
@@ -245,5 +245,6 @@ function wrapper(c){
 	});
 	addProperty('VM_info',{version:0.1});
 }
-if(window!==window.top) unsafeExecute('window.top.postMessage({topic:"VM_FindFrameScripts",data:{source:"'+id+'",origin:window.location.href}},"*");');
+if(window!==window.top)
+	unsafeExecute('if(window.parent.parent===window.top) window.top.postMessage({topic:"VM_FindFrameScripts",data:{source:"'+id+'",origin:window.location.href}},"*");');	// allow injected scripts in iframes within 2 levels
 else post('FindScript',window.location.href);
