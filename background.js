@@ -260,6 +260,7 @@ function fetchCache(url){
 function parseScript(o,d,c){
 	if(o&&!d) d=o.data;
 	var r={status:0,message:'message' in d?d.message:_('Script updated.')},i;
+	if(c) r.item=ids.indexOf(c.id);
 	if(d.status&&d.status!=200) {r.status=-1;r.message=_('Error fetching script!');}
 	else {
 		var meta=parseMeta(d.code);

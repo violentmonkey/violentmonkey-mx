@@ -326,9 +326,9 @@ rt.post('GetOptions',{
 rt.listen('UpdateItem',function(r){
 	if(r.obj) map[r.obj.id]=r.obj;
 	switch(r.status){
-		case 1:addItem(r.obj);updateMove(L.childNodes[r.item-1]);break;
-		case 2:modifyItem(L.childNodes[r.item],r);break;
-		default:loadItem(L.childNodes[r.item],r.obj,r);
+		case 0:loadItem(L.childNodes[r.item],r.obj,r);break;
+		case 1:ids.push(r.obj.id);addItem(r.obj);updateMove(L.childNodes[r.item-1]);break;
+		default:if('item' in r) modifyItem(L.childNodes[r.item],r);
 	}
 	updateMove(L.childNodes[r.item]);
 });
