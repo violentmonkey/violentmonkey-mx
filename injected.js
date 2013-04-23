@@ -24,9 +24,10 @@ function utf8decode (utftext) {
 
 // Messages
 var rt=window.external.mxGetRuntime(),id=Date.now()+Math.random().toString().substr(1);
-function unsafeExecute(scr){
+function unsafeExecute(d,c){
 	var p=document.createElement("script");
-	p.innerHTML=scr;
+	if(c) c='if('+c+')'; else c='';
+	p.innerHTML=c+'Window.prototype.postMessage.call(window.top,'+JSON.stringify(d)+',"*");';
 	document.documentElement.appendChild(p);
 	document.documentElement.removeChild(p);
 }
@@ -61,18 +62,21 @@ function confirmInstall(data){
 }
 if(window===window.top) {
 	window.addEventListener('message',function(e){
-		if(e=e.data) switch(e.topic) {
+		var d=e.data;
+		if(d) switch(d.topic) {
 			case 'VM_FrameScripts':
-				e.data.forEach(function(i){if(!_ids[i]){_ids[i]=1;ids.push(i);}});
+				d.data.forEach(function(i){if(!_ids[i]){_ids[i]=1;ids.push(i);}});
 				post('GetPopup');
 				break;
 			case 'VM_GetPopup':
 				setPopup();
 				break;
 			case 'VM_FindFrameScripts':
-				post('FindScript',window.location.href,e.data);
+				post('FindScript',window.location.href,d.data);
 				break;
+			default: d=0;
 		}
+		if(d) {e.preventDefault();e.stopPropagation();}
 	},false);
 }
 
@@ -140,7 +144,7 @@ function loadScript(o){
 	});
 	cache=o.cache;
 	values=o.values;
-	if(window!==window.top) unsafeExecute('window.top.postMessage({topic:"VM_FrameScripts",data:'+JSON.stringify(ids)+'},"*");');
+	if(window!==window.top) unsafeExecute({topic:'VM_FrameScripts',data:ids});
 	runStart();
 	window.addEventListener('DOMNodeInserted',runBody,true);
 	window.addEventListener('DOMContentLoaded',runEnd,false);
@@ -246,5 +250,5 @@ function wrapper(c){
 	addProperty('VM_info',{version:0.1});
 }
 if(window!==window.top)
-	unsafeExecute('if(window.parent.parent===window.top) window.top.postMessage({topic:"VM_FindFrameScripts",data:{source:"'+id+'",origin:window.location.href}},"*");');	// allow injected scripts in iframes within 2 levels
+	unsafeExecute({topic:'VM_FindFrameScripts',data:{source:id,origin:window.location.href}},'window.parent.parent===window.top');	// allow injected scripts in iframes within 2 levels
 else post('FindScript',window.location.href);

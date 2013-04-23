@@ -33,9 +33,7 @@ function menuScript(i) {
 function getPopup(){
 	getPopup.flag++;	// avoid frequent asking for popup menu
 	setTimeout(function(){
-		if(!--getPopup.flag) {
-			br.executeScript('unsafeExecute(\'window.top.postMessage({topic:"VM_GetPopup"},"*");\');');
-		}
+		if(!--getPopup.flag) br.executeScript('unsafeExecute({topic:"VM_GetPopup"});');
 	},200);
 }
 getPopup.flag=0;
