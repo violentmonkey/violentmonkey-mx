@@ -324,11 +324,12 @@ rt.post('GetOptions',{
 	autoUpdate:0
 });
 rt.listen('UpdateItem',function(r){
+	if(!('item' in r)||r.item<0) return;
 	if(r.obj) map[r.obj.id]=r.obj;
 	switch(r.status){
 		case 0:loadItem(L.childNodes[r.item],r.obj,r);break;
 		case 1:ids.push(r.obj.id);addItem(r.obj);updateMove(L.childNodes[r.item-1]);break;
-		default:if('item' in r) modifyItem(L.childNodes[r.item],r);
+		default:modifyItem(L.childNodes[r.item],r);
 	}
 	updateMove(L.childNodes[r.item]);
 });
