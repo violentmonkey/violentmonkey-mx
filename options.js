@@ -83,7 +83,7 @@ L.onclick=function(e){
 				p.classList.add('disabled');
 				o.innerText=_('Enable');
 			}
-			rt.post('SaveScript',e);
+			rt.post('EnableScript',{id:e.id,data:e.enabled});
 			break;
 		case 'remove':
 			rt.post('RemoveScript',i);
