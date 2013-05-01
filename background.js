@@ -121,14 +121,21 @@ function removeScript(i){
 
 function str2RE(s){return s.replace(/(\.|\?|\/)/g,'\\$1').replace(/\*/g,'.*?');}
 function autoReg(s,w){	// w: forced wildcard mode
-	if(!w&&/^\/.*\/$/.test(s)) return RegExp(s.slice(1,-1));	// Regular-expression
+	if(!w&&s[0]=='/'&&s.slice(-1)=='/') return RegExp(s.slice(1,-1));	// Regular-expression
 	return RegExp('^'+str2RE(s)+'$');	// String with wildcards
 }
 var match_reg=/(.*?):\/\/([^\/]*)\/(.*)/;
 function matchTest(s,u){
 	var m=s.match(match_reg);
-	if(m&&u) for(var i=0;i<3;i++) if(!autoReg(m[i],1).test(u[i])) {m=0;break;}
-	return u&&!!m;
+	if(!m) return false;
+	if(!autoReg(m[0],1).test(u[0])) return false;		// scheme
+	if(m[1]!='*') {	// host
+		if(m[1].slice(0,2)=='*.') {
+			if(u[1]!=m[1].slice(2)&&u[1].slice(1-m[1].length)!=m[1].slice(1)) return false;
+		} else if(m[1]!=u[1]) return false;
+	}
+	if(!autoReg(m[2],1).test(u[2])) return false;		// pathname
+	return true;
 }
 function testURL(url,e){
 	var f=true,i,inc=[],exc=[],mat=[],u=url.match(match_reg);
