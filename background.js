@@ -128,13 +128,17 @@ var match_reg=/(.*?):\/\/([^\/]*)\/(.*)/;
 function matchTest(s,u){
 	var m=s.match(match_reg);
 	if(!m) return false;
-	if(!autoReg(m[1],1).test(u[1])) return false;		// scheme
-	if(m[2]!='*') {	// host
+	// scheme
+	if(m[1]=='*') {if(u[1]!='http'&&u[1]!='https') return false;}	// * = http|https
+	else if(m[1]!=u[1]) return false;
+	// host
+	if(m[2]!='*') {
 		if(m[2].slice(0,2)=='*.') {
 			if(u[2]!=m[2].slice(2)&&u[2].slice(1-m[2].length)!=m[2].slice(1)) return false;
 		} else if(m[2]!=u[2]) return false;
 	}
-	if(!autoReg(m[3],1).test(u[3])) return false;		// pathname
+	// pathname
+	if(!autoReg(m[3],1).test(u[3])) return false;
 	return true;
 }
 function testURL(url,e){

@@ -23,7 +23,7 @@ function utf8decode (utftext) {
 }
 
 // Messages
-var rt=window.external.mxGetRuntime(),id=Date.now()+Math.random().toString().substr(1);
+var rt=window.external.mxGetRuntime(),id=Date.now()+Math.random().toString().slice(1);
 function unsafeExecute(d,c){
 	var p=document.createElement("script");
 	if(c) c='if('+c+')'; else c='';
@@ -116,7 +116,7 @@ function run_code(c){
 	this.code=code.join('\n');
 	try{with(w) eval(this.code);}catch(e){
 		i=e.stack.lastIndexOf('\n    at run_code.eval');
-		if(i>0) e.stack=e.stack.substr(0,i).replace(/eval at run_code \(mxaddon-pkg:[^\)]*\), /g,'');
+		if(i>0) e.stack=e.stack.slice(0,i).replace(/eval at run_code \(mxaddon-pkg:[^\)]*\), /g,'');
 		e.message='Error running script: '+(c.custom.name||c.meta.name||c.id);
 		console.log(e+'\n'+e.stack);
 	}
@@ -191,15 +191,19 @@ function wrapper(c){
 	// GM functions
 	// Reference: http://wiki.greasespot.net/Greasemonkey_Manual:API
 	addProperty('GM_deleteValue',function(key){delete value[key];post('SetValue',{id:c.id,data:value});});
-	addProperty('GM_getValue',function(key,def){
-		var v=value[key];
-		if(v==null) return def;
-		def=v.substr(1);
-		switch(v[0]){
-			case 'n': return parseInt(def,10);
-			case 'b': return !!JSON.parse(def);
-			default: return def;
+	addProperty('GM_getValue',function(k,d){
+		var v=value[k];
+		if(v) {
+			k=v[0];
+			v=v.slice(1);
+			switch(k){
+				case 'n': d=Number(v);break;
+				case 'b': d=v=='true';break;
+				case 'o': try{d=JSON.parse(v);}catch(e){console.log(e);}break;
+				default: d=v;
+			}
 		}
+		return d;
 	});
 	addProperty('GM_listValues',function(){
 		var v=[],i;
@@ -207,10 +211,10 @@ function wrapper(c){
 		return v;
 	});
 	addProperty('GM_setValue',function(key,val){
-		switch(typeof val){
-			case 'number':val='n'+val;break;
-			case 'boolean':val='b'+val;break;
-			default:val='s'+val;
+		var t=(typeof val)[0];
+		switch(t){
+			case 'o':val=t+JSON.stringify(val);break;
+			default:val=t+val;
 		}
 		value[key]=val;post('SetValue',{id:c.id,data:value});
 	});
