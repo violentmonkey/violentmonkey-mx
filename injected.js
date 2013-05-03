@@ -190,6 +190,27 @@ function wrapper(c){
 	addProperty('XMLHttpRequest',unsafeWindow.XMLHttpRequest);
 	// GM functions
 	// Reference: http://wiki.greasespot.net/Greasemonkey_Manual:API
+	addProperty('GM_info',function(){
+		var m=c.code.match(/\/\/\s+==UserScript==\s+([\s\S]*?)\/\/\s+==\/UserScript==\s/);
+		m=m?m[1]:'';
+		return {
+			script:{
+				description:c.meta.description||'',
+				excludes:c.meta.exclude,
+				includes:c.meta.include,
+				matches:c.meta.match,
+				name:c.meta.name||'',
+				namespace:c.meta.namespace||'',
+				resources:c.meta.resources,
+				'run-at':c.meta['run-at']||'document-end',
+				unwrap:false,
+				version:c.meta.version||'',
+			},
+			scriptMetaStr:m,
+			scriptWillUpdate:c.update,
+			version:undefined,
+		};
+	});
 	addProperty('GM_deleteValue',function(key){delete value[key];post('SetValue',{id:c.id,data:value});});
 	addProperty('GM_getValue',function(k,d){
 		var v=value[k];
@@ -226,7 +247,7 @@ function wrapper(c){
 	});
 	addProperty('GM_getResourceURL',function(name){
 		var b=getCache(name);
-		if(b) b='data:;base64,'+btoa(b);
+		if(b) b='data:;base64,'+window.btoa(b);
 		return b;
 	});
 	addProperty('GM_addStyle',function(css){

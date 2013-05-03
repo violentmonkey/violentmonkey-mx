@@ -243,7 +243,7 @@ function parseMeta(d,meta){
 		if(o==1&&k[0]=='@') k=k.slice(1); else return;
 		v=v.replace(/^\s+|\s+$/g,'');
 		if(meta[k]&&meta[k].push) meta[k].push(v);
-		else meta[k]=v;
+		else if(!meta[k]||typeof meta[k]=='string') meta[k]=v;
 	});
 	meta.resource.forEach(function(i){
 		o=i.match(/^(\w+)\s+(.*)/);
