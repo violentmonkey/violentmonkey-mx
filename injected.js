@@ -173,46 +173,54 @@ function wrapper(c){
 			if(typeof window[i]=='function') {
 				if(itemWrapper) t[i]=itemWrapper(window,i,wrapWindow);
 				else t[i]=window[i];
-			} else {
-				t.__defineGetter__(i,function(){return wrapWindow(window[i]);});
-				t.__defineSetter__(i,function(v){window[i]=v;});
-			}
+			} else Object.defineProperty(t,i,{
+				get:function(){return wrapWindow(window[i]);},
+				set:function(v){window[i]=v;},
+			});
 		}catch(e){}
 	}
 	var itemWrapper=null;
 	Object.getOwnPropertyNames(window).forEach(wrapItem);
 	itemWrapper=wrapFunction;
-	for(n=Object.getPrototypeOf(window);n;n=Object.getPrototypeOf(n)) Object.getOwnPropertyNames(n).forEach(wrapItem);
+	n=window;while(n=Object.getPrototypeOf(n)) Object.getOwnPropertyNames(n).forEach(wrapItem);
 
-	function addProperty(name,prop){t[name]=prop;t[name].toString=propertyToString;elements.push(name);}
+	function getCache(name){for(var i in resources) if(name==i) return cache[resources[i]];}
+	function addProperty(name,prop,obj){
+		if('value' in prop) prop.writable=false;
+		prop.configurable=false;
+		if(!obj) {obj=t;elements.push(name);}
+		Object.defineProperty(obj,name,prop);
+		if(typeof obj[name]=='function') obj[name].toString=propertyToString;
+	}
 	var resources=c.meta.resources||{};elements=[];
-	addProperty('unsafeWindow',unsafeWindow);
-	addProperty('XMLHttpRequest',unsafeWindow.XMLHttpRequest);
+	addProperty('XMLHttpRequest',{value:unsafeWindow.XMLHttpRequest});
 	// GM functions
 	// Reference: http://wiki.greasespot.net/Greasemonkey_Manual:API
-	addProperty('GM_info',function(){
-		var m=c.code.match(/\/\/\s+==UserScript==\s+([\s\S]*?)\/\/\s+==\/UserScript==\s/);
-		m=m?m[1]:'';
-		return {
-			script:{
-				description:c.meta.description||'',
-				excludes:c.meta.exclude,
-				includes:c.meta.include,
-				matches:c.meta.match,
-				name:c.meta.name||'',
-				namespace:c.meta.namespace||'',
-				resources:c.meta.resources,
-				'run-at':c.meta['run-at']||'document-end',
-				unwrap:false,
-				version:c.meta.version||'',
-			},
-			scriptMetaStr:m,
-			scriptWillUpdate:c.update,
-			version:undefined,
-		};
-	});
-	addProperty('GM_deleteValue',function(key){delete value[key];post('SetValue',{id:c.id,data:value});});
-	addProperty('GM_getValue',function(k,d){
+	addProperty('GM_info',{get:function(){
+		var m=c.code.match(/\/\/\s+==UserScript==\s+([\s\S]*?)\/\/\s+==\/UserScript==\s/),
+				script={
+					description:c.meta.description||'',
+					excludes:c.meta.exclude.concat(),
+					includes:c.meta.include.concat(),
+					matches:c.meta.match.concat(),
+					name:c.meta.name||'',
+					namespace:c.meta.namespace||'',
+					resources:{},
+					'run-at':c.meta['run-at']||'document-end',
+					unwrap:false,
+					version:c.meta.version||'',
+				},
+				o={};
+		addProperty('script',{value:{}},o);
+		addProperty('scriptMetaStr',{value:m?m[1]:''},o);
+		addProperty('scriptWillUpdate',{value:c.update},o);
+		addProperty('version',{value:undefined},o);
+		for(m in script) addProperty(m,{value:script[m]},o.script);
+		for(m in c.meta.resources) addProperty(m,{value:c.meta.resources[m]},o.script.resources);
+		return o;
+	}});
+	addProperty('GM_deleteValue',{value:function(key){delete value[key];post('SetValue',{id:c.id,data:value});}});
+	addProperty('GM_getValue',{value:function(k,d){
 		var v=value[k];
 		if(v) {
 			k=v[0];
@@ -225,44 +233,39 @@ function wrapper(c){
 			}
 		}
 		return d;
-	});
-	addProperty('GM_listValues',function(){
-		var v=[],i;
-		for(i in value) v.push(i);
-		return v;
-	});
-	addProperty('GM_setValue',function(key,val){
+	}});
+	addProperty('GM_listValues',{value:function(){return Object.getOwnPropertyNames(value);}});
+	addProperty('GM_setValue',{value:function(key,val){
 		var t=(typeof val)[0];
 		switch(t){
 			case 'o':val=t+JSON.stringify(val);break;
 			default:val=t+val;
 		}
 		value[key]=val;post('SetValue',{id:c.id,data:value});
-	});
-	function getCache(name){for(var i in resources) if(name==i) return cache[resources[i]];}
-	addProperty('GM_getResourceText',function(name){
+	}});
+	addProperty('GM_getResourceText',{value:function(name){
 		var b=getCache(name);
 		if(b) b=utf8decode(b);
 		return b;
-	});
-	addProperty('GM_getResourceURL',function(name){
+	}});
+	addProperty('GM_getResourceURL',{value:function(name){
 		var b=getCache(name);
 		if(b) b='data:;base64,'+window.btoa(b);
 		return b;
-	});
-	addProperty('GM_addStyle',function(css){
+	}});
+	addProperty('GM_addStyle',{value:function(css){
 		if(!document.head) return;
 		var v=document.createElement('style');
 		v.innerHTML=css;
 		document.head.appendChild(v);
 		return v;
-	});
-	addProperty('GM_log',console.log);
-	addProperty('GM_openInTab',function(url){window.open(url);});
-	addProperty('GM_registerMenuCommand',function(cap,func,acc){
+	}});
+	addProperty('GM_log',{value:console.log});
+	addProperty('GM_openInTab',{value:function(url){window.open(url);}});
+	addProperty('GM_registerMenuCommand',{value:function(cap,func,acc){
 		menu.push([cap,acc]);command[cap]=func;post('GetPopup');
-	});
-	addProperty('GM_xmlhttpRequest',function(details){
+	}});
+	addProperty('GM_xmlhttpRequest',{value:function(details){
 		function callback(e){var c=details['on'+e.type];if(c) c(req);}
 		var req=new XMLHttpRequest();
 		req.open(details.method,details.url,!details.synchronous,details.user,details.password);
@@ -271,8 +274,7 @@ function wrapper(c){
 		['abort','error','load','progress','readystatechange','timeout'].forEach(function(i){req['on'+i]=callback;});
 		req.send(details.data||'');
 		return req;
-	});
-	addProperty('VM_info',{version:0.1});
+	}});
 }
 if(window!==window.top)
 	unsafeExecute({topic:'VM_FindFrameScripts',data:{source:id,origin:window.location.href}},'window.parent.parent===window.top');	// allow injected scripts in iframes within 2 levels
