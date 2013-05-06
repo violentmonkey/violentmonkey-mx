@@ -60,23 +60,26 @@ function init(){
 	getItem('installFile',true);
 	getItem('compress',true);
 	getItem('withData',true);
+	getString('search',_('Search$1'));
 	autoUpdate=getItem('autoUpdate',true);
 	isApplied=getItem('isApplied',true);
 	lastUpdate=getItem('lastUpdate',0);
-	getString('search',_('Search$1'));
-	ids=[];map={};gExc=getItem('gExc',[]);
-	getItem('ids',[]).forEach(function(i){
-		var o=getItem('vm:'+i);
-		if(o) {
-			if(!o.meta) o.meta=newMeta();	// fix unknown bugs
-			ids.push(i);map[i]=o;
-		}
-	});
+	gExc=getItem('gExc',[]);
 }
 var isApplied,ids,map,gExc,lastUpdate,autoUpdate;
 init();
+ids=[];map={};
+getItem('ids',[]).forEach(function(i){
+	var o=getItem('vm:'+i);
+	if(o) {
+		if(!o.meta) o.meta=newMeta();	// fix unknown bugs
+		ids.push(i);map[i]=o;
+	}
+});
 
-rt.listen('Clear',function(){localStorage.clear();init();rt.post('Cleared');});
+rt.listen('Clear',function(){
+	localStorage.clear();init();rt.post('Cleared');ids=[];map={};
+});
 rt.listen('Vacuum',function(){
 	var k,s,i,cc={},ns={};
 	ids.forEach(function(i){
@@ -308,7 +311,7 @@ rt.listen('ImportZip',function(b){
 		if(o.dir) return;
 		var c=null,v,i;
 		try{
-			if(v=vm[o.name]) {
+			if(vm.scripts&&(v=vm.scripts[o.name.slice(0,-8)])) {
 				c=map[v.id];
 				if(c) for(i in v) c[i]=v[i];
 				else c=v;
@@ -318,20 +321,36 @@ rt.listen('ImportZip',function(b){
 		}catch(e){console.log('Error importing data: '+o.name+'\n'+e);}
 	});
 	if(vm.values) for(z in vm.values) setItem('val:'+z,vm.values[z]);
-	rt.post('ShowMessage',format(_('$1 item(s) are imported.'),count));
+	if(vm.settings) {
+		for(z in vm.settings) setString(z,vm.settings[z]);
+		init();
+	}
+	rt.post('Reload',format(_('$1 item(s) are imported.'),count));
 });
 rt.listen('ExportZip',function(o){
-	var z=new JSZip(),n,_n,names={},values={},vm={};
+	var z=new JSZip(),n,_n,names={},vm={scripts:{}};
+	if(o.withData) vm.values={};
 	o.data.forEach(function(c){
 		var j=0;c=map[c];
 		n=_n=c.custom.name||c.meta.name||'Noname';
-		while(names[n]) n=_n+'_'+(++j);names[n]=1;n+='.user.js';
-		z.file(n,c.code);
-		vm[n]={id:c.id,custom:c.custom,enabled:c.enabled,update:c.update};
+		while(names[n]) n=_n+'_'+(++j);names[n]=1;
+		z.file(n+'.user.js',c.code);
+		vm.scripts[n]={id:c.id,custom:c.custom,enabled:c.enabled,update:c.update};
 		n=getNameURI(c);
-		if(o.withData&&(_n=getItem('val:'+n))) values[n]=_n;
+		if(o.withData&&(_n=getItem('val:'+n))) vm.values[n]=_n;
 	});
-	if(o.withData) vm.values=values;
+	vm.settings={
+		isApplied:0,
+		installFile:0,
+		autoUpdate:0,
+		search:0,
+		showDetails:0,
+		editorType:0,
+		compress:0,
+		withData:0,
+		gExc:0,
+	};
+	for(n in vm.settings) vm.settings[n]=getString(n);
 	z.file('ViolentMonkey',JSON.stringify(vm));
 	vm={};if(o.deflate) vm.compression='DEFLATE';
 	n=z.generate(vm);

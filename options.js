@@ -2,6 +2,7 @@ function $(i){return document.getElementById(i);}
 var N=$('main'),L=$('sList'),O=$('overlay'),ids,map={};
 function split(t){return t.replace(/^\s+|\s+$/g,'').split(/\s*\n\s*/).filter(function(e){return e;});}
 rt.listen('ShowMessage',function(o){alert(o);});
+rt.listen('Reload',function(o){alert(o);location.reload();});
 
 // Main options
 function updateMove(d){
