@@ -36,7 +36,7 @@ function menuScript(i) {
 function getPopup(){
 	getPopup.flag++;	// avoid frequent asking for popup menu
 	setTimeout(function(){
-		if(!--getPopup.flag) br.executeScript('unsafeExecute({topic:"VM_GetPopup"});');
+		if(!--getPopup.flag) br.executeScript('setPopup();');
 	},200);
 }
 getPopup.flag=0;

@@ -24,13 +24,6 @@ function utf8decode (utftext) {
 
 // Messages
 var rt=window.external.mxGetRuntime(),id=Date.now()+Math.random().toString().slice(1);
-function unsafeExecute(d,c){
-	var p=document.createElement("script");
-	if(c) c='if('+c+')'; else c='';
-	p.innerHTML=c+'Window.prototype.postMessage.call(window.top,'+JSON.stringify(d)+',"*");';
-	document.documentElement.appendChild(p);
-	document.documentElement.removeChild(p);
-}
 function post(topic,data,o){
 	if(!o) o={};
 	if(!o.source) o.source=id;
@@ -59,25 +52,6 @@ function showMessage(data){
 function confirmInstall(data){
 	if(!data||!confirm(data)) return;
 	if(installCallback) installCallback(); else post('ParseScript',{code:document.body.innerText});
-}
-if(window===window.top) {
-	window.addEventListener('message',function(e){
-		var d=e.data;
-		if(d) switch(d.topic) {
-			case 'VM_FrameScripts':
-				d.data.forEach(function(i){if(!_ids[i]){_ids[i]=1;ids.push(i);}});
-				post('GetPopup');
-				break;
-			case 'VM_GetPopup':
-				setPopup();
-				break;
-			case 'VM_FindFrameScripts':
-				post('FindScript',window.location.href,d.data);
-				break;
-			default: d=0;
-		}
-		if(d) {e.preventDefault();e.stopPropagation();}
-	},false);
 }
 
 // For UserScripts installation
@@ -144,7 +118,7 @@ function loadScript(o){
 	});
 	cache=o.cache;
 	values=o.values;
-	if(window!==window.top) unsafeExecute({topic:'VM_FrameScripts',data:ids});
+	// TODO: post scripts to top
 	runStart();
 	window.addEventListener('DOMNodeInserted',runBody,true);
 	window.addEventListener('DOMContentLoaded',runEnd,false);
@@ -276,6 +250,4 @@ function wrapper(c){
 		return req;
 	}});
 }
-if(window!==window.top)
-	unsafeExecute({topic:'VM_FindFrameScripts',data:{source:id,origin:window.location.href}},'window.parent.parent===window.top');	// allow injected scripts in iframes within 2 levels
-else post('FindScript',window.location.href);
+post('FindScript',window.location.href);
