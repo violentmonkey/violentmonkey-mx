@@ -214,7 +214,7 @@ rt.listen('SaveScript',saveScript);
 rt.listen('EnableScript',function(o,e){
 	if(o.id) {
 		e=map[o.id];e.enabled=o.data;saveScript(e);
-		rt.post('UpdateItem',{item:ids.indexOf(o.id),obj:o,status:0});
+		rt.post('UpdateItem',{item:ids.indexOf(o.id),obj:getMeta(e),status:0});
 	} else setItem('isApplied',isApplied=o.data);
 });
 rt.listen('SetValue',function(o){setItem('val:'+getNameURI(map[o.data.id]),o.data.data);});
