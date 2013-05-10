@@ -272,8 +272,9 @@ function fetchCache(url){
 }
 
 function parseScript(o,d,c){
-	if(o&&!d) d=o.data;
-	var r={status:0,message:'message' in d?d.message:_('Script updated.')},i;
+	var u=null,i,r={status:0};
+	if(o) {if(d) u=o.data; else d=o.data;}
+	r.message='message' in d?d.message:_('Script updated.');
 	if(c) r.item=ids.indexOf(c.id);
 	if(d.status&&d.status!=200) {r.status=-1;r.message=_('Error fetching script!');}
 	else {
@@ -294,6 +295,7 @@ function parseScript(o,d,c){
 		if(i<0){r.status=1;r.message=_('Script installed.');i=ids.length;}
 		c.meta=meta;c.code=d.code;r.item=i;r.obj=getMeta(c);
 		if(o&&!c.meta.homepage&&!c.custom.homepage&&!/^(file|data):/.test(o.origin)) c.custom.homepage=o.origin;
+		if(u&&!c.meta.downloadURL&&!c.custom.downloadURL) c.custom.downloadURL=u;
 		saveScript(c);
 		meta.require.forEach(fetchCache);	// @require
 		for(d in meta.resources) fetchCache(meta.resources[d]);	// @resource
@@ -358,10 +360,7 @@ rt.listen('ExportZip',function(o){
 });
 
 rt.listen('ParseScript',function(o){
-	if(o.url) fetchURL(o.url,function(){
-		parseScript(null,{status:this.status,id:o.id,code:this.responseText});
-	}); else if(o.source) parseScript(o);
-	else parseScript(null,o);
+	if(o.source) parseScript(o); else parseScript(null,o);
 });
 rt.listen('InstallScript',function(o){
 	if(!o.data) {
