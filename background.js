@@ -53,6 +53,7 @@ function init(){
 var isApplied,ids,map,gExc,lastUpdate,autoUpdate,autoBackup,
 		settings={o:['showDetails','installFile','compress','withData','autoBackup','autoUpdate','isApplied','lastUpdate','gExc'],s:['search']};
 (function(){
+	if(getString('ids')) return;
 	// upgrade data from Violentmonkey 1 irreversibly
 	function set(l,f){l.forEach(function(i){if(i in v) f(i,v[i]);});}
 	var k,v,o;
@@ -69,7 +70,7 @@ var isApplied,ids,map,gExc,lastUpdate,autoUpdate,autoBackup,
 		setString('search',v.search);
 	}catch(e){}
 	// restore data from backup
-	if(v=rt.storage.getConfig('backup')) for(k in v) localStorage.setItem(k,v[k]);
+	if(v=rt.storage.getConfig('backup')) try{for(k in v) localStorage.setItem(k,v[k]);}catch(e){}
 })();
 init();ids=[];map={};
 getItem('ids',[]).forEach(function(i){
@@ -326,8 +327,7 @@ rt.listen('ImportZip',function(b){
 		}catch(e){console.log('Error importing data: '+o.name+'\n'+e);}
 	});
 	if(vm.values) for(z in vm.values) setItem('val:'+z,vm.values[z]);
-	function set(l,f){l.forEach(function(i){if(i in vm.settings) f(i,vm.settings[i]);});}
-	if(vm.settings) {set(settings.o,setItem);set(settings.s,setString);init();}
+	if(vm.settings) {for(z in vm.settings) setString(z,vm.settings[z]);init();}
 	rt.post('Reload',format(_('$1 item(s) are imported.'),count));
 });
 rt.listen('ExportZip',function(o){
@@ -343,8 +343,7 @@ rt.listen('ExportZip',function(o){
 		if(o.withData&&(_n=getItem('val:'+n))) vm.values[n]=_n;
 	});
 	vm.settings={};
-	function get(l,f){l.forEach(function(i){vm.settings[i]=f(i);});}
-	get(settings.o,getItem);get(settings.s,getString);
+	settings.o.concat(settings.s).forEach(function(i){vm.settings[i]=getString(i);});
 	z.file('ViolentMonkey',JSON.stringify(vm));
 	vm={};if(o.deflate) vm.compression='DEFLATE';
 	n=z.generate(vm);
@@ -371,7 +370,7 @@ try{	// debug
 		(i=o.meta.icon)&&!(i in r.cache)&&(o=getString('cache:'+i))&&(r.cache[i]=btoa(o));
 	}
 	rt.post('GotOptions',r);
-}catch(e){rt.post('ShowMessage',e.stack);}
+}catch(e){notify(e+'\n'+e.stack);}
 });
 rt.listen('GetScript',function(o){rt.post('GotScript',map[o]);});
 rt.listen('SetOption',function(o){

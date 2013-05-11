@@ -33,3 +33,7 @@ function setItem(key,val){
 	setString(key,JSON.stringify(val));
 	return val;
 }
+
+function notify(msg){
+	window.webkitNotifications.createNotification('',_('Violentmonkey'),msg).show();
+}
