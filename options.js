@@ -152,6 +152,7 @@ var A=$('advanced');
 $('bAdvanced').onclick=function(){showDialog(A);};
 $('cInstall').onchange=function(){rt.post('SetOption',{key:'installFile',data:this.checked});};
 $('cUpdate').onchange=function(){rt.post('AutoUpdate',this.checked);};
+$('cBackup').onchange=function(){rt.post('SetOption',{key:'autoBackup',data:this.checked});};
 $('bDefSearch').onclick=function(){$('tSearch').value=_('Search$1');};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
 $('aImport').onchange=function(e){
@@ -307,23 +308,17 @@ try{	// debug
 	ids=o.ids;map=o.map;cache=o.cache;L.innerHTML='';
 	ids.forEach(function(i){addItem(map[i]);});
 	updateMove(L.firstChild);updateMove(L.lastChild);
-	$('cInstall').checked=JSON.parse(o.installFile);
-	$('cUpdate').checked=JSON.parse(o.autoUpdate);
+	$('cInstall').checked=o.installFile;
+	$('cUpdate').checked=o.autoUpdate;
+	$('cBackup').checked=o.autoBackup;
 	$('tSearch').value=o.search;
 	$('tExclude').value=o.gExc.join('\n');
-	if(!($('cDetail').checked=JSON.parse(o.showDetails))) L.classList.add('simple');
-	xC.checked=JSON.parse(o.compress);
-	xD.checked=JSON.parse(o.withData);
+	if(!($('cDetail').checked=o.showDetails)) L.classList.add('simple');
+	xC.checked=o.compress;
+	xD.checked=o.withData;
 }catch(e){alert(e.stack);}
 });
-rt.post('GetOptions',{
-	installFile:0,
-	search:0,
-	showDetails:0,
-	compress:0,
-	withData:0,
-	autoUpdate:0
-});
+rt.post('GetOptions',['showDetails','installFile','compress','withData','backup','autoUpdate','search']);
 rt.listen('UpdateItem',function(r){
 	if(!('item' in r)||r.item<0) return;
 	if(r.obj) map[r.obj.id]=r.obj;
