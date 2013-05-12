@@ -81,10 +81,7 @@ var isApplied,ids,map,gExc,lastUpdate,autoUpdate,autoBackup,
 init();ids=[];map={};
 getItem('ids',[]).forEach(function(i){
 	var o=getItem('vm:'+i);
-	if(o) {
-		if(!o.meta) o.meta=newMeta();	// fix unknown bugs
-		ids.push(i);map[i]=o;
-	}
+	if(o) {ids.push(i);map[i]=o;}
 });
 
 rt.listen('Clear',function(){
@@ -108,15 +105,14 @@ rt.listen('Vacuum',function(){
 	rt.post('Vacuumed');
 });
 
-function newMeta(){return {name:'New Script',namespace:''};}
 function newScript(save){
 	var r={
 		custom:{},
-		meta:newMeta(),
 		enabled:1,
 		update:1,
 		code:'// ==UserScript==\n// @name New Script\n// ==/UserScript==\n'
 	};
+	r.meta=parseMeta(r.code);
 	r.id=Date.now()+Math.random().toString().substr(1);
 	if(save) saveScript(r);
 	return r;
@@ -285,7 +281,7 @@ function parseScript(o,d,c){
 	if(o) {if(d) u=o.data; else d=o.data;}
 	r.message='message' in d?d.message:_('Script updated.');
 	if(c) r.item=ids.indexOf(c.id);
-	if(d.status&&d.status!=200) {r.status=-1;r.message=_('Error fetching script!');}
+	if(d.status&&d.status!=200||!d.code) {r.status=-1;r.message=_('Error fetching script!');}
 	else {
 		var meta=parseMeta(d.code);
 		if(!c&&!d.id) {
