@@ -70,7 +70,13 @@ var isApplied,ids,map,gExc,lastUpdate,autoUpdate,autoBackup,
 		setString('search',v.search);
 	}catch(e){}
 	// restore data from backup
-	if(v=rt.storage.getConfig('backup')) try{for(k in v) localStorage.setItem(k,v[k]);}catch(e){}
+	if(v=rt.storage.getConfig('backup')) try{
+		v=JSON.parse(v);
+		for(k in v) {
+			if(/^cache:/.test(k)) v[k]=atob(v[k]);
+			localStorage.setItem(k,v[k]);
+		}
+	}catch(e){}
 })();
 init();ids=[];map={};
 getItem('ids',[]).forEach(function(i){
@@ -414,7 +420,12 @@ rt.listen('AutoUpdate',function(o){
 function backup(){
 	function save(){
 		if(!--backup.count) {
-			rt.storage.setConfig('backup',JSON.stringify(localStorage));
+			var r={},i,k;
+			for(i=0;k=localStorage.key(i);i++) {
+				r[k]=localStorage.getItem(k);
+				if(/^cache:/.test(k)) r[k]=btoa(r[k]);
+			}
+			rt.storage.setConfig('backup',JSON.stringify(r));
 			_changed=false;
 		}
 	}
