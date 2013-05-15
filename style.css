@@ -63,7 +63,7 @@ fieldset{border-radius:5px;}
 .list .selected{background:gray;color:white;}
 #export .list{width:400px;height:420px;}
 #xOptions{display:inline-block;position:relative;}
-#xOptions>div{display:none;position:absolute;padding:10px;background:silver;box-shadow:5px 10px 15px rgba(0,0,0,0.4);border:1px solid gray;}
+#xOptions>div{display:none;position:absolute;padding:10px;background:#eee;box-shadow:5px 10px 15px rgba(0,0,0,0.4);border:1px solid gray;}
 #xOptions>div>label{display:block;white-space:nowrap;}
 #xOptions:hover>div{display:block;}
 .menu>div{cursor:pointer;padding:5px;display:block;}

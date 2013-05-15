@@ -45,13 +45,12 @@ function init(){
 	getItem('withData',true);
 	getString('search',_('Search$1'));
 	autoUpdate=getItem('autoUpdate',true);
-	autoBackup=getItem('autoBackup',false);
 	isApplied=getItem('isApplied',true);
 	lastUpdate=getItem('lastUpdate',0);
 	gExc=getItem('gExc',[]);
 }
-var isApplied,ids,map,gExc,lastUpdate,autoUpdate,autoBackup,
-		settings={o:['showDetails','installFile','compress','withData','autoBackup','autoUpdate','isApplied','lastUpdate','gExc'],s:['search']};
+var isApplied,ids,map,gExc,lastUpdate,autoUpdate,
+		settings={o:['showDetails','installFile','compress','withData','autoUpdate','isApplied','lastUpdate','gExc'],s:['search']};
 (function(){
 	if(getString('ids')) return;
 	// upgrade data from Violentmonkey 1 irreversibly
@@ -68,14 +67,6 @@ var isApplied,ids,map,gExc,lastUpdate,autoUpdate,autoBackup,
 		}
 		for(k in v.cache) setString('cache:'+k,v.cache[k]);
 		setString('search',v.search);
-	}catch(e){}
-	// restore data from backup
-	if(v=rt.storage.getConfig('backup')) try{
-		v=JSON.parse(v);
-		for(k in v) {
-			if(/^cache:/.test(k)) v[k]=atob(v[k]);
-			localStorage.setItem(k,v[k]);
-		}
 	}catch(e){}
 })();
 init();ids=[];map={};
@@ -375,8 +366,8 @@ try{	// debug
 });
 rt.listen('GetScript',function(o){rt.post('GotScript',map[o]);});
 rt.listen('SetOption',function(o){
-	var v=(typeof o.data=='string'?setString:setItem)(o.key,o.data);
-	if(o.wkey) window[o.wkey]=v;
+	if(o.wkey) window[o.wkey]=o.data;
+	(typeof o.data=='string'?setString:setItem)(o.key,o.data);
 });
 
 var optionsURL=new RegExp('^'+(rt.getPrivateUrl()+'options.html').replace(/\./g,'\\.'));
@@ -410,24 +401,3 @@ if(autoUpdate) autoCheck(2e4);
 rt.listen('AutoUpdate',function(o){
 	if(setItem('autoUpdate',autoUpdate=o)) autoCheck();
 });
-
-// Backup data to rt.storage
-function backup(){
-	function save(){
-		if(!--backup.count) {
-			var r={},i,k;
-			for(i=0;k=localStorage.key(i);i++) {
-				r[k]=localStorage.getItem(k);
-				if(/^cache:/.test(k)) r[k]=btoa(r[k]);
-			}
-			rt.storage.setConfig('backup',JSON.stringify(r));
-			_changed=false;
-		}
-	}
-	backup.count++;setTimeout(save,3e4);
-}
-backup.count=0;
-var _setString=setString,_changed=false;
-setString=function(k,v){
-	_changed=true;if(autoBackup) backup();return _setString(k,v);
-};
