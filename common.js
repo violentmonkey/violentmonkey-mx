@@ -26,7 +26,7 @@ function setString(key,val){
 }
 function getItem(key,def){
 	var v=localStorage.getItem(key);
-	if(v==null&&def) return setItem(key,def);
+	if(!v&&def!=undefined) return setItem(key,def);
 	try{return JSON.parse(v);}catch(e){return def;}
 }
 function setItem(key,val){

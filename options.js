@@ -1,5 +1,5 @@
-function $(i){return document.getElementById(i);}
-var N=$('main'),L=$('sList'),O=$('overlay'),ids,map={};
+var $=document.getElementById.bind(document),
+		N=$('main'),L=$('sList'),O=$('overlay'),ids,map={};
 function split(t){return t.replace(/^\s+|\s+$/g,'').split(/\s*\n\s*/).filter(function(e){return e;});}
 rt.listen('ShowMessage',function(o){alert(o);});
 rt.listen('Reload',function(o){alert(o);location.reload();});
@@ -150,7 +150,6 @@ var A=$('advanced');
 $('bAdvanced').onclick=function(){showDialog(A);};
 $('cInstall').onchange=function(){rt.post('SetOption',{key:'installFile',data:this.checked});};
 $('cUpdate').onchange=function(){rt.post('AutoUpdate',this.checked);};
-$('cBackup').onchange=function(){rt.post('SetOption',{key:'autoBackup',data:this.checked});};
 $('bDefSearch').onclick=function(){$('tSearch').value=_('Search$1');};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
 $('aImport').onchange=function(e){
@@ -301,22 +300,19 @@ CodeMirror.commands.close=E.close=$('eClose').onclick=function(){if(confirmCance
 
 // Load at last
 var ids,map,cache;
-rt.listen('GotOptions',function(o){
-try{	// debug
+function loadOptions(o){
 	ids=o.ids;map=o.map;cache=o.cache;L.innerHTML='';
 	ids.forEach(function(i){addItem(map[i]);});
 	updateMove(L.firstChild);updateMove(L.lastChild);
 	$('cInstall').checked=o.installFile;
 	$('cUpdate').checked=o.autoUpdate;
-	$('cBackup').checked=o.autoBackup;
 	$('tSearch').value=o.search;
 	$('tExclude').value=o.gExc.join('\n');
 	if(!($('cDetail').checked=o.showDetails)) L.classList.add('simple');
 	xC.checked=o.compress;
 	xD.checked=o.withData;
-}catch(e){alert(e.stack);}
-});
-rt.post('GetOptions',['showDetails','installFile','compress','withData','backup','autoUpdate','search']);
+}
+rt.listen('GotOptions',function(o){loadOptions(o);});		// loadOptions can be rewrited
 rt.listen('UpdateItem',function(r){
 	if(!('item' in r)||r.item<0) return;
 	if(r.obj) map[r.obj.id]=r.obj;
@@ -327,3 +323,4 @@ rt.listen('UpdateItem',function(r){
 	}
 	updateMove(L.childNodes[r.item]);
 });
+rt.post('GetOptions');
