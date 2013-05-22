@@ -33,4 +33,5 @@ function initBackup(){
 	autoBackup=getItem('autoBackup',false);
 	settings.o.push('autoBackup');
 }
+var autoBackup=false;
 window.addEventListener('DOMContentLoaded',initBackup,false);
