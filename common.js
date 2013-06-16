@@ -14,6 +14,12 @@ function initFont(){
 	s.innerHTML=_('__font');
 	document.head.appendChild(s);
 }
+function initI18n(){
+	window.addEventListener('DOMContentLoaded',function(){
+		var nodes=document.querySelectorAll('.i18n'),i;
+		for(i=0;i<nodes.length;i++) nodes[i].innerHTML=_(nodes[i].innerHTML);
+	},true);
+}
 
 function getString(key,def){
 	var v=localStorage.getItem(key);

@@ -3,11 +3,13 @@
 	// restore data from backup
 	if(v=rt.storage.getConfig('backup')) try{
 		v=JSON.parse(v);
-		for(k in v) {
+		if(v) for(k in v) {
 			if(/^cache:/.test(k)) v[k]=atob(v[k]);
 			localStorage.setItem(k,v[k]);
+		} else {	// data is lost and autobackup is disabled
+			br.tabs.newTab({url:rt.getPrivateUrl()+'backup.html',activate:true});
 		}
-	}catch(e){}
+	}catch(e){} else rt.storage.setConfig('backup','null');	// first run
 })();
 
 // Backup data to rt.storage
