@@ -11,10 +11,6 @@
  * val:nameURI	Dict
  * cache:url	BinaryString
  */
-function getNameURI(i){
-	var ns=i.meta.namespace||'',n=i.meta.name||'',k=escape(ns)+':'+escape(n)+':';
-	if(!ns&&!n) k+=i.id;return k;
-}
 function getMeta(j){return {id:j.id,custom:j.custom,meta:j.meta,enabled:j.enabled,update:j.update};}
 
 // Check Maxthon version
@@ -41,7 +37,6 @@ function getMeta(j){return {id:j.id,custom:j.custom,meta:j.meta,enabled:j.enable
 function init(){
 	getItem('showDetails',true);
 	getItem('installFile',true);
-	getItem('compress',true);
 	getItem('withData',true);
 	getString('search',_('Search$1'));
 	autoUpdate=getItem('autoUpdate',true);
@@ -50,7 +45,7 @@ function init(){
 	gExc=getItem('gExc',[]);
 }
 var isApplied,ids,map,gExc,lastUpdate,autoUpdate,
-		settings={o:['showDetails','installFile','compress','withData','autoUpdate','isApplied','lastUpdate','gExc'],s:['search']};
+		settings={o:['showDetails','installFile','withData','autoUpdate','isApplied','lastUpdate','gExc'],s:['search']};
 (function(){
 	if(getString('ids')) return;
 	// upgrade data from Violentmonkey 1 irreversibly
@@ -275,7 +270,9 @@ function parseScript(o,d,c){
 	if(d.status&&d.status!=200||!d.code) {r.status=-1;r.message=_('Error fetching script!');}
 	else {
 		var meta=parseMeta(d.code);
-		if(!c&&!d.id) {
+		if(!c&&d.id) c=map[d.id];
+		if(c) i=ids.indexOf(c.id);
+		else {
 			if(meta.name) {
 				if(!meta.namespace) meta.namespace='';
 				for(i=0;i<ids.length;i++) {
@@ -285,11 +282,10 @@ function parseScript(o,d,c){
 				if(i==ids.length) i=-1;
 			} else i=-1;
 			if(i<0) c=newScript(); else c=map[ids[i]];
-		} else {
-			if(!c) c=map[d.id];i=ids.indexOf(c.id);
 		}
 		if(i<0){r.status=1;r.message=_('Script installed.');i=ids.length;}
 		c.meta=meta;c.code=d.code;r.item=i;r.obj=getMeta(c);
+		if(d.data) for(i in d.data) c[i]=d.data[i];
 		if(o&&!c.meta.homepage&&!c.custom.homepage&&!/^(file|data):/.test(o.origin)) c.custom.homepage=o.origin;
 		if(u&&!c.meta.downloadURL&&!c.custom.downloadURL) c.custom.downloadURL=u;
 		saveScript(c);
@@ -300,46 +296,11 @@ function parseScript(o,d,c){
 	if(o) rt.post(o.source,{topic:'ShowMessage',data:r.message});
 	rt.post('UpdateItem',r);
 }
-rt.listen('ImportZip',function(b){
-	var z=new JSZip();
-	try{z.load(b,{base64:true});}catch(e){rt.post('ShowMessage',_('Error loading zip file.'));return;}
-	var vm=z.file('ViolentMonkey'),count=0;
-	try{vm=JSON.parse(vm.asText());}catch(e){vm={};console.log('Error parsing ViolentMonkey configuration.');}
-	z.file(/\.user\.js$/).forEach(function(o){
-		if(o.dir) return;
-		var c=null,v,i;
-		try{
-			if(vm.scripts&&(v=vm.scripts[o.name.slice(0,-8)])) {
-				c=map[v.id];
-				if(c) for(i in v) c[i]=v[i];
-				else c=v;
-			}
-			parseScript(null,{code:o.asText()},c);
-			count++;
-		}catch(e){console.log('Error importing data: '+o.name+'\n'+e);}
-	});
-	if(vm.values) for(z in vm.values) setItem('val:'+z,vm.values[z]);
-	if(vm.settings) {for(z in vm.settings) setString(z,vm.settings[z]);init();}
-	rt.post('Reload',format(_('$1 item(s) are imported.'),count));
-});
 rt.listen('ExportZip',function(o){
-	var z=new JSZip(),n,_n,names={},vm={scripts:{}};
-	if(o.withData) vm.values={};
-	o.data.forEach(function(c){
-		var j=0;c=map[c];
-		n=_n=c.custom.name||c.meta.name||'Noname';
-		while(names[n]) n=_n+'_'+(++j);names[n]=1;
-		z.file(n+'.user.js',c.code);
-		vm.scripts[n]={id:c.id,custom:c.custom,enabled:c.enabled,update:c.update};
-		n=getNameURI(c);
-		if(o.withData&&(_n=getItem('val:'+n))) vm.values[n]=_n;
-	});
-	vm.settings={};
-	settings.o.concat(settings.s).forEach(function(i){vm.settings[i]=getString(i);});
-	z.file('ViolentMonkey',JSON.stringify(vm));
-	vm={};if(o.deflate) vm.compression='DEFLATE';
-	n=z.generate(vm);
-	rt.post('Exported',n);
+	var r={data:[],settings:{}};
+	o.data.forEach(function(c){var o=map[c];if(o) r.data.push(o);});
+	settings.o.concat(settings.s).forEach(function(i){r.settings[i]=getString(i);});
+	rt.post('ExportStart',r);
 });
 
 rt.listen('ParseScript',function(o){

@@ -3,15 +3,16 @@
 	<head>
 		<meta http-equiv="content-type" content="text/html;charset=utf-8">
 		<link rel="stylesheet" type="text/css" href="style.css" />
-		<link rel="stylesheet" type="text/css" href="lib/codemirror.css" />
+		<link rel="stylesheet" type="text/css" href="lib/codemirror/codemirror.css" />
 		<link rel="shortcut icon" type="image/png" href="icons/icon_32.png" />
-		<script type="text/javascript" src="lib/codemirror.js"></script>
-		<script type="text/javascript" src="lib/javascript.js"></script>
-		<script type="text/javascript" src="lib/continuecomment.js"></script>
-		<script type="text/javascript" src="lib/matchbrackets.js"></script>
-		<script type="text/javascript" src="lib/match-highlighter.js"></script>
-		<script type="text/javascript" src="lib/search.js"></script>
-		<script type="text/javascript" src="lib/searchcursor.js"></script>
+		<script type="text/javascript" src="lib/codemirror/codemirror.js"></script>
+		<script type="text/javascript" src="lib/codemirror/javascript.js"></script>
+		<script type="text/javascript" src="lib/codemirror/continuecomment.js"></script>
+		<script type="text/javascript" src="lib/codemirror/matchbrackets.js"></script>
+		<script type="text/javascript" src="lib/codemirror/match-highlighter.js"></script>
+		<script type="text/javascript" src="lib/codemirror/search.js"></script>
+		<script type="text/javascript" src="lib/codemirror/searchcursor.js"></script>
+		<script type="text/javascript" src="lib/zip.js/zip.js"></script>
 		<title class=i18n>Violentmonkey</title>
 	</head>
 	<body class=fill>
@@ -108,14 +109,13 @@
 			<div id=xOptions class=right>
 				<a class=i18n>Export Options</a>
 				<div>
-					<label><input type=checkbox id=cCompress><span class=i18n>Compress</span></label>
 					<label><input type=checkbox id=cWithData><span class=i18n>Export script data</span></label>
 				</div>
 			</div>
 			<div id=xList class=list></div>
 			<div class=left><button id=bSelect class=i18n>All/None</button></div>
 			<div class=right>
-				<button id=bExport></button>
+				<a id=xHelper></a><button id=bExport></button>
 				<button id=bClose class=i18n>Close</button>
 			</div>
 		</div>

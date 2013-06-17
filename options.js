@@ -2,7 +2,6 @@ var $=document.getElementById.bind(document),
 		N=$('main'),L=$('sList'),O=$('overlay'),ids,map={};
 function split(t){return t.replace(/^\s+|\s+$/g,'').split(/\s*\n\s*/).filter(function(e){return e;});}
 rt.listen('ShowMessage',function(o){alert(o);});
-rt.listen('Reload',function(o){alert(o);location.reload();});
 
 // Main options
 function updateMove(d){
@@ -150,12 +149,39 @@ $('cUpdate').onchange=function(){rt.post('AutoUpdate',this.checked);};
 $('bDefSearch').onclick=function(){$('tSearch').value=_('Search$1');};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
 $('aImport').onchange=function(e){
-	var i,f,files=e.target.files;
-	for(i=0;f=files[i];i++) {
-		var r=new FileReader();
-		r.onload=function(e){rt.post('ImportZip',btoa(e.target.result));};
-		r.readAsBinaryString(f);
-	}
+	zip.createReader(new zip.BlobReader(e.target.files[0]),function(r){
+		r.getEntries(function(e){
+			function getFiles(){
+				var i=e.shift();
+				if(i) i.getData(writer,function(t){
+					var c={code:t};
+					if(vm.scripts&&(v=vm.scripts[i.filename.slice(0,-8)])) {
+						c.id=v.id;c.data=v;
+					}
+					rt.post('ParseScript',c);
+					count++;
+					getFiles();
+				}); else {
+					alert(format(_('$1 item(s) are imported.'),count));
+					location.reload();
+				}
+			}
+			var i,vm={},writer=new zip.TextWriter(),count=0;
+			for(i=0;i<e.length;i++) if(e[i].filename=='ViolentMonkey') break;
+			if(i<e.length){
+				i=e.splice(i,1)[0];
+				i.getData(writer,function(t){
+					try{
+						vm=JSON.parse(t);
+					}catch(e){
+						vm={};
+						console.log('Error parsing ViolentMonkey configuration.');
+					}
+					getFiles();
+				});
+			} else getFiles();
+		});
+	});
 };
 $('aVacuum').onclick=function(){rt.post('Vacuum');};
 rt.listen('Cleared',function(){window.location.reload();});
@@ -180,7 +206,6 @@ function xLoad() {
 		xL.appendChild(d);
 	});
 }
-xC.onchange=function(){rt.post('SetOption',{key:'compress',data:this.checked});};
 xD.onchange=function(){rt.post('SetOption',{key:'withData',data:this.checked});};
 xL.onclick=function(e){
 	var t=e.target;
@@ -194,14 +219,65 @@ $('bSelect').onclick=function(){
 	for(i=0;i<c.length;i++) if(v) c[i].classList.add('selected'); else c[i].classList.remove('selected');
 };
 X.close=$('bClose').onclick=closeDialog;
-xE.onclick=function(){
+xE.onclick=function(e){
+	e.preventDefault();
 	this.disabled=true;this.innerHTML=_('Exporting...');
 	var i,c=[];
 	for(i=0;i<ids.length;i++)
 		if(xL.childNodes[i].classList.contains('selected')) c.push(ids[i]);
-	rt.post('ExportZip',{deflate:xC.checked,withData:xD.checked,data:c});
+	rt.post('ExportZip',{data:c});
 };
-rt.listen('Exported',function(o){X.close();window.open('data:application/zip;base64,'+o);});
+zip.workerScriptsPath='lib/zip.js/';
+function exportStart(o){
+	function addFiles(){
+		if(!writer) {	// create writer
+			zip.createWriter(new zip.BlobWriter(),function(w){writer=w;addFiles();});
+			return;
+		}
+		adding=true;
+		var i=files.shift();
+		if(i) {
+			if(i.name) {	// add file
+				writer.add(i.name,new zip.TextReader(i.content),addFiles);
+				return;
+			} else {	// finished
+				writer.close(function(b){
+					xE.innerHTML='导出完成';
+					var u=URL.createObjectURL(b),e=document.createEvent('MouseEvent');
+					e.initMouseEvent('click',true,true,window,0,0,0,0,0,false,false,false,false,0,null);
+					xH.href=u;
+					xH.download='scripts.zip';
+					xH.dispatchEvent(e);
+					writer=null;
+					X.close();
+					URL.revokeObjectURL(u);
+					xH.removeAttribute('href');
+					xH.removeAttribute('download');
+				});
+			}
+		}
+		adding=false;
+	}
+	function addFile(o){
+		files.push(o);
+		if(!adding) addFiles();
+	}
+	var writer=null,files=[],adding=false,xH=$('xHelper'),
+			n,_n,names={},vm={scripts:{},settings:o.settings};
+	if(xD.checked) vm.values={};
+	o.data.forEach(function(c){
+		var j=0;
+		n=_n=c.custom.name||c.meta.name||'Noname';
+		while(names[n]) n=_n+'_'+(++j);names[n]=1;
+		addFile({name:n+'.user.js',content:c.code});
+		vm.scripts[n]={id:c.id,custom:c.custom,enabled:c.enabled,update:c.update};
+		n=getNameURI(c);
+		if(xD.checked&&(_n=getItem('val:'+n))) vm.values[n]=_n;
+	});
+	addFile({name:'ViolentMonkey',content:JSON.stringify(vm)});
+	addFile({});	// finish adding files
+}
+rt.listen('ExportStart',exportStart);
 
 // Script Editor
 var E=$('editor'),U=$('eUpdate'),M=$('meta'),
@@ -306,7 +382,6 @@ function loadOptions(o){
 	$('tSearch').value=o.search;
 	$('tExclude').value=o.gExc.join('\n');
 	if(!($('cDetail').checked=o.showDetails)) L.classList.add('simple');
-	xC.checked=o.compress;
 	xD.checked=o.withData;
 }
 rt.listen('GotOptions',function(o){loadOptions(o);});		// loadOptions can be rewrited
