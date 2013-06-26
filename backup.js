@@ -8,6 +8,9 @@
 			localStorage.setItem(k,v[k]);
 		} else {	// data is lost and autobackup is disabled
 			br.tabs.newTab({url:rt.getPrivateUrl()+'backup.html',activate:true});
+			rt.listen('ShowOptions',function(){
+				br.tabs.newTab({url:rt.getPrivateUrl()+'options.html',activate:true});
+			});
 		}
 	}catch(e){} else rt.storage.setConfig('backup','null');	// first run
 })();
