@@ -76,7 +76,7 @@ var p=document.createElement('p');
 p.setAttribute('onclick','return window;');
 var unsafeWindow=p.onclick();
 delete p;
-var start=[],body=[],end=[],cache,values,ids=[],_ids={},menu=[],command={},elements;
+var start=[],body=[],end=[],cache,values,ids=[],menu=[],command={},elements;
 function run_code(c){
 	var w=new wrapper(c),require=c.meta.require||[],i,r,code=[];
 	elements.forEach(function(i){code.push(i+'=window.'+i);});
@@ -106,7 +106,7 @@ function runEnd(){while(end.length) new run_code(end.shift());}
 function loadScript(o){
 	var l;
 	(ids=o.ids).forEach(function(i){
-		_ids[i]=1;i=o.map[i];
+		i=o.map[i];
 		if(i&&i.enabled) {
 			switch(i.custom['run-at']||i.meta['run-at']){
 				case 'document-start': l=start;break;

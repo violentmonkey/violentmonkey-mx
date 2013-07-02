@@ -239,17 +239,16 @@ function exportStart(o){
 				return;
 			} else	// finished
 				writer.close(function(b){
-					xE.innerHTML='导出完成';
 					var u=URL.createObjectURL(b),e=document.createEvent('MouseEvent');
 					e.initMouseEvent('click',true,true,window,0,0,0,0,0,false,false,false,false,0,null);
 					xH.href=u;
 					xH.download='scripts.zip';
 					xH.dispatchEvent(e);
 					writer=null;
-					X.close();
 					URL.revokeObjectURL(u);
 					xH.removeAttribute('href');
 					xH.removeAttribute('download');
+					X.close();
 				});
 		}
 		adding=false;
