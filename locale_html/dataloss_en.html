@@ -3,7 +3,7 @@
 	<head>
 		<meta http-equiv="content-type" content="text/html;charset=utf-8">
 		<link rel="stylesheet" type="text/css" href="/style.css" />
-		<title>Obsolete Maxthon</title>
+		<title>Data Loss</title>
 		<style>
 			html{font-family:Calibri,Arial;}
 			body{width:600px;margin:50px auto;padding:20px;border:1px solid gray;border-radius:10px;box-shadow:5px 10px 15px rgba(0,0,0,0.4);}
@@ -12,9 +12,10 @@
 		<base target=_blank>
 	</head>
 	<body>
-		<h1><font color=red>Warning:</font> Obsolete Maxthon</h1>
-		<p><span class=keyword>Violentmonkey 2</span> requires Maxthon v4 and later.</p>
-		<p>It is highly recommended that you visit <a href=http://www.maxthon.com/>Maxthon.com</a> to get the latest Maxthon. However, if you insist on this version, please visit <a href=http://gera2ld.blog.163.com/blog/static/18801729620132266333382/>Violentmonkey support page</a> for a proper download and more details.</p>
+		<h1><font color=red>Warning:</font> Data Loss Due to Update</h1>
+		<p>It seems that you have just updated Maxthon from an earlier version. This may cause extension data loss due to a bug fix.</p>
+		<p><b>Cause:</b> Extension data was stored in %TMP% (which may cause frequent data loss) in earlier versions, but is now moved to %AppData%.</p>
+		<p><b>Solution:</b> You may either restore your data from a backup or just move your session files from %TMP% to %AppData% when Maxthon is closed.</p>
 		<p align=right>Gerald &lt;<a href=mailto:gera2ld@163.com>gera2ld@163.com</a>&gt;</p>
 	</body>
 </html>

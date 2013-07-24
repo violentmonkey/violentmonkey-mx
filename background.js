@@ -12,26 +12,40 @@
  * cache:url	BinaryString
  */
 function getMeta(j){return {id:j.id,custom:j.custom,meta:j.meta,enabled:j.enabled,update:j.update};}
+function older(o,n){
+	o=(o||'').split('.');n=(n||'').split('.');
+	var r=/(\d*)([a-z]*)(\d*)([a-z]*)/i;
+	while(o.length&&n.length) {
+		var vo=o.shift().match(r),vn=n.shift().match(r);
+		vo.shift();vn.shift();	// origin string
+		vo[0]=parseInt(vo[0]||0,10);
+		vo[2]=parseInt(vo[2]||0,10);
+		vn[0]=parseInt(vn[0]||0,10);
+		vn[2]=parseInt(vn[2]||0,10);
+		while(vo.length&&vn.length) {
+			var eo=vo.shift(),en=vn.shift();
+			if(eo!=en) return eo<en;
+		}
+	}
+	return n.length;
+}
 
 // Check Maxthon version
-(function(v){
-	if(getString('warnObsolete')) return;
-	setString('warnObsolete','1');
-	function older(a,b,c,d){
-		a=a.split('.');b=b.split('.');c=d=0;
-		while(a.length||b.length){
-			c=parseInt(a.shift())||0;
-			d=parseInt(b.shift())||0;
-			if(c!=d) break;
-		}
-		return c<d;
-	}
-	if(older(v,'4.0.3.5000')) {
+(function(l,v){
+	function showHTML(locales,name) {
 		mx.locale();
-		var v=mx.getSystemLocale(),o=['en','zh-cn'],i=o.indexOf(v);if(i<0) v=o[0];
-		br.tabs.newTab({url:rt.getPrivateUrl()+'oldversion/'+v+'.html',activate:true});
+		var lc=mx.getSystemLocale(),i=locales.indexOf(lc);
+		if(i<0) lc=locales[0]||'en';
+		br.tabs.newTab({url:rt.getPrivateUrl()+'locale_html/'+name+'_'+lc+'.html',activate:true});
 	}
-})(window.external.mxVersion);
+	if(older(l,v)) {	// first use or new update
+		setString('lastVersion',v);
+		if(older(v,'4.1.1.1600'))	// early versions may have bugs
+			showHTML(['en','zh-cn'],'oldversion');
+		else if(l&&older(l,'4.1.1.1600'))	// update caused data loss
+			showHTML(['en','zh-cn'],'dataloss');
+	}
+})(getString('lastVersion',''),window.external.mxVersion);
 
 // Initiate settings
 function init(){
@@ -70,9 +84,6 @@ getItem('ids',[]).forEach(function(i){
 	if(o) {ids.push(i);map[i]=o;}
 });
 
-rt.listen('Clear',function(){
-	localStorage.clear();init();rt.post('Cleared');ids=[];map={};
-});
 rt.listen('Vacuum',function(){
 	var k,s,i,cc={},ns={};
 	ids.forEach(function(i){
@@ -149,23 +160,6 @@ function testURL(url,e){
 	if(f) for(i=0;i<exc.length;i++) if(!(f=!autoReg(exc[i]).test(url))) break;	// @exclude
 	return f;
 }
-function canUpdate(o,n){
-	o=(o||'').split('.');n=(n||'').split('.');
-	var r=/(\d*)([a-z]*)(\d*)([a-z]*)/i;
-	while(o.length&&n.length) {
-		var vo=o.shift().match(r),vn=n.shift().match(r);
-		vo.shift();vn.shift();	// origin string
-		vo[0]=parseInt(vo[0]||0,10);
-		vo[2]=parseInt(vo[2]||0,10);
-		vn[0]=parseInt(vn[0]||0,10);
-		vn[2]=parseInt(vn[2]||0,10);
-		while(vo.length&&vn.length) {
-			var eo=vo.shift(),en=vn.shift();
-			if(eo!=en) return eo<en;
-		}
-	}
-	return n.length;
-}
 function checkUpdate(i){
 	var o=map[ids[i]],r={item:i,hideUpdate:1,status:2};
 	if(!o.update) return;
@@ -186,7 +180,7 @@ function checkUpdate(i){
 			r.message=_('Failed fetching update information.');
 			if(this.status==200) try{
 				var m=parseMeta(this.responseText);
-				if(canUpdate(o.meta.version,m.version)) return update();
+				if(older(o.meta.version,m.version)) return update();
 				r.message=_('No update found.');
 			}catch(e){}
 			delete r.hideUpdate;

@@ -182,10 +182,6 @@ $('aImport').onchange=function(e){
 	});
 };
 $('aVacuum').onclick=function(){rt.post('Vacuum');};
-rt.listen('Cleared',function(){window.location.reload();});
-$('aClear').onclick=function(){
-	if(confirm(_('All data of Violentmonkey will be cleared! Do you want to continue?'))) rt.post('Clear');
-};
 rt.listen('Vacuumed',function(){var t=$('aVacuum');t.innerHTML=_('Data vacuumed');t.disabled=true;});
 A.close=$('aClose').onclick=function(){
 	rt.post('SetOption',{key:'search',data:$('tSearch').value});
@@ -239,7 +235,7 @@ function exportStart(o){
 				return;
 			} else	// finished
 				writer.close(function(b){
-					var u=URL.createObjectURL(b),e=document.createEvent('MouseEvent');
+					var u=URL.createObjectURL(b),e=document.createEvent('MouseEvent'),xH=document.createElement('a');
 					e.initMouseEvent('click',true,true,window,0,0,0,0,0,false,false,false,false,0,null);
 					xH.href=u;
 					xH.download='scripts.zip';
@@ -257,7 +253,7 @@ function exportStart(o){
 		files.push(o);
 		if(!adding) addFiles();
 	}
-	var writer=null,files=[],adding=false,xH=$('xHelper'),
+	var writer=null,files=[],adding=false,
 			n,_n,names={},vm={scripts:{},settings:o.settings};
 	if(xD.checked) vm.values={};
 	o.data.forEach(function(c){
