@@ -104,7 +104,7 @@ function loadScript(){
 				default: l=end;
 			}
 			l.push(i);
-			if(i.meta.require) i.meta.require.forEach(function(i){var r=_data.cache[i];if(r) cache[i]=utf8decode(r);});
+			if(i.meta.require) i.meta.require.forEach(function(i){var r=_data.cache[i];if(r) cache[i]=r;});
 		}
 	});
 	runStart();
