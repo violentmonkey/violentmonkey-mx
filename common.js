@@ -11,7 +11,7 @@ function _(t){
 };
 function initFont(){
 	var s=document.createElement('style');
-	s.innerHTML=_('font');
+	s.innerHTML=_('__font');
 	document.head.appendChild(s);
 }
 function unsafeExecute(id,funcName,args){

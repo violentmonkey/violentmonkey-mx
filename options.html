@@ -3,18 +3,23 @@
 	<head>
 		<meta http-equiv="content-type" content="text/html;charset=utf-8">
 		<link rel="stylesheet" type="text/css" href="style.css">
-		<link rel="stylesheet" type="text/css" href="lib/codemirror.css">
-		<link rel="stylesheet" type="text/css" href="lib/javascript.css">
-		<link rel="shortcut icon" type="image/png" href="images/icon18.png">
-		<script type="text/javascript" src="lib/codemirror-compressed.js"></script>
-		<script type="text/javascript" src="lib/jszip.js"></script>
-		<script type="text/javascript" src="lib/jszip-deflate.js"></script>
-		<title class=i18n>Options - Violentmonkey</title>
+		<link rel="stylesheet" type="text/css" href="lib/codemirror/codemirror.css">
+		<link rel="shortcut icon" type="image/png" href="icons/icon_32.png">
+		<script type="text/javascript" src="lib/codemirror/codemirror.js"></script>
+		<script type="text/javascript" src="lib/codemirror/javascript.js"></script>
+		<script type="text/javascript" src="lib/codemirror/continuecomment.js"></script>
+		<script type="text/javascript" src="lib/codemirror/matchbrackets.js"></script>
+		<script type="text/javascript" src="lib/codemirror/match-highlighter.js"></script>
+		<script type="text/javascript" src="lib/codemirror/search.js"></script>
+		<script type="text/javascript" src="lib/codemirror/searchcursor.js"></script>
+		<script type="text/javascript" src="lib/jszip/jszip.js"></script>
+		<script type="text/javascript" src="lib/jszip/jszip-deflate.js"></script>
+		<title class=i18n>Violentmonkey</title>
 	</head>
 	<body class=fill>
 		<div id=main>
 			<div id=header class=main>
-				<h1 class=i18n>Options - Violentmonkey</h1>
+				<h1><span class=i18n>Options</span> - <span class=i18n>Violentmonkey</span></h1>
 				<div class=left>
 					<button id=bNew class=i18n>New</button>
 					<a href=http://userscripts.org target=_blank class=i18n>Get more scripts from userscripts.org</a>
@@ -29,7 +34,7 @@
 				<legend><span class=i18n>Installed Scripts</span> <input type=checkbox id=cDetail><label for=cDetail class=i18n>Show details</label></legend>
 				<div id=sList></div>
 			</fieldset>
-			<div id=footer class="i18n main">Designed by Gerald</div>
+			<div id=footer class=main><span class=i18n>Violentmonkey link</span> - <span class=i18n>Designed by Gerald</span> - 2013</div>
 		</div>
 		<div id=overlay class=hide></div>
 		<div id=editor class="float hide">
@@ -44,8 +49,8 @@
 			</div>
 		</div>
 		<div id=meta class="float hide">
-			<div><label class=i18n for=mName>Name: </label><input type=text id=mName></div>
-			<div><label class=i18n for=mURL>Homepage: </label><input type=text id=mURL></div>
+			<div><label class=i18n for=mName>Name:</label><input type=text id=mName></div>
+			<div><label class=i18n for=mURL>Homepage:</label><input type=text id=mURL></div>
 			<fieldset>
 				<legend class=i18n>Includes</legend>
 				<div><input type=checkbox id=cInclude><label for=cInclude class=i18n>Keep original include rules</label></div>
@@ -87,8 +92,8 @@
 			</div>
 			<fieldset>
 				<legend class=i18n>Data</legend>
-				<button id=aExport class=i18n>Export to zip file</button><br>
-				<button id=aVacuum class=i18n>Vacuum data</button> <span class=i18n>Vacuum hint</span>
+				<button id=aExport class=i18n>Export to zip file</button>
+				<button id=aVacuum class=i18n>Vacuum data</button><span class=i18n>Vacuum hint</span>
 			</fieldset>
 			<div class=right><button id=aClose class=i18n>Close</button></div>
 		</div>
