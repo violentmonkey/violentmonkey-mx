@@ -362,6 +362,22 @@ eSC.onclick=function(){eSave();eClose();};
 CodeMirror.commands.save=function(){if(!eS.disabled) setTimeout(eSave,0);};
 CodeMirror.commands.close=E.close=$('eClose').onclick=function(){if(confirmCancel(!eS.disabled)) eClose();};
 
+// Theme
+var themes={
+	"default":['default.css','default'],
+	dark:['dark.css','tomorrow-night-eighties'],
+},th=$('sTheme');
+function loadTheme(o){
+	o=themes[o]||themes['default'];
+	$('theme').href='themes/'+o[0];
+	T.setOption('theme',o[1]);
+}
+th.onchange=function(e){
+	var v=e.target.value;
+	loadTheme(v);
+	rt.post('SetOption',{key:'theme',data:v});
+};
+
 // Load at last
 var ids,map,cache;
 function loadOptions(o){
@@ -374,6 +390,7 @@ function loadOptions(o){
 	$('tExclude').value=o.gExc.join('\n');
 	if(!($('cDetail').checked=o.showDetails)) L.classList.add('simple');
 	xD.checked=o.withData;
+	loadTheme(th.value=o.theme||'default');
 }
 rt.listen('GotOptions',function(o){loadOptions(o);});		// loadOptions can be rewrited
 rt.listen('UpdateItem',function(r){

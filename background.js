@@ -59,7 +59,7 @@ function init(){
 	gExc=getItem('gExc',[]);
 }
 var isApplied,ids,map,gExc,lastUpdate,autoUpdate,
-		settings={o:['showDetails','installFile','withData','autoUpdate','isApplied','lastUpdate','gExc'],s:['search']};
+		settings={o:['showDetails','installFile','withData','autoUpdate','isApplied','lastUpdate','gExc'],s:['search','theme']};
 (function(){
 	if(getString('ids')) return;
 	// upgrade data from Violentmonkey 1 irreversibly

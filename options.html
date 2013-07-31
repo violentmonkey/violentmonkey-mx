@@ -2,8 +2,9 @@
 <html class=fill>
 	<head>
 		<meta http-equiv="content-type" content="text/html;charset=utf-8">
-		<link rel="stylesheet" type="text/css" href="style.css" />
+		<link rel="stylesheet" type="text/css" id=theme href="themes/default.css" />
 		<link rel="stylesheet" type="text/css" href="lib/codemirror/codemirror.css" />
+		<link rel="stylesheet" type="text/css" href="lib/codemirror/tomorrow-night-eighties.css">
 		<link rel="shortcut icon" type="image/png" href="icons/icon_32.png" />
 		<script type="text/javascript" src="lib/codemirror/codemirror.js"></script>
 		<script type="text/javascript" src="lib/codemirror/javascript.js"></script>
@@ -121,6 +122,13 @@
 		</div>
 		<div id=advanced class="float hide">
 			<h2 class=i18n>Advanced</h2>
+			<label>
+				<span class=i18n>Theme:</span>
+				<select id=sTheme>
+					<option value="default" class=i18n>Default</option>
+					<option value="dark" class=i18n>Dark</option>
+				</select>
+			</label>
 			<label><input type=checkbox id=cInstall><span class=i18n>Allow installing .user.js files</span></label>
 			<label><input type=checkbox id=cUpdate><span class=i18n>Automatically check scripts for updates every day</span></label>
 			<div>
