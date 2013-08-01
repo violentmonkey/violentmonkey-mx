@@ -36,8 +36,8 @@ function loadItem(d,n,r){
 		+'<button data=edit>'+_('Edit')+'</button> '
 		+'<button data=enable>'+_(n.enabled?'Disable':'Enable')+'</button> '
 		+'<button data=remove>'+_('Remove')+'</button>'
-		+'<button data=up class=move>'+_('&uarr;')+'</button>'
-		+'<button data=down class=move>'+_('&darr;')+'</button>'
+		+'<button data=up class=move>&uarr;</button>'
+		+'<button data=down class=move>&darr;</button>'
 	+'</div>';
 	d.className=n.enabled?'':'disabled';
 	var a=d.querySelector('.name'),b=n.custom.name||n.meta.name;
@@ -271,7 +271,7 @@ function exportStart(o){
 rt.listen('ExportStart',exportStart);
 
 // Script Editor
-var E=$('editor'),U=$('eUpdate'),M=$('meta'),
+var E=$('editor'),U=$('eUpdate'),C=$('code'),M=$('meta'),bM=$('bmeta'),
 		mN=$('mName'),mH=$('mHomepage'),mR=$('mRunAt'),
 		mU=$('mUpdateURL'),mD=$('mDownloadURL'),
     mI=$('mInclude'),mE=$('mExclude'),mM=$('mMatch'),
@@ -294,25 +294,8 @@ T=CodeMirror.fromTextArea($('eCode'),{
 });
 T.on('change',function(){eS.disabled=eSC.disabled=T.isClean();});
 rt.listen('GotScript',function(o){
-	switchTo(E);E.scr=o;U.checked=o.update;
-	T.setValue(o.code);T.markClean();T.getDoc().clearHistory();
-	eS.disabled=eSC.disabled=true;T.focus();
-});
-function edit(i){
-	E.cur=L.childNodes[i];rt.post('GetScript',map[ids[i]].id);
-}
-function eSave(){
-	E.scr.update=U.checked;
-	rt.post('ParseScript',{id:E.scr.id,code:T.getValue(),message:''});
-	T.markClean();eS.disabled=eSC.disabled=true;
-}
-function eClose(){T.setValue('');switchTo(N);}
-U.onchange=E.markDirty=function(){eS.disabled=eSC.disabled=false;};
-function metaChange(){M.dirty=true;}
-[mN,mH,mR,mU,mD,mI,mM,mE,cI,cM,cE].forEach(function(i){i.onchange=metaChange;});
-$('bcustom').onclick=function(){
-	var e=[],c=E.scr.custom;M.dirty=false;
-	showDialog(M,10);
+	E.scr=o;U.checked=o.update;
+	var e=[],c=o.custom;
 	mN.value=c.name||'';
 	mH.value=c.homepage||'';
 	mU.value=c.updateURL||'';
@@ -329,34 +312,47 @@ $('bcustom').onclick=function(){
 	mM.value=(c.match||e).join('\n');
 	cE.checked=c._exclude!=false;
 	mE.value=(c.exclude||e).join('\n');
-};
-M.close=function(){if(confirmCancel(M.dirty)) closeDialog();};
-$('mCancel').onclick=closeDialog;
-$('mOK').onclick=function(){
-	if(M.dirty) {
-		var c=E.scr.custom;
-		c.name=mN.value;
-		c.homepage=mH.value;
-		c.updateURL=mU.value;
-		c.downloadURL=mD.value;
-		switch(mR.value){
-			case 'start':c['run-at']='document-start';break;
-			case 'body':c['run-at']='document-body';break;
-			case 'end':c['run-at']='document-end';break;
-			default:delete c['run-at'];
-		}
-		c._include=cI.checked;
-		c.include=split(mI.value);
-		c._match=cM.checked;
-		c.match=split(mM.value);
-		c._exclude=cE.checked;
-		c.exclude=split(mE.value);
-		loadItem(E.cur,E.scr);
-		updateMove(E.cur);
-		rt.post('SaveScript',E.scr);
+	initMetaButton();switchTo(E);
+	T.setValue(o.code);T.markClean();T.getDoc().clearHistory();
+	eS.disabled=eSC.disabled=true;T.focus();
+});
+function edit(i){
+	E.cur=L.childNodes[i];rt.post('GetScript',map[ids[i]].id);
+}
+function eSave(){
+	var c=E.scr.custom;
+	c.name=mN.value;
+	c.homepage=mH.value;
+	c.updateURL=mU.value;
+	c.downloadURL=mD.value;
+	switch(mR.value){
+		case 'start':c['run-at']='document-start';break;
+		case 'body':c['run-at']='document-body';break;
+		case 'end':c['run-at']='document-end';break;
+		default:delete c['run-at'];
 	}
-	closeDialog();
-};
+	c._include=cI.checked;
+	c.include=split(mI.value);
+	c._match=cM.checked;
+	c.match=split(mM.value);
+	c._exclude=cE.checked;
+	c.exclude=split(mE.value);
+	E.scr.update=U.checked;
+	E.scr.code=T.getValue();
+	rt.post('ParseScript',{script:E.scr,message:''});
+	T.markClean();eS.disabled=eSC.disabled=true;
+	loadItem(E.cur,E.scr);
+	updateMove(E.cur);
+}
+function eClose(){T.setValue('');switchTo(N);}
+E.markDirty=function(){eS.disabled=eSC.disabled=false;};
+[U,mN,mH,mR,mU,mD,mI,mM,mE,cI,cM,cE].forEach(function(i){i.onchange=E.markDirty;});
+function initMetaButton(e){
+	if(e){C.classList.toggle('hide');M.classList.toggle('hide');}
+	else {C.classList.remove('hide');M.classList.add('hide');}
+	bM.innerHTML=C.classList.contains('hide')?_('Edit code'):_('Custom meta data');
+}
+bM.onclick=initMetaButton;
 eS.onclick=eSave;
 eSC.onclick=function(){eSave();eClose();};
 CodeMirror.commands.save=function(){if(!eS.disabled) setTimeout(eSave,0);};

@@ -195,7 +195,6 @@ function checkUpdateAll(){
 rt.listen('CheckUpdate',checkUpdate);
 rt.listen('CheckUpdateAll',checkUpdateAll);
 rt.listen('NewScript',function(o){rt.post('AddScript',newScript(true));});
-rt.listen('SaveScript',saveScript);
 rt.listen('EnableScript',function(o,e){
 	if(o.id) {
 		e=map[o.id];e.enabled=o.data;saveScript(e);
@@ -257,7 +256,12 @@ function fetchCache(url){
 
 function parseScript(o,d,c){
 	var u=null,i,r={status:0};
-	if(o) {if(d) u=o.data; else d=o.data;}
+	if(o) {
+		if(d) u=o.data;	// from injected: url
+		else d=o.data;	// from injected: .user.js file
+	} else if(!d.code) {	// from options: user edited
+		c=d.script;d.code=c.code;
+	}
 	r.message='message' in d?d.message:_('Script updated.');
 	if(c) r.item=ids.indexOf(c.id);
 	if(d.status&&d.status!=200||!d.code) {r.status=-1;r.message=_('Error fetching script!');}
@@ -279,8 +283,12 @@ function parseScript(o,d,c){
 		if(i<0){r.status=1;r.message=_('Script installed.');i=ids.length;}
 		c.meta=meta;c.code=d.code;r.item=i;r.obj=getMeta(c);
 		if(d.data) for(i in d.data) c[i]=d.data[i];
-		if(o&&!c.meta.homepage&&!c.custom.homepage&&!/^(file|data):/.test(o.origin)) c.custom.homepage=o.origin;
-		if(u&&!c.meta.downloadURL&&!c.custom.downloadURL) c.custom.downloadURL=u;
+		if(o) {
+			if(d.custom) c.custom=d.custom; else {
+				if(!c.meta.homepage&&!c.custom.homepage&&!/^(file|data):/.test(o.origin)) c.custom.homepage=o.origin;
+				if(u&&!c.meta.downloadURL&&!c.custom.downloadURL) c.custom.downloadURL=u;
+			}
+		}
 		saveScript(c);
 		meta.require.forEach(fetchCache);	// @require
 		for(d in meta.resources) fetchCache(meta.resources[d]);	// @resource
@@ -297,12 +305,15 @@ rt.listen('ExportZip',function(o){
 });
 
 rt.listen('ParseScript',function(o){
-	if(o.source) parseScript(o); else parseScript(null,o);
+	if(o.source) parseScript(o);	// from injected: .user.js file
+	else parseScript(null,o);		// from options: user edited
 });
 rt.listen('InstallScript',function(o){
 	if(!o.data) {
 		if(getItem('installFile')) rt.post(o.source,{topic:'ConfirmInstall',data:_('Do you want to install this UserScript?')});
-	} else fetchURL(o.data,function(){parseScript(o,{status:this.status,code:this.responseText});});
+	} else fetchURL(o.data,function(){
+		parseScript(o,{status:this.status,code:this.responseText});		// from injected: url
+	});
 });
 
 rt.listen('GetOptions',function(){
