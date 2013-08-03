@@ -22,7 +22,4 @@ button:disabled{background:gray;color:silver;}
 .list .selected{background:silver;color:#333;}
 #xOptions>div{background:#eee;box-shadow:5px 10px 15px rgba(0,0,0,0.4);border:1px solid gray;}
 #xOptions>div{background:#333;box-shadow:5px 10px 15px rgba(0,0,0,0.4);border:1px solid #555;}
-.menu>div:hover{background:gray;color:gold;}
-.menu>div.disabled{color:gray;}
-.menu>div.disabled:hover{color:silver;}
 /* <<< Styles */
