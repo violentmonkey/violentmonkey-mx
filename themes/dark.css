@@ -6,6 +6,8 @@ fieldset{border:1px solid #555;}
 button{background:#333;color:#ddd;border:1px solid #555;border-radius:5px;}
 button:hover{background:dodgerblue;color:yellow;}
 button:disabled{background:gray;color:silver;}
+#overlay{background:gray;}
+#overlay.overlay{opacity:0.6;}
 .popup .expand>td{border-top:1px dashed #555;}
 .em{font-style:italic;}
 .new{color:yellow;}

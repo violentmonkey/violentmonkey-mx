@@ -44,8 +44,7 @@ fieldset{border-radius:5px;}
 #sList .panel{position:absolute;bottom:10px;right:10px;}
 #sList .panel>button{width:80px;}
 #sList .panel .move{width:40px;padding:1px 2px;}
-#overlay{background:#000;position:fixed;top:0;bottom:0;left:0;right:0;-webkit-transition:all .5s linear;opacity:0;}
-#overlay.overlay{opacity:0.6;}
+#overlay{position:fixed;top:0;bottom:0;left:0;right:0;-webkit-transition:all .5s linear;opacity:0;}
 #advanced{padding:20px;}
 #advanced fieldset>*:not(:first-child){display:inline-block;}
 #advanced legend{margin:0;}

@@ -2,6 +2,8 @@
 html,body{background:#eee;}
 h1,h2{text-shadow:#999 3px 3px 5px;}
 a{color:dodgerblue;}
+#overlay{background:black;}
+#overlay.overlay{opacity:0.6;}
 .float,.frame{background:lightgray;}
 .popup .expand>td{border-top:1px dashed gray;}
 .em{font-style:italic;}
