@@ -15,7 +15,7 @@ button:disabled{background:gray;color:silver;}
 #sList>div:last-child{border-bottom:1px dashed #555;}
 #sList>.hint{border:2px solid silver;box-shadow:5px 10px 15px rgba(0,0,0,0.4);}
 #sList .version,#sList .author{color:gray;font-style:italic;}
-#sList .message{color:#ccc;}
+#sList .message{color:gray;}
 #sList .disabled{color:#ccc;background:#222;}
 #sList .disabled a{color:#ccc;}
 #sList .disabled img{opacity:0.3;}
