@@ -29,22 +29,22 @@ function loadItem(d,n,r){
 	+'<a class="name ellipsis" target=_blank></a>'
 	+'<span class=author></span>'
 	+'<span class=version>'+(n.meta.version?'v'+n.meta.version:'')+'</span>'
-	+(allowUpdate(n)?'<a data=update class=update href=#>'+_('Check for updates')+'</a> ':'')
+	+(allowUpdate(n)?'<a data=update class=update href=#>'+_('anchorUpdate')+'</a> ':'')
 	+'<div class="descrip ellipsis"></div>'
 	+'<span class=message></span>'
 	+'<div class=panel>'
-		+'<button data=edit>'+_('Edit')+'</button> '
-		+'<button data=enable>'+_(n.enabled?'Disable':'Enable')+'</button> '
-		+'<button data=remove>'+_('Remove')+'</button>'
+		+'<button data=edit>'+_('buttonEdit')+'</button> '
+		+'<button data=enable>'+_(n.enabled?'buttonDisable':'buttonEnable')+'</button> '
+		+'<button data=remove>'+_('buttonRemove')+'</button>'
 		+'<button data=up class=move>&uarr;</button>'
 		+'<button data=down class=move>&darr;</button>'
 	+'</div>';
 	d.className=n.enabled?'':'disabled';
 	var a=d.querySelector('.name'),b=n.custom.name||n.meta.name;
 	a.title=b||'';
-	a.innerHTML=b?b.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('Null name')+'</em>';
+	a.innerHTML=b?b.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('labelNoName')+'</em>';
 	if(b=n.custom.homepage||n.meta.homepage) a.href=b;
-	if(n.meta.author) d.querySelector('.author').innerText=_('Author: ')+n.meta.author;
+	if(n.meta.author) d.querySelector('.author').innerText=_('labelAuthor')+n.meta.author;
 	a=d.querySelector('.descrip');
 	a.innerText=a.title=n.meta.description||'';
 	modifyItem(d,r);
@@ -77,10 +77,10 @@ L.onclick=function(e){
 			e=map[ids[i]];
 			if(e.enabled=!e.enabled) {
 				p.classList.remove('disabled');
-				o.innerText=_('Disable');
+				o.innerText=_('buttonDisable');
 			} else {
 				p.classList.add('disabled');
-				o.innerText=_('Enable');
+				o.innerText=_('buttonEnable');
 			}
 			rt.post('EnableScript',{id:e.id,data:e.enabled});
 			break;
@@ -138,16 +138,15 @@ O.onclick=function(){
 	if(dialogs.length) (dialogs[dialogs.length-1].close||closeDialog)();
 };
 function confirmCancel(dirty){
-	return !dirty||confirm(_('Modifications are not saved!'));
+	return !dirty||confirm(_('confirmNotSaved'));
 }
 initFont();initI18n();
 
 // Advanced
 var A=$('advanced');
 $('bAdvanced').onclick=function(){showDialog(A);};
-$('cInstall').onchange=function(){rt.post('SetOption',{key:'installFile',data:this.checked});};
 $('cUpdate').onchange=function(){rt.post('AutoUpdate',this.checked);};
-$('bDefSearch').onclick=function(){$('tSearch').value=_('Search$1');};
+$('bDefSearch').onclick=function(){$('tSearch').value=_('defaultSearch');};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
 function importFile(e){
 	zip.createReader(new zip.BlobReader(e.target.files[0]),function(r){
@@ -163,7 +162,7 @@ function importFile(e){
 					count++;
 					getFiles();
 				}); else {
-					alert(format(_('$1 item(s) are imported.'),count));
+					alert(_('msgImported',count));
 					location.reload();
 				}
 			}
@@ -188,7 +187,7 @@ $('aImport').onclick=function(){
 	iH.dispatchEvent(e);
 };
 $('aVacuum').onclick=function(){rt.post('Vacuum');};
-rt.listen('Vacuumed',function(){var t=$('aVacuum');t.innerHTML=_('Data vacuumed');t.disabled=true;});
+rt.listen('Vacuumed',function(){var t=$('aVacuum');t.innerHTML=_('buttonVacuumed');t.disabled=true;});
 A.close=$('aClose').onclick=function(){
 	rt.post('SetOption',{key:'search',data:$('tSearch').value});
 	rt.post('SetOption',{key:'gExc',wkey:'gExc',data:split($('tExclude').value)});
@@ -198,7 +197,7 @@ A.close=$('aClose').onclick=function(){
 // Export
 var X=$('export'),xL=$('xList'),xE=$('bExport'),xC=$('cCompress'),xD=$('cWithData');
 function xLoad() {
-	xL.innerHTML='';xE.disabled=false;xE.innerHTML=_('Export');
+	xL.innerHTML='';xE.disabled=false;xE.innerHTML=_('buttonExport');
 	ids.forEach(function(i){
 		var d=document.createElement('div');
 		d.className='ellipsis';
@@ -221,7 +220,7 @@ $('bSelect').onclick=function(){
 X.close=$('bClose').onclick=closeDialog;
 xE.onclick=function(e){
 	e.preventDefault();
-	this.disabled=true;this.innerHTML=_('Exporting...');
+	this.disabled=true;this.innerHTML=_('buttonExporting');
 	var i,c=[];
 	for(i=0;i<ids.length;i++)
 		if(xL.childNodes[i].classList.contains('selected')) c.push(ids[i]);
@@ -354,7 +353,7 @@ E.markDirty=function(){eS.disabled=eSC.disabled=false;};
 function initMetaButton(e){
 	if(e){C.classList.toggle('hide');M.classList.toggle('hide');}
 	else {C.classList.remove('hide');M.classList.add('hide');}
-	bM.innerHTML=C.classList.contains('hide')?_('Edit code'):_('Custom meta data');
+	bM.innerHTML=C.classList.contains('hide')?_('buttonEditCode'):_('buttonCustomMeta');
 }
 bM.onclick=initMetaButton;
 eS.onclick=eSave;
@@ -384,7 +383,6 @@ function loadOptions(o){
 	ids=o.ids;map=o.map;cache=o.cache;L.innerHTML='';
 	ids.forEach(function(i){addItem(map[i]);});
 	updateMove(L.firstChild);updateMove(L.lastChild);
-	$('cInstall').checked=o.installFile;
 	$('cUpdate').checked=o.autoUpdate;
 	$('tSearch').value=o.search;
 	$('tExclude').value=o.gExc.join('\n');

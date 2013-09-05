@@ -50,16 +50,17 @@ function older(o,n){
 // Initiate settings
 function init(){
 	getItem('showDetails',true);
-	getItem('installFile',true);
 	getItem('withData',true);
-	getString('search',_('Search$1'));
+	getString('search',_('defaultSearch'));
 	autoUpdate=getItem('autoUpdate',true);
 	isApplied=getItem('isApplied',true);
 	lastUpdate=getItem('lastUpdate',0);
 	gExc=getItem('gExc',[]);
+	updateIcon();
 }
+function updateIcon(){rt.icon.setIconImage('icon'+(isApplied?'':'w'));}
 var isApplied,ids,map,gExc,lastUpdate,autoUpdate,
-		settings={o:['showDetails','installFile','withData','autoUpdate','isApplied','lastUpdate','gExc'],s:['search','theme']};
+		settings={o:['showDetails','withData','autoUpdate','isApplied','lastUpdate','gExc'],s:['search','theme']};
 (function(){
 	if(getString('ids')) return;
 	// upgrade data from Violentmonkey 1 irreversibly
@@ -155,7 +156,7 @@ function testURL(url,e){
 	if(e.custom.include) inc=inc.concat(e.custom.include);
 	if(e.custom._exclude!=false&&e.meta.exclude) exc=exc.concat(e.meta.exclude);
 	if(e.custom.exclude) exc=exc.concat(e.custom.exclude);
-	if(mat.length) {for(i=0;i<mat.length;i++) if(f=matchTest(mat[i],u)) break;}	// @match
+	if(u&&mat.length) {for(i=0;i<mat.length;i++) if(f=matchTest(mat[i],u)) break;}	// @match
 	else for(i=0;i<inc.length;i++) if(f=autoReg(inc[i]).test(url)) break;	// @include
 	if(f) for(i=0;i<exc.length;i++) if(!(f=!autoReg(exc[i]).test(url))) break;	// @exclude
 	return f;
@@ -166,22 +167,22 @@ function checkUpdate(i){
 	function update(){
 		var u=o.custom.downloadURL||o.meta.downloadURL;
 		if(u) {
-			r.message=_('Updating...');
+			r.message=_('msgUpdating');
 			fetchURL(u,function(){
 				parseScript(null,{status:this.status,code:this.responseText},o);
 			});
-		} else r.message='<span class=new>'+_('New version found.')+'</span>';
+		} else r.message='<span class=new>'+_('msgNewVersion')+'</span>';
 		rt.post('UpdateItem',r);
 	}
 	var u=o.custom.updateURL||o.meta.updateURL;
 	if(u) {
-		r.message=_('Checking for updates...');rt.post('UpdateItem',r);
+		r.message=_('msgCheckingForUpdate');rt.post('UpdateItem',r);
 		fetchURL(u,function(){
-			r.message=_('Failed fetching update information.');
+			r.message=_('msgErrorFetchingUpdateInfo');
 			if(this.status==200) try{
 				var m=parseMeta(this.responseText);
 				if(older(o.meta.version,m.version)) return update();
-				r.message=_('No update found.');
+				r.message=_('msgNoUpdate');
 			}catch(e){}
 			delete r.hideUpdate;
 			rt.post('UpdateItem',r);
@@ -199,7 +200,10 @@ rt.listen('EnableScript',function(o,e){
 	if(o.id) {
 		e=map[o.id];e.enabled=o.data;saveScript(e);
 		rt.post('UpdateItem',{item:ids.indexOf(o.id),obj:getMeta(e),status:0});
-	} else setItem('isApplied',isApplied=o.data);
+	} else {
+		setItem('isApplied',isApplied=o.data);
+		updateIcon();
+	}
 });
 rt.listen('SetValue',function(o){setItem('val:'+getNameURI(map[o.data.id]),o.data.data);});
 rt.listen('RemoveScript',removeScript);
@@ -262,9 +266,9 @@ function parseScript(o,d,c){
 	} else if(!d.code) {	// from options: user edited
 		c=d.script;d.code=c.code;
 	}
-	r.message='message' in d?d.message:_('Script updated.');
+	r.message='message' in d?d.message:_('msgUpdated');
 	if(c) r.item=ids.indexOf(c.id);
-	if(d.status&&d.status!=200||!d.code) {r.status=-1;r.message=_('Error fetching script!');}
+	if(d.status&&d.status!=200||!d.code) {r.status=-1;r.message=_('msgErrorFetchingScript');}
 	else {
 		var meta=parseMeta(d.code);
 		if(!c&&d.id) c=map[d.id];
@@ -280,7 +284,7 @@ function parseScript(o,d,c){
 			} else i=-1;
 			if(i<0) c=newScript(); else c=map[ids[i]];
 		}
-		if(i<0){r.status=1;r.message=_('Script installed.');i=ids.length;}
+		if(i<0){r.status=1;r.message=_('msgInstalled');i=ids.length;}
 		c.meta=meta;c.code=d.code;r.item=i;r.obj=getMeta(c);
 		if(d.data) for(i in d.data) c[i]=d.data[i];
 		if(o) {
@@ -310,7 +314,7 @@ rt.listen('ParseScript',function(o){
 });
 rt.listen('InstallScript',function(o){
 	if(!o.data) {
-		if(getItem('installFile')) rt.post(o.source,{topic:'ConfirmInstall',data:_('Do you want to install this UserScript?')});
+		rt.post(o.source,{topic:'ConfirmInstall',data:_('msgConfirm')});
 	} else fetchURL(o.data,function(){
 		parseScript(o,{status:this.status,code:this.responseText});		// from injected: url
 	});
@@ -319,7 +323,6 @@ rt.listen('InstallScript',function(o){
 rt.listen('GetOptions',function(){
 	var i,r={};
 	function get(l,f){l.forEach(function(i){r[i]=f(i);});}
-try{	// debug
 	get(settings.o,getItem);get(settings.s,getString);
 	r.ids=ids;r.map={};r.cache={};
 	for(i in map) {
@@ -327,19 +330,28 @@ try{	// debug
 		(i=o.meta.icon)&&!(i in r.cache)&&(o=getString('cache:'+i))&&(r.cache[i]=btoa(o));
 	}
 	rt.post('GotOptions',r);
-}catch(e){notify(e+'\n'+e.stack);}
 });
 rt.listen('GetScript',function(o){rt.post('GotScript',map[o]);});
 rt.listen('SetOption',function(o){
 	if(o.wkey) window[o.wkey]=o.data;
 	(typeof o.data=='string'?setString:setItem)(o.key,o.data);
 });
+function getBadge(){
+	getBadge.flag++;	// avoid frequent asking for popup menu
+	setTimeout(function(){
+		if(!--getBadge.flag) br.executeScript('setBadge();');
+	},200);
+}
+getBadge.flag=0;
+rt.listen('GetBadge',getBadge);
+rt.listen('SetBadge',function(o){rt.icon.showBadge(o.data);});
 
 var optionsURL=new RegExp('^'+(rt.getPrivateUrl()+'options.html').replace(/\./g,'\\.'));
 br.onBrowserEvent=function(o){
 	switch(o.type){
 		case 'TAB_SWITCH':
 		case 'ON_NAVIGATE':
+			rt.icon.hideBadge();getBadge();
 			var tab=br.tabs.getCurrentTab(),i,t;
 			if(optionsURL.test(tab.url)) {
 				for(i=0;i<br.tabs.length;i++) {

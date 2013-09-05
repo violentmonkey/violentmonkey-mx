@@ -1,17 +1,18 @@
 var rt=window.external.mxGetRuntime(),br=rt.create('mx.browser');
 
-function format(){
-	var a=arguments;
-	if(a[0]) return a[0].replace(/\$(?:\{(\d+)\}|(\d+))/g,function(v,g1,g2){g1=a[g1||g2];if(g1==undefined) g1=v;return g1;});
-}
-function _(t){
-	var l=t.replace(/[%+=]/g,function(v){return '%'+v.charCodeAt().toString(16);}).replace(/ /g,'+');
-	l=rt.locale.t(l);
-	return l?JSON.parse(l):t;
+function _(){
+	var a=arguments,k=a[0],v;
+	v=rt.locale.t(k);
+	try{
+		v=JSON.parse(v).replace(/\$(?:\{(\d+)\}|(\d+))/g,function(v,g1,g2){return a[g1||g2]||'';});
+	}catch(e){
+		v='';
+	}
+	return v;
 };
 function initFont(){
 	var s=document.createElement('style');
-	s.innerHTML=_('__font');
+	s.innerHTML=_('css');
 	document.head.appendChild(s);
 }
 function initI18n(){
@@ -46,5 +47,5 @@ function getNameURI(i){
 }
 
 function notify(msg){
-	window.webkitNotifications.createNotification('',_('Violentmonkey'),msg).show();
+	window.webkitNotifications.createNotification('',_('extName'),msg).show();
 }

@@ -32,6 +32,7 @@ function post(topic,data,o){
 	rt.post(topic,o);
 }
 function setPopup(){post('SetPopup',[menu,ids]);}
+function setBadge(){post('SetBadge',ids.length);}
 rt.listen(id,function(o,c){
 	if(o.topic=='FoundScript') loadScript(o);
 	else if(o.topic=='Command') {c=command[o.data];if(c) c();}
@@ -77,8 +78,8 @@ p.setAttribute('onclick','return window;');
 var unsafeWindow=p.onclick();
 delete p;
 var start=[],body=[],end=[],cache,values,ids=[],menu=[],command={},elements;
-function run_code(c){
-	var w=new wrapper(c),require=c.meta.require||[],i,r,code=[];
+function runCode(c){
+	var w=new wrapper(c),require=c.meta.require||[],i,r,f,code=[];
 	elements.forEach(function(i){code.push(i+'=window.'+i);});
 	code=['(function(){var '+code.join(',')+';'];
 	for(i=0;i<require.length;i++) try{
@@ -87,22 +88,23 @@ function run_code(c){
 	}catch(e){console.log(e+'\n'+e.stack);}
 	code.push(c.code);
 	code.push('})();');
-	this.code=code.join('\n');
-	try{with(w) eval(this.code);}catch(e){
-		i=e.stack.lastIndexOf('\n    at run_code.eval');
-		if(i>0) e.stack=e.stack.slice(0,i).replace(/eval at run_code \(mxaddon-pkg:[^\)]*\), /g,'');
+	code=code.join('\n');
+	f=new Function('w','with(w) eval('+JSON.stringify(code)+');');
+	try{f.call(w,w);}catch(e){
+		i=e.stack.lastIndexOf('\n    at runCode.eval');
+		if(i>0) e.stack=e.stack.slice(0,i).replace(/eval at runCode \(mxaddon-pkg:[^\)]*\), /g,'');
 		e.message='Error running script: '+(c.custom.name||c.meta.name||c.id);
 		console.log(e+'\n'+e.stack);
 	}
 }
-function runStart(){while(start.length) new run_code(start.shift());}
+function runStart(){while(start.length) runCode(start.shift());}
 function runBody(){
 	if(document.body) {
 		window.removeEventListener('DOMNodeInserted',runBody,true);
-		while(body.length) new run_code(body.shift());
+		while(body.length) runCode(body.shift());
 	}
 }
-function runEnd(){while(end.length) new run_code(end.shift());}
+function runEnd(){while(end.length) runCode(end.shift());}
 function loadScript(o){
 	var l;
 	(ids=o.ids).forEach(function(i){
@@ -124,7 +126,7 @@ function loadScript(o){
 	window.addEventListener('DOMContentLoaded',runEnd,false);
 	runBody();
 	if(document.readyState=='complete') runEnd();
-	post('GetPopup');
+	post('GetPopup');post('GetBadge');
 }
 function propertyToString(){return 'Property for Violentmonkey: designed by Gerald';}
 function wrapper(c){

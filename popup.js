@@ -28,7 +28,7 @@ function addItem(h,c){
 function menuCommand(e){e=e.target;rt.post(e.source,{topic:'Command',data:e.cmd});}
 function menuScript(i) {
 	var s=getItem('vm:'+i);if(!s) return;
-	var n=s.meta.name?s.meta.name.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('Null name')+'</em>';
+	var n=s.meta.name?s.meta.name.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('labelNoName')+'</em>';
 	addItem(n,{holder:pB,data:s.enabled,title:s.meta.name,onclick:function(e){
 		loadItem(this,s.enabled=!s.enabled);rt.post('EnableScript',{id:i,data:s.enabled});
 	}});
@@ -42,28 +42,29 @@ function getPopup(){
 getPopup.flag=0;
 function load(o){
 	pT.innerHTML=pB.innerHTML=cT.innerHTML=cB.innerHTML='';C.classList.add('hide');P.classList.remove('hide');
-	addItem(_('Manage scripts'),{holder:pT,symbol:'➤',title:true,onclick:function(){
+	addItem(_('menuManageScripts'),{holder:pT,symbol:'➤',title:true,onclick:function(){
 		br.tabs.newTab({url:rt.getPrivateUrl()+'options.html',activate:true});
 	}});
-	if(o) addItem(_('Find scripts for this site'),{holder:pT,symbol:'➤',title:true,onclick:function(){
+	if(o) addItem(_('menuFindScripts'),{holder:pT,symbol:'➤',title:true,onclick:function(){
 		var q='site:userscripts.org+inurl:show+'+br.tabs.getCurrentTab().url.replace(/^.*?:\/\/([^\/]*?)\.\w+\/.*$/,function(v,g){
 			return g.replace(/\.(com|..)$/,'').replace(/\./g,'+');
 		});
-		br.tabs.newTab({url:format(getString('search'),q),activate:true});
+		br.tabs.newTab({url:getString('search').replace('*',q),activate:true});
 	}});
 	var d=o&&o.data;
 	if(d&&d[0]&&d[0].length) {
-		addItem(_('Back'),{holder:cT,symbol:'◄',title:true,onclick:function(){
+		addItem(_('menuBack'),{holder:cT,symbol:'◄',title:true,onclick:function(){
 			C.classList.add('hide');P.classList.remove('hide');
 		}});
 		d[0].forEach(function(i){addItem(i[0],{holder:cB,symbol:'➤',title:true,onclick:menuCommand,cmd:i[0],source:o.source});});
-		addItem(_('Script commands...'),{holder:pT,symbol:'➤',title:true,onclick:function(){
+		addItem(_('menuCommands'),{holder:pT,symbol:'➤',title:true,onclick:function(){
 			P.classList.add('hide');C.classList.remove('hide');
 		}});
 	}
 	var isApplied=getItem('isApplied');
-	addItem(_('Scripts enabled'),{holder:pT,data:isApplied,title:true,onclick:function(e){
-		rt.post('EnableScript',{data:isApplied=!isApplied});loadItem(this,isApplied);
+	addItem(_('menuScriptEnabled'),{holder:pT,data:isApplied,title:true,onclick:function(e){
+		rt.post('EnableScript',{data:isApplied=!isApplied});
+		loadItem(this,isApplied);
 	}});
 	if(d&&d[1]&&d[1].length) {
 		pR.classList.remove('hide');
