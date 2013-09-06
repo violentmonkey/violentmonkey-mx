@@ -224,6 +224,11 @@ rt.listen('FindScript',function(o){
 	});
 	rt.post(o.source,{topic:'FoundScript',ids:_ids,map:_map,cache:cache,values:values});
 });
+rt.listen('Move',function(o){
+	var s=o.to>o.from?1:-1,i=o.from,x=ids[i];
+	for(;i!=o.to;i+=s) ids[i]=ids[i+s];
+	ids[i]=x;saveIDs();
+});
 function parseMeta(d){
 	var o=-1,meta={include:[],exclude:[],match:[],require:[],resources:{}};
 	meta.resource=[];

@@ -10,8 +10,10 @@ a{color:dodgerblue;}
 .new{color:red;}
 #sList>div{border-top:1px dashed gray;}
 #sList>div:last-child{border-bottom:1px dashed gray;}
+#sList>div.moving{background:#bb6;border:1px outset gray;}
 #sList .version,#sList .author{color:gray;font-style:italic;}
 #sList .message{color:gray;}
+#sList .move{color:gray;}
 #sList .disabled{color:gray;background:silver;}
 #sList .disabled a{color:gray;}
 #sList .disabled img{opacity:0.3;}

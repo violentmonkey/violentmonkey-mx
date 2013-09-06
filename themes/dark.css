@@ -13,9 +13,11 @@ button:disabled{background:gray;color:silver;}
 .new{color:yellow;}
 #sList>div{border-top:1px dashed #555;}
 #sList>div:last-child{border-bottom:1px dashed #555;}
+#sList>div.moving{background:#330;border:1px outset #444;}
 #sList>.hint{border:2px solid silver;box-shadow:5px 10px 15px rgba(0,0,0,0.4);}
 #sList .version,#sList .author{color:gray;font-style:italic;}
 #sList .message{color:gray;}
+#sList .move{color:gray;}
 #sList .disabled{color:#ccc;background:#222;}
 #sList .disabled a{color:#ccc;}
 #sList .disabled img{opacity:0.3;}

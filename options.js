@@ -5,12 +5,6 @@ function split(t){return t.replace(/^\s+|\s+$/g,'').split(/\s*\n\s*/).filter(fun
 rt.listen('ShowMessage',function(o){alert(o);});
 
 // Main options
-function updateMove(d){
-	if(!d) return;
-	var b=d.querySelectorAll('.move');
-	b[0].disabled=!d.previousSibling;
-	b[1].disabled=!d.nextSibling;
-}
 function allowUpdate(n){return n.update&&(n.custom.updateURL||n.meta.updateURL);}
 function getIcon(n){
 	var i=cache[n.meta.icon];
@@ -29,15 +23,16 @@ function loadItem(d,n,r){
 	+'<a class="name ellipsis" target=_blank></a>'
 	+'<span class=author></span>'
 	+'<span class=version>'+(n.meta.version?'v'+n.meta.version:'')+'</span>'
-	+(allowUpdate(n)?'<a data=update class=update href=#>'+_('anchorUpdate')+'</a> ':'')
+	+'<div class=panelT>'
+		+(allowUpdate(n)?'<a data=update class=update href=#>'+_('anchorUpdate')+'</a> ':'')
+		+'<span class=move data=move>&equiv;</span>'
+	+'</div>'
 	+'<div class="descrip ellipsis"></div>'
 	+'<span class=message></span>'
-	+'<div class=panel>'
+	+'<div class=panelB>'
 		+'<button data=edit>'+_('buttonEdit')+'</button> '
 		+'<button data=enable>'+_(n.enabled?'buttonDisable':'buttonEnable')+'</button> '
 		+'<button data=remove>'+_('buttonRemove')+'</button>'
-		+'<button data=up class=move>&uarr;</button>'
-		+'<button data=down class=move>&darr;</button>'
 	+'</div>';
 	d.className=n.enabled?'':'disabled';
 	var a=d.querySelector('.name'),b=n.custom.name||n.meta.name;
@@ -55,26 +50,49 @@ function addItem(n){
 	L.appendChild(d);
 	return d;
 }
-function moveUp(i,p){
-	var x=ids[i];
-	ids[i]=ids[i-1];
-	ids[i-1]=x;
-	L.insertBefore(p,p.previousSibling);
-	rt.post('SetOption',{key:'ids',wkey:'ids',data:ids});
-	updateMove(p);updateMove(p.nextSibling);
-}
-L.onclick=function(e){
-	var o=e.target,d=o.getAttribute('data'),p;
-	if(!d) return;
-	e.preventDefault();
-	for(p=o;p&&p.parentNode!=L;p=p.parentNode);
-	var i=Array.prototype.indexOf.call(L.childNodes,p);
-	switch(d){
-		case 'edit':
-			edit(i);
-			break;
-		case 'enable':
-			e=map[ids[i]];
+(function(){
+	function getSource(e){
+		var o=e.target,p,i;
+		for(p=o;p&&p.parentNode!=L;p=p.parentNode);
+		i=Array.prototype.indexOf.call(L.childNodes,p);
+		return [i,p,o];
+	}
+	function moveItem(e){
+		var m=getSource(e);if(m[0]<0) return;
+		if(m[0]>=0&&m[0]!=t) {
+			e=m;m=e[1];if(e[0]>t) m=m.nextSibling;
+			L.insertBefore(o[1],m);
+			t=e[0];
+		}
+	}
+	function movedItem(e){
+		if(!moving) return;moving=false;
+		o[1].classList.remove('moving');
+		L.onmousemove=L.onmouseup=null;L.onmousedown=startMove;
+		if(o[0]!=t) {
+			rt.post('Move',{from:o[0],to:t});
+			var s=t>o[0]?1:-1,i=o[0],x=ids[i];
+			for(;i!=t;i+=s) ids[i]=ids[i+s];
+			ids[t]=x;
+		}
+	}
+	function startMove(e){
+		o=getSource(e);t=o[0];
+		if(o[2].getAttribute('data')=='move') {
+			if(moving) return;moving=true;
+			e.preventDefault();
+			o[1].classList.add('moving');
+			L.onmousedown=null;
+			L.onmousemove=moveItem;
+			L.onmouseup=movedItem;
+		}
+	}
+	var maps={
+		edit:function(i){
+			E.cur=L.childNodes[i];rt.post('GetScript',map[ids[i]].id);
+		},
+		enable:function(i,p,o){
+			var e=map[ids[i]];
 			if(e.enabled=!e.enabled) {
 				p.classList.remove('disabled');
 				o.innerText=_('buttonDisable');
@@ -83,28 +101,27 @@ L.onclick=function(e){
 				o.innerText=_('buttonEnable');
 			}
 			rt.post('EnableScript',{id:e.id,data:e.enabled});
-			break;
-		case 'remove':
+		},
+		remove:function(i,p){
 			rt.post('RemoveScript',i);
 			delete map[ids.splice(i,1)[0]];
 			L.removeChild(p);
-			if(i==L.childNodes.length) i--;
-			updateMove(L.childNodes[i]);
-			break;
-		case 'update':
+		},
+		update:function(i){
 			rt.post('CheckUpdate',i);
-			break;
-		case 'up':
-			if(p.previousSibling) moveUp(i,p);
-			break;
-		case 'down':
-			if(p.nextSibling) moveUp(i+1,p.nextSibling);
-			break;
-	}
-};
+		}
+	},o,t,moving=false;
+	L.onmousedown=startMove;
+	L.onclick=function(e){
+		var o=getSource(e),d=o[2].getAttribute('data'),f=maps[d];
+		if(f) {
+			e.preventDefault();
+			f.apply(this,o);
+		}
+	};
+})();
 rt.listen('AddScript',function(o){
-	ids.push(o.id);o=addItem(map[o.id]=o);
-	updateMove(o);updateMove(o.previousSibling);
+	ids.push(o.id);addItem(map[o.id]=o);
 });
 $('bNew').onclick=function(){rt.post('NewScript');};
 $('bUpdate').onclick=function(){rt.post('CheckUpdateAll');};
@@ -319,9 +336,6 @@ rt.listen('GotScript',function(o){
 	T.setValue(o.code);T.markClean();T.getDoc().clearHistory();
 	eS.disabled=eSC.disabled=true;T.focus();
 });
-function edit(i){
-	E.cur=L.childNodes[i];rt.post('GetScript',map[ids[i]].id);
-}
 function eSave(){
 	var c=E.scr.custom;
 	c.name=mN.value;
@@ -345,7 +359,6 @@ function eSave(){
 	rt.post('ParseScript',{script:E.scr,message:''});
 	T.markClean();eS.disabled=eSC.disabled=true;
 	loadItem(E.cur,E.scr);
-	updateMove(E.cur);
 }
 function eClose(){T.setValue('');switchTo(N);}
 E.markDirty=function(){eS.disabled=eSC.disabled=false;};
@@ -382,7 +395,6 @@ var ids,map,cache;
 function loadOptions(o){
 	ids=o.ids;map=o.map;cache=o.cache;L.innerHTML='';
 	ids.forEach(function(i){addItem(map[i]);});
-	updateMove(L.firstChild);updateMove(L.lastChild);
 	$('cUpdate').checked=o.autoUpdate;
 	$('tSearch').value=o.search;
 	$('tExclude').value=o.gExc.join('\n');
@@ -396,9 +408,8 @@ rt.listen('UpdateItem',function(r){
 	if(r.obj) map[r.obj.id]=r.obj;
 	switch(r.status){
 		case 0:loadItem(L.childNodes[r.item],r.obj,r);break;
-		case 1:ids.push(r.obj.id);addItem(r.obj);updateMove(L.childNodes[r.item-1]);break;
+		case 1:ids.push(r.obj.id);addItem(r.obj);break;
 		default:modifyItem(L.childNodes[r.item],r);
 	}
-	updateMove(L.childNodes[r.item]);
 });
 rt.post('GetOptions');
