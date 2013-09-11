@@ -163,6 +163,7 @@ initFont();initI18n();
 var A=$('advanced');
 $('bAdvanced').onclick=function(){showDialog(A);};
 $('cUpdate').onchange=function(){rt.post('AutoUpdate',this.checked);};
+$('cBadge').onchange=function(){rt.post('ShowBadge',this.checked);};
 $('bDefSearch').onclick=function(){$('tSearch').value=_('defaultSearch');};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
 function importFile(e){
@@ -396,6 +397,7 @@ function loadOptions(o){
 	ids=o.ids;map=o.map;cache=o.cache;L.innerHTML='';
 	ids.forEach(function(i){addItem(map[i]);});
 	$('cUpdate').checked=o.autoUpdate;
+	$('cBadge').checked=o.showBadge;
 	$('tSearch').value=o.search;
 	$('tExclude').value=o.gExc.join('\n');
 	if(!($('cDetail').checked=o.showDetails)) L.classList.add('simple');

@@ -53,14 +53,15 @@ function init(){
 	getItem('withData',true);
 	getString('search',_('defaultSearch'));
 	autoUpdate=getItem('autoUpdate',true);
+	showBadge=getItem('showBadge',true);
 	isApplied=getItem('isApplied',true);
 	lastUpdate=getItem('lastUpdate',0);
 	gExc=getItem('gExc',[]);
 	updateIcon();
 }
 function updateIcon(){rt.icon.setIconImage('icon'+(isApplied?'':'w'));}
-var isApplied,ids,map,gExc,lastUpdate,autoUpdate,
-		settings={o:['showDetails','withData','autoUpdate','isApplied','lastUpdate','gExc'],s:['search','theme']};
+var isApplied,ids,map,gExc,lastUpdate,autoUpdate,showBadge,
+		settings={o:['showDetails','withData','autoUpdate','showBadge','isApplied','lastUpdate','gExc'],s:['search','theme']};
 (function(){
 	if(getString('ids')) return;
 	// upgrade data from Violentmonkey 1 irreversibly
@@ -349,7 +350,13 @@ function getBadge(){
 }
 getBadge.flag=0;
 rt.listen('GetBadge',getBadge);
-rt.listen('SetBadge',function(o){rt.icon.showBadge(o.data);});
+rt.listen('SetBadge',function(o){
+	if(showBadge) rt.icon.showBadge(o.data);
+});
+rt.listen('ShowBadge',function(o){
+	if(setItem('showBadge',showBadge=o)) getBadge();
+	else rt.icon.hideBadge();
+});
 
 var optionsURL=new RegExp('^'+(rt.getPrivateUrl()+'options.html').replace(/\./g,'\\.'));
 br.onBrowserEvent=function(o){
