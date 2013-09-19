@@ -32,18 +32,12 @@ function older(o,n){
 
 // Check Maxthon version
 (function(l,v){
-	function showHTML(locales,name) {
-		mx.locale();
-		var lc=mx.getSystemLocale(),i=locales.indexOf(lc);
-		if(i<0) lc=locales[0]||'en';
-		br.tabs.newTab({url:rt.getPrivateUrl()+'locale_html/'+name+'_'+lc+'.html',activate:true});
-	}
 	if(older(l,v)) {	// first use or new update
 		setString('lastVersion',v);
 		if(older(v,'4.1.1.1600'))	// early versions may have bugs
-			showHTML(['en','zh-cn'],'oldversion');
+			br.tabs.newTab({url:'https://github.com/gera2ld/Violentmonkey-for-Maxthon/wiki/ObsoleteMaxthon',activate:true});
 		else if(l&&older(l,'4.1.1.1600'))	// update caused data loss
-			showHTML(['en','zh-cn'],'dataloss');
+			br.tabs.newTab({url:'https://github.com/gera2ld/Violentmonkey-for-Maxthon/wiki/DataLoss',activate:true});
 	}
 })(getString('lastVersion',''),window.external.mxVersion);
 
@@ -51,13 +45,13 @@ function older(o,n){
 function init(){
 	getItem('showDetails',true);
 	getItem('withData',true);
-	getString('search',_('defaultSearch'));
 	autoUpdate=getItem('autoUpdate',true);
 	showBadge=getItem('showBadge',true);
 	isApplied=getItem('isApplied',true);
 	lastUpdate=getItem('lastUpdate',0);
 	gExc=getItem('gExc',[]);
 	updateIcon();
+	if(!/\*/.test(getString('search',''))) setString('search',_('defaultSearch'));
 }
 function updateIcon(){rt.icon.setIconImage('icon'+(isApplied?'':'w'));}
 var isApplied,ids,map,gExc,lastUpdate,autoUpdate,showBadge,

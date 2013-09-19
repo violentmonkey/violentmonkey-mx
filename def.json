@@ -2,7 +2,7 @@
 	{
 		"type": "extension",
 		"frameworkVersion":"1.0.6",
-		"version":"2.0.44",
+		"version":"2.0.45",
 		"guid": "{7732dc50-47c1-9be5-6ea9-f85c38172974}",
 		"author":{
 			"name":"Gerald",
