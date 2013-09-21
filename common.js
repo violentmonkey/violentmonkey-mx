@@ -1,10 +1,9 @@
 var rt=window.external.mxGetRuntime(),br=rt.create('mx.browser');
 
-function _(){
-	var a=arguments,k=a[0],v;
-	v=rt.locale.t(k);
+function _(k,a){
+	var v=rt.locale.t(k);
 	try{
-		v=JSON.parse(v).replace(/\$(?:\{(\d+)\}|(\d+))/g,function(v,g1,g2){return a[g1||g2]||'';});
+		v=JSON.parse(v).replace(/\$(?:\{(\d+)\}|(\d+))/g,function(v,g1,g2){v=g1||g2;return a[v-1]||'';});
 	}catch(e){
 		v='';
 	}

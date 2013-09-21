@@ -178,7 +178,7 @@ function importFile(e){
 					count++;
 					getFiles();
 				}); else {
-					alert(_('msgImported',count));
+					alert(_('msgImported',[count]));
 					location.reload();
 				}
 			}
