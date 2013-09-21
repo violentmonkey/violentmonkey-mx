@@ -98,7 +98,7 @@ rt.listen('Vacuum',function(){
 	rt.post('Vacuumed');
 });
 
-function newScript(save){
+function newScript(){
 	var r={
 		custom:{},
 		enabled:1,
@@ -107,7 +107,6 @@ function newScript(save){
 	};
 	r.meta=parseMeta(r.code);
 	r.id=Date.now()+Math.random().toString().substr(1);
-	if(save) saveScript(r);
 	return r;
 }
 function saveIDs(){setItem('ids',ids);}
@@ -190,7 +189,7 @@ function checkUpdateAll(){
 }
 rt.listen('CheckUpdate',checkUpdate);
 rt.listen('CheckUpdateAll',checkUpdateAll);
-rt.listen('NewScript',function(o){rt.post('AddScript',newScript(true));});
+rt.listen('NewScript',function(o){rt.post('AddScript',newScript());});
 rt.listen('EnableScript',function(o,e){
 	if(o.id) {
 		e=map[o.id];e.enabled=o.data;saveScript(e);

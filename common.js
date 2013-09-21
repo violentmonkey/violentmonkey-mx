@@ -15,10 +15,11 @@ function initFont(){
 	s.innerHTML=_('css');
 	document.head.appendChild(s);
 }
-function initI18n(){
+function initI18n(callback){
 	window.addEventListener('DOMContentLoaded',function(){
 		var nodes=document.querySelectorAll('.i18n'),i;
 		for(i=0;i<nodes.length;i++) nodes[i].innerHTML=_(nodes[i].innerHTML);
+		if(callback) callback();
 	},true);
 }
 
