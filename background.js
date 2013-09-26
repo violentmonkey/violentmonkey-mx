@@ -30,6 +30,30 @@ function older(o,n){
 	return n.length;
 }
 
+/**
+* http://www.webtoolkit.info/javascript-utf8.html
+*/
+function utf8decode (utftext) {
+	var string = "";
+	var i = 0;
+	var c = 0, c1 = 0, c2 = 0, c3 = 0;
+	while ( i < utftext.length ) {
+		c = utftext.charCodeAt(i);
+		if (c < 128) {string += String.fromCharCode(c);i++;}
+		else if((c > 191) && (c < 224)) {
+			c2 = utftext.charCodeAt(i+1);
+			string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
+			i += 2;
+		} else {
+			c2 = utftext.charCodeAt(i+1);
+			c3 = utftext.charCodeAt(i+2);
+			string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+			i += 3;
+		}
+	}
+	return string;
+}
+
 // Check Maxthon version
 (function(l,v){
 	if(older(l,v)) {	// first use or new update
@@ -77,7 +101,7 @@ var isApplied,ids,map,gExc,lastUpdate,autoUpdate,showBadge,
 init();ids=[];map={};
 getItem('ids',[]).forEach(function(i){
 	var o=getItem('vm:'+i);
-	if(o) {ids.push(i);map[i]=o;}
+	if(o) {ids.push(i);map[i]=o;o.uri=getNameURI(o);}
 });
 
 rt.listen('Vacuum',function(){
@@ -199,24 +223,24 @@ rt.listen('EnableScript',function(o,e){
 		updateIcon();
 	}
 });
-rt.listen('SetValue',function(o){setItem('val:'+getNameURI(map[o.data.id]),o.data.data);});
+rt.listen('SetValue',function(o){setItem('val:'+o.data.uri,o.data.values);});
 rt.listen('RemoveScript',removeScript);
 rt.listen('FindScript',function(o){
-	var i,_ids=[],_map={},cache={},values={},url=o.origin;
+	var i,scripts=[],cache={},require={},values={},url=o.origin;
+	function getRequire(j){require[j]=utf8decode(getString('cache:'+j));}
 	function getCache(j){cache[j]=getString('cache:'+j);}
 	if(o.data) for(i=0;i<gExc.length;i++) if(autoReg(gExc[i]).test(o.data)) return;
 	if(url.substr(0,5)!='data:') ids.forEach(function(i,j){
 		if(testURL(url,i=map[i])) {
-			_ids.push(i.id);
+			scripts.push(i);
 			if(isApplied&&i.enabled) {
-				_map[i.id]=i;
-				if(i.meta.require) i.meta.require.forEach(getCache);
+				if(i.meta.require) i.meta.require.forEach(getRequire);
 				for(j in i.meta.resources) getCache(i.meta.resources[j]);
-				values[i.id]=getItem('val:'+getNameURI(i));
+				values[i.uri]=getItem('val:'+i.uri);
 			}
 		}
 	});
-	rt.post(o.source,{topic:'FoundScript',ids:_ids,map:_map,cache:cache,values:values});
+	rt.post(o.source,{topic:'FoundScript',data:{isApplied:isApplied,scripts:scripts,require:require,cache:cache,values:values}});
 });
 rt.listen('Move',function(o){
 	var s=o.to>o.from?1:-1,i=o.from,x=ids[i];
