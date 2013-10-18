@@ -162,6 +162,7 @@ var A=$('advanced');
 $('bAdvanced').onclick=function(){showDialog(A);};
 $('cUpdate').onchange=function(){rt.post('AutoUpdate',this.checked);};
 $('cBadge').onchange=function(){rt.post('ShowBadge',this.checked);};
+$('tSearch').title=_('hintSearchLink');
 $('bDefSearch').onclick=function(){$('tSearch').value=_('defaultSearch');};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
 function importFile(e){
@@ -203,6 +204,8 @@ $('aImport').onclick=function(){
 	iH.dispatchEvent(e);
 };
 $('aVacuum').onclick=function(){rt.post('Vacuum');};
+$('aVacuum').title=_('hintVacuumData');
+$('tExclude').title=_('hintGlobalExcludes');
 rt.listen('Vacuumed',function(){var t=$('aVacuum');t.innerHTML=_('buttonVacuumed');t.disabled=true;});
 A.close=$('aClose').onclick=function(){
 	rt.post('SetOption',{key:'search',data:$('tSearch').value});
