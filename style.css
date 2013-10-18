@@ -61,3 +61,31 @@ fieldset{border-radius:5px;}
 .menu>div{cursor:pointer;padding:5px;display:block;}
 .menu>div span{display:inline-block;width:20px;}
 /* <<< Layout */
+
+/* Styles >>> */
+html,body{background:#eee;}
+h1,h2{text-shadow:#999 3px 3px 5px;}
+a{color:dodgerblue;}
+#overlay{background:black;}
+#overlay.overlay{opacity:0.6;}
+.float,.frame{background:lightgray;}
+.popup .expand>td{border-top:1px dashed gray;}
+.em{font-style:italic;}
+.new{color:red;}
+#sList>div{border-top:1px dashed gray;}
+#sList>div:last-child{border-bottom:1px dashed gray;}
+#sList>div.moving{background:#bb6;border:1px outset gray;}
+#sList .version,#sList .author{color:gray;font-style:italic;}
+#sList .message{color:gray;}
+#sList .move{color:gray;}
+#sList .disabled{color:gray;background:silver;}
+#sList .disabled a{color:gray;}
+#sList .disabled img{opacity:0.3;}
+.list{background:white;}
+.list>div{border-bottom:1px dashed lightgray;}
+.list .selected{background:gray;color:white;}
+#xOptions>div{background:#eee;box-shadow:5px 10px 15px rgba(0,0,0,0.4);border:1px solid gray;}
+.menu>div:hover{background:gray;color:gold;}
+.menu>div.disabled{color:gray;}
+.menu>div.disabled:hover{color:silver;}
+/* <<< Styles */

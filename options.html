@@ -2,19 +2,10 @@
 <html class=fill>
 	<head>
 		<meta http-equiv="content-type" content="text/html;charset=utf-8">
-		<link rel="stylesheet" type="text/css" href="layout.css" />
-		<link rel="stylesheet" type="text/css" id=theme href="themes/default.css" />
-		<link rel="stylesheet" type="text/css" href="lib/codemirror/codemirror.css" />
-		<link rel="stylesheet" type="text/css" href="lib/codemirror/tomorrow-night-eighties.css">
+		<link rel="stylesheet" type="text/css" href="style.css" />
 		<link rel="shortcut icon" type="image/png" href="icons/icon_32.png" />
-		<script type="text/javascript" src="lib/codemirror/codemirror.js"></script>
-		<script type="text/javascript" src="lib/codemirror/javascript.js"></script>
-		<script type="text/javascript" src="lib/codemirror/continuecomment.js"></script>
-		<script type="text/javascript" src="lib/codemirror/matchbrackets.js"></script>
-		<script type="text/javascript" src="lib/codemirror/match-highlighter.js"></script>
-		<script type="text/javascript" src="lib/codemirror/search.js"></script>
-		<script type="text/javascript" src="lib/codemirror/searchcursor.js"></script>
 		<script type="text/javascript" src="lib/zip.js/zip.js"></script>
+		<script type="text/javascript" src="load.js"></script>
 		<title class=i18n>extName</title>
 	</head>
 	<body class=fill>
@@ -52,50 +43,12 @@
 		<table id=editor class="frame hide">
 			<tr>
 				<td><h2 class=i18n>labelScriptEditor</h2></td>
-				<td class=buttons><button id=bmeta></button></td>
+				<td class=buttons><button id=bcustom class=i18n>buttonCustomMeta</button></td>
 			</tr>
-			<tr id=code class=expand><td colspan=2 class=expandr><textarea id=eCode class=expanda></textarea></td></tr>
-			<tr id=meta class="hide expand"><td colspan=2 class=expandr><div class=expanda><div>
-				<table>
-					<tr>
-						<td title="@name" class=i18n>labelName</td><td class=expand><input type=text id=mName></td>
-						<td title="@run-at" class=i18n>labelRunAt</td><td>
-							<select id=mRunAt>
-								<option class=i18n value=default>labelRunAtDefault</option>
-								<option value=start>document-start</option>
-								<option value=body>document-body</option>
-								<option value=end>document-end</option>
-							</select>
-						</td>
-					</tr>
-					<tr title="@homepage"><td class=i18n>labelHomepage</td><td colspan=3 class=expand><input type=text id=mHomepage></td></tr>
-				</table>
-				<table>
-					<tr title="@updateURL"><td class=i18n>labelUpdateURL</td><td class=expand><input type=text id=mUpdateURL></td></tr>
-					<tr title="@downloadURL"><td class=i18n>labelDownloadURL</td><td class=expand><input type=text id=mDownloadURL></td></tr>
-				</table>
-				<fieldset title="@include">
-					<legend class=i18n>labelInclude</legend>
-					<label><input type=checkbox id=cInclude><span class=i18n>labelKeepInclude</span></label>
-					<span class=i18n>labelCustomInclude</span><br>
-					<textarea id=mInclude></textarea>
-				</fieldset>
-				<fieldset title="@match">
-					<legend class=i18n>labelMatch</legend>
-					<label><input type=checkbox id=cMatch><span class=i18n>labelKeepMatch</span></label>
-					<span class=i18n>labelCustomMatch</span><br>
-					<textarea id=mMatch></textarea>
-				</fieldset>
-				<fieldset title="@exclude">
-					<legend class=i18n>labelExclude</legend>
-					<label><input type=checkbox id=cExclude><span class=i18n>labelKeepExclude</span></label>
-					<span class=i18n>labelCustomExclude</span><br>
-					<textarea id=mExclude></textarea>
-				</fieldset>
-			</div></div></td></tr>
+			<tr class=expand><td id=eCode colspan=2 class=expandr></td></tr>
 			<tr>
 				<td colspan=2>
-					<label class=left><input type=checkbox id=eUpdate><span class=i18n>labelAllowUpdate</span></label>
+					<label><input type=checkbox id=eUpdate><span class=i18n>labelAllowUpdate</span></label>
 					<div class=right>
 						<button id=eSave class=i18n>buttonSave</button>
 						<button id=eSaveClose class=i18n>buttonSaveClose</button>
@@ -104,6 +57,45 @@
 				</td>
 			</tr>
 		</table>
+		<div id=meta class="float hide">
+			<table>
+				<tr>
+					<td title="@name" class=i18n>labelName</td><td class=expand><input type=text id=mName></td>
+					<td title="@run-at" class=i18n>labelRunAt</td><td>
+						<select id=mRunAt>
+							<option class=i18n value=default>labelRunAtDefault</option>
+							<option value=start>document-start</option>
+							<option value=idle>document-idle</option>
+							<option value=end>document-end</option>
+						</select>
+					</td>
+				</tr>
+				<tr title="@homepage"><td class=i18n>labelHomepage</td><td colspan=3 class=expand><input type=text id=mHomepage></td></tr>
+			</table>
+			<table>
+				<tr title="@updateURL"><td class=i18n>labelUpdateURL</td><td class=expand><input type=text id=mUpdateURL></td></tr>
+				<tr title="@downloadURL"><td class=i18n>labelDownloadURL</td><td class=expand><input type=text id=mDownloadURL></td></tr>
+			</table>
+			<fieldset title="@include">
+				<legend class=i18n>labelInclude</legend>
+				<label><input type=checkbox id=cInclude><span class=i18n>labelKeepInclude</span></label>
+				<span class=i18n>labelCustomInclude</span>
+				<textarea id=mInclude></textarea>
+			</fieldset>
+			<fieldset title="@match">
+				<legend class=i18n>labelMatch</legend>
+				<label><input type=checkbox id=cMatch><span class=i18n>labelKeepMatch</span></label>
+				<span class=i18n>labelCustomMatch</span>
+				<textarea id=mMatch></textarea>
+			</fieldset>
+			<fieldset title="@exclude">
+				<legend class=i18n>labelExclude</legend>
+				<label><input type=checkbox id=cExclude><span class=i18n>labelKeepExclude</span></label>
+				<span class=i18n>labelCustomExclude</span>
+				<textarea id=mExclude></textarea>
+			</fieldset>
+			<div class=right><button id=mOK class=i18n>buttonOK</button> <button id=mCancel class=i18n>buttonCancel</button></div>
+		</div>
 		<div id=export class="float hide">
 			<h2 class=i18n>labelExport</h2>
 			<span class=i18n>labelInstalledScripts</span>
@@ -122,13 +114,6 @@
 		</div>
 		<div id=advanced class="float hide">
 			<h2 class=i18n>labelAdvanced</h2>
-			<label>
-				<span class=i18n>labelTheme</span>
-				<select id=sTheme>
-					<option value="default" class=i18n>themeDefault</option>
-					<option value="dark" class=i18n>themeDark</option>
-				</select>
-			</label>
 			<label><input type=checkbox id=cUpdate><span class=i18n>labelAutoUpdate</span></label>
 			<label><input type=checkbox id=cBadge><span class=i18n>labelShowBadge</span></label>
 			<div>
@@ -148,4 +133,5 @@
 	</body>
 </html>
 <script src="common.js"></script>
+<script src="editor.js"></script>
 <script src="options.js"></script>

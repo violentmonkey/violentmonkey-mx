@@ -293,50 +293,19 @@ function exportStart(o){
 rt.listen('ExportStart',exportStart);
 
 // Script Editor
-var E=$('editor'),U=$('eUpdate'),C=$('code'),M=$('meta'),bM=$('bmeta'),
+var E=$('editor'),U=$('eUpdate'),M=$('meta'),
 		mN=$('mName'),mH=$('mHomepage'),mR=$('mRunAt'),
 		mU=$('mUpdateURL'),mD=$('mDownloadURL'),
     mI=$('mInclude'),mE=$('mExclude'),mM=$('mMatch'),
     cI=$('cInclude'),cE=$('cExclude'),cM=$('cMatch'),
 		eS=$('eSave'),eSC=$('eSaveClose'),T;
-CodeMirror.keyMap.vm={
-	'Esc':'close',
-	'Ctrl-S':'save',
-	'fallthrough':'default'
-};
-T=CodeMirror.fromTextArea($('eCode'),{
-	lineNumbers:true,
-	matchBrackets:true,
-	mode:'text/typescript',
-	lineWrapping:true,
-	indentUnit:4,
-	indentWithTabs:true,
-	extraKeys:{"Enter":"newlineAndIndentContinueComment"},
-	keyMap:'vm'
-});
-T.on('change',function(){eS.disabled=eSC.disabled=T.isClean();});
+function markClean(){
+	T.clearHistory();
+	eS.disabled=eSC.disabled=true;
+}
 function edit(o){
-	E.scr=o;U.checked=o.update;
-	var e=[],c=o.custom;
-	mN.value=c.name||'';
-	mH.value=c.homepage||'';
-	mU.value=c.updateURL||'';
-	mD.value=c.downloadURL||'';
-	switch(c['run-at']){
-		case 'document-start':mR.value='start';break;
-		case 'document-body':mR.value='body';break;
-		case 'document-end':mR.value='end';break;
-		default:mR.value='default';
-	}
-	cI.checked=c._include!=false;
-	mI.value=(c.include||e).join('\n');
-	cM.checked=c._match!=false;
-	mM.value=(c.match||e).join('\n');
-	cE.checked=c._exclude!=false;
-	mE.value=(c.exclude||e).join('\n');
-	initMetaButton();switchTo(E);
-	T.setValue(o.code);T.markClean();T.getDoc().clearHistory();
-	eS.disabled=eSC.disabled=true;T.focus();
+	switchTo(E);E.scr=o;U.checked=o.update;
+	T.setValueAndFocus(o.code);markClean();
 }
 rt.listen('GotScript',edit);
 function eSave(){
@@ -360,38 +329,62 @@ function eSave(){
 	E.scr.update=U.checked;
 	E.scr.code=T.getValue();
 	rt.post('ParseScript',{script:E.scr,message:''});
-	T.markClean();eS.disabled=eSC.disabled=true;
+	markClean();
 	if(E.cur) loadItem(E.cur,E.scr);
 }
-function eClose(){T.setValue('');switchTo(N);}
-E.markDirty=function(){eS.disabled=eSC.disabled=false;};
-[U,mN,mH,mR,mU,mD,mI,mM,mE,cI,cM,cE].forEach(function(i){i.onchange=E.markDirty;});
-function initMetaButton(e){
-	if(e){C.classList.toggle('hide');M.classList.toggle('hide');}
-	else {C.classList.remove('hide');M.classList.add('hide');}
-	bM.innerHTML=C.classList.contains('hide')?_('buttonEditCode'):_('buttonCustomMeta');
-}
-bM.onclick=initMetaButton;
+function eClose(){switchTo(N);}
+U.onchange=E.markDirty=function(){eS.disabled=eSC.disabled=false;};
+function metaChange(){M.dirty=true;}
+[mN,mH,mR,mU,mD,mI,mM,mE,cI,cM,cE].forEach(function(i){i.onchange=metaChange;});
+$('bcustom').onclick=function(){
+	var e=[],c=E.scr.custom;M.dirty=false;
+	showDialog(M,10);
+	mN.value=c.name||'';
+	mH.value=c.homepage||'';
+	mU.value=c.updateURL||'';
+	mD.value=c.downloadURL||'';
+	switch(c['run-at']){
+		case 'document-start':mR.value='start';break;
+		case 'document-idle':mR.value='idle';break;
+		case 'document-end':mR.value='end';break;
+		default:mR.value='default';
+	}
+	cI.checked=c._include!=false;
+	mI.value=(c.include||e).join('\n');
+	cM.checked=c._match!=false;
+	mM.value=(c.match||e).join('\n');
+	cE.checked=c._exclude!=false;
+	mE.value=(c.exclude||e).join('\n');
+};
+M.close=function(){if(confirmCancel(M.dirty)) closeDialog();};
+$('mCancel').onclick=closeDialog;
+$('mOK').onclick=function(){
+	if(M.dirty) {
+		var c=E.scr.custom;
+		c.name=mN.value;
+		c.homepage=mH.value;
+		c.updateURL=mU.value;
+		c.downloadURL=mD.value;
+		switch(mR.value){
+			case 'start':c['run-at']='document-start';break;
+			case 'idle':c['run-at']='document-idle';break;
+			case 'end':c['run-at']='document-end';break;
+			default:delete c['run-at'];
+		}
+		c._include=cI.checked;
+		c.include=split(mI.value);
+		c._match=cM.checked;
+		c.match=split(mM.value);
+		c._exclude=cE.checked;
+		c.exclude=split(mE.value);
+		E.markDirty();
+	}
+	closeDialog();
+};
 eS.onclick=eSave;
 eSC.onclick=function(){eSave();eClose();};
-CodeMirror.commands.save=function(){if(!eS.disabled) setTimeout(eSave,0);};
-CodeMirror.commands.close=E.close=$('eClose').onclick=function(){if(confirmCancel(!eS.disabled)) eClose();};
-
-// Theme
-var themes={
-	"default":['default.css','default'],
-	dark:['dark.css','tomorrow-night-eighties'],
-},th=$('sTheme');
-function loadTheme(o){
-	o=themes[o]||themes['default'];
-	$('theme').href='themes/'+o[0];
-	T.setOption('theme',o[1]);
-}
-th.onchange=function(e){
-	var v=e.target.value;
-	loadTheme(v);
-	rt.post('SetOption',{key:'theme',data:v});
-};
+E.close=$('eClose').onclick=function(){if(confirmCancel(!eS.disabled)) eClose();};
+initEditor(function(o){T=o;},{save:eSave,exit:E.close,onchange:E.markDirty});
 
 // Load at last
 var ids,map,cache;
@@ -404,7 +397,6 @@ function loadOptions(o){
 	$('tExclude').value=o.gExc.join('\n');
 	if(!($('cDetail').checked=o.showDetails)) L.classList.add('simple');
 	xD.checked=o.withData;
-	loadTheme(th.value=o.theme||'default');
 }
 rt.listen('GotOptions',function(o){loadOptions(o);});		// loadOptions can be rewrited
 rt.listen('UpdateItem',function(r){
