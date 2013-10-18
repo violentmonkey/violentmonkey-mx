@@ -362,7 +362,7 @@ rt.listen('SetOption',function(o){
 function getBadge(){
 	getBadge.flag++;	// avoid frequent asking for popup menu
 	setTimeout(function(){
-		if(!--getBadge.flag) br.executeScript('setBadge();');
+		if(!--getBadge.flag) br.executeScript('try{setBadge();}catch(){}');	// avoid error in compatible mode
 	},200);
 }
 getBadge.flag=0;
