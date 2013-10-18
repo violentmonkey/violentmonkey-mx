@@ -22,13 +22,18 @@ function initI18n(callback){
 	},true);
 }
 
+// for background and popup
 function getString(key,def){
 	var v=localStorage.getItem(key);
 	if(v==null) (v=def)&&localStorage.setItem(key,v);
 	return v;
 }
 function setString(key,val){
-	localStorage.setItem(key,val=val||'');
+	try{
+		localStorage.setItem(key,val=val||'');
+	}catch(e){
+		if(e.code==22) notify(_('hintQuotaExceeded'));
+	}
 	return val;
 }
 function getItem(key,def){
