@@ -115,8 +115,9 @@ rt.listen('Vacuum',function(){
 	});
 	for(i in cc) if(localStorage.getItem('cache:'+i)==null) fetchCache(i);
 	for(i=0;k=localStorage.key(i);i++) {
-		if((s=k.match(/^val:([^:]*:[^:]*:[^:]*)/))&&!ns[s[1]]) localStorage.removeItem(k);
-		else if((s=k.match(/^cache:(.*)/))&&!cc[s[1]]) localStorage.removeItem(k);
+		if((s=k.match(/^val:([^:]*:[^:]*:[^:]*)/))&&!ns[s[1]]
+			||(s=k.match(/^cache:(.*)/))&&!cc[s[1]]
+			||(s=k.match(/^vm:(.*)/))&&ids.indexOf(s[1])<0) localStorage.removeItem(k);
 		else i++;
 	}
 	rt.post('Vacuumed');
