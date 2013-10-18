@@ -2,7 +2,7 @@
 	{
 		"type": "extension",
 		"frameworkVersion":"1.0.6",
-		"version":"2.1.3",
+		"version":"2.1.4",
 		"guid": "{7732dc50-47c1-9be5-6ea9-f85c38172974}",
 		"author":{
 			"name":"Gerald",
@@ -19,7 +19,7 @@
 		},
 		"config":"options.html",
 		"service":{
-			"main":"index.html",
+			"main":"background.html",
 			"debug":false
 		},
 		"actions": [
