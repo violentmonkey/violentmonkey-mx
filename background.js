@@ -231,10 +231,10 @@ rt.listen('FindScript',function(o){
 	function getRequire(j){require[j]=utf8decode(getString('cache:'+j));}
 	function getCache(j){cache[j]=getString('cache:'+j);}
 	if(o.data) for(i=0;i<gExc.length;i++) if(autoReg(gExc[i]).test(o.data)) return;
-	if(url.substr(0,5)!='data:') ids.forEach(function(i,j){
+	if(url.substr(0,5)!='data:'&&isApplied) ids.forEach(function(i,j){
 		if(testURL(url,i=map[i])) {
 			scripts.push(i);
-			if(isApplied&&i.enabled) {
+			if(i.enabled) {
 				if(i.meta.require) i.meta.require.forEach(getRequire);
 				for(j in i.meta.resources) getCache(i.meta.resources[j]);
 				values[i.uri]=getItem('val:'+i.uri);
