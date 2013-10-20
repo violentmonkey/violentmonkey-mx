@@ -45,12 +45,12 @@ function setItem(key,val){
 	setString(key,JSON.stringify(val));
 	return val;
 }
+function injectContent(s){br.executeScript('if(window.mx){'+s+'}');}
 
 function getNameURI(i){
 	var ns=i.meta.namespace||'',n=i.meta.name||'',k=escape(ns)+':'+escape(n)+':';
 	if(!ns&&!n) k+=i.id;return k;
 }
-
 function notify(msg){
 	window.webkitNotifications.createNotification('',_('extName'),msg).show();
 }
