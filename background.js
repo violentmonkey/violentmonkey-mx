@@ -79,7 +79,7 @@ function init(){
 }
 function updateIcon(){rt.icon.setIconImage('icon'+(isApplied?'':'w'));}
 var isApplied,ids,map,gExc,lastUpdate,autoUpdate,showBadge,
-		settings={o:['showDetails','withData','autoUpdate','showBadge','isApplied','lastUpdate','gExc'],s:['search','theme']};
+		settings={o:['showDetails','withData','autoUpdate','showBadge','isApplied','lastUpdate','gExc'],s:['search']};
 (function(){
 	if(getString('ids')) return;
 	// upgrade data from Violentmonkey 1 irreversibly
@@ -105,21 +105,28 @@ getItem('ids',[]).forEach(function(i){
 });
 
 rt.listen('Vacuum',function(){
-	var k,s,i,cc={},ns={};
+	var k,i,cc={},ns={},st=settings.o.concat(settings.s);
 	ids.forEach(function(i){
 		k=map[i];
-		if(k.meta.icon) cc[k.meta.icon]=1;
+		//if(k.meta.icon) cc[k.meta.icon]=1;
 		if(k.meta.require) k.meta.require.forEach(function(i){cc[i]=1;});
 		if(k.meta.resources) for(i in k.meta.resources) cc[i]=1;
 		ns[getNameURI(k)]=1;
 	});
 	for(i in cc) if(localStorage.getItem('cache:'+i)==null) fetchCache(i);
-	for(i=0;k=localStorage.key(i);i++) {
-		if((s=k.match(/^val:([^:]*:[^:]*:[^:]*)/))&&!ns[s[1]]
-			||(s=k.match(/^cache:(.*)/))&&!cc[s[1]]
-			||(s=k.match(/^vm:(.*)/))&&ids.indexOf(s[1])<0) localStorage.removeItem(k);
-		else i++;
+	function shouldRemove(k,s){
+		if(s=k.match(/^val:(.*)/)) {
+			if(!(s=s[1].match(/^([^:]*:[^:]*:[^:]*)$/))||!ns[s[1]]) return true;
+		} else if(s=k.match(/^cache:(.*)/)) {
+			if(!cc[s[1]]) return true;
+		} else if(s=k.match(/^vm:(.*)/)) {
+			if(ids.indexOf(s[1])<0) return true;
+		} else if(st.indexOf(k)<0) return true;
+		return false;
 	}
+	for(i=0;k=localStorage.key(i);)
+		if(shouldRemove(k)) localStorage.removeItem(k);
+		else i++;
 	rt.post('Vacuumed');
 });
 
@@ -136,6 +143,7 @@ function newScript(){
 }
 function saveIDs(){setItem('ids',ids);}
 function saveScript(o){
+	o.id=o.id.toString();
 	if(!map[o.id]) {ids.push(o.id);saveIDs();}
 	setItem('vm:'+o.id,map[o.id]=o);
 }
@@ -320,7 +328,7 @@ function parseScript(o,d,c){
 		saveScript(c);
 		meta.require.forEach(fetchCache);	// @require
 		for(d in meta.resources) fetchCache(meta.resources[d]);	// @resource
-		if(meta.icon) fetchCache(meta.icon);	// @icon
+		//if(meta.icon) fetchCache(meta.icon);	// @icon
 	}
 	if(o) rt.post(o.source,{topic:'ShowMessage',data:r.message});
 	rt.post('UpdateItem',r);
@@ -351,7 +359,7 @@ rt.listen('GetOptions',function(){
 	r.ids=ids;r.map={};r.cache={};
 	for(i in map) {
 		r.map[i]=getMeta(o=map[i]);
-		(i=o.meta.icon)&&!(i in r.cache)&&(o=getString('cache:'+i))&&(r.cache[i]=btoa(o));
+		//(i=o.meta.icon)&&!(i in r.cache)&&(o=getString('cache:'+i))&&(r.cache[i]=btoa(o));
 	}
 	rt.post('GotOptions',r);
 });

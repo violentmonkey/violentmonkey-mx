@@ -6,9 +6,27 @@ rt.listen('ShowMessage',function(o){alert(o);});
 
 // Main options
 function allowUpdate(n){return n.update&&(n.custom.updateURL||n.meta.updateURL);}
-function getIcon(n){
-	var i=cache[n.meta.icon];
-	return i?'data:image/x;base64,'+i:'icons/icon_64.png';
+var icons={};
+function getIcon(d,n){
+	if(n.meta.icon) {
+		var u=icons[n.meta.icon];
+		if(typeof u=='string') u&&(d.src=u); else {
+			if(u) u.push(d); else {
+				icons[n.meta.icon]=u=[d];
+				var x=new XMLHttpRequest();
+				x.open('GET',n.meta.icon,true);
+				x.responseType='blob';
+				x.onload=function(){
+					x=icons[n.meta.icon]=URL.createObjectURL(this.response);
+					u.forEach(function(i){i.src=x;});
+				};
+				x.onerror=function(){
+					icons[n.meta.icon]='';
+				};
+				x.send();
+			}
+		}
+	}
 }
 function modifyItem(d,r){
 	if(r) {
@@ -19,7 +37,7 @@ function modifyItem(d,r){
 	}
 }
 function loadItem(d,n,r){
-	d.innerHTML='<img class=icon src="'+getIcon(n)+'">'
+	d.innerHTML='<img class=icon src=icons/icon_64.png>'
 	+'<a class="name ellipsis" target=_blank></a>'
 	+'<span class=author></span>'
 	+'<span class=version>'+(n.meta.version?'v'+n.meta.version:'')+'</span>'
@@ -43,6 +61,7 @@ function loadItem(d,n,r){
 	a=d.querySelector('.descrip');
 	a.innerText=a.title=n.meta.description||'';
 	modifyItem(d,r);
+	getIcon(d.querySelector('.icon'),n);
 }
 function addItem(n){
 	var d=document.createElement('div');
@@ -166,7 +185,9 @@ $('tSearch').title=_('hintSearchLink');
 $('bDefSearch').onclick=function(){$('tSearch').value=_('defaultSearch');};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
 function importFile(e){
+	console.log('Start import...');
 	zip.createReader(new zip.BlobReader(e.target.files[0]),function(r){
+		console.log('Zip file loaded.');
 		r.getEntries(function(e){
 			function getFiles(){
 				var i=e.shift();
