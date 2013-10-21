@@ -105,7 +105,7 @@ getItem('ids',[]).forEach(function(i){
 });
 
 rt.listen('Vacuum',function(){
-	var k,i,cc={},ns={},st=settings.o.concat(settings.s);
+	var k,i,cc={},ns={},st=settings.o.concat(settings.s).concat(['ids']);
 	ids.forEach(function(i){
 		k=map[i];
 		//if(k.meta.icon) cc[k.meta.icon]=1;

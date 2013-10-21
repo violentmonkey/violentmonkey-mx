@@ -8,23 +8,18 @@ rt.listen('ShowMessage',function(o){alert(o);});
 function allowUpdate(n){return n.update&&(n.custom.updateURL||n.meta.updateURL);}
 var icons={};
 function getIcon(d,n){
-	if(n.meta.icon) {
-		var u=icons[n.meta.icon];
-		if(typeof u=='string') u&&(d.src=u); else {
-			if(u) u.push(d); else {
-				icons[n.meta.icon]=u=[d];
-				var x=new XMLHttpRequest();
-				x.open('GET',n.meta.icon,true);
-				x.responseType='blob';
-				x.onload=function(){
-					x=icons[n.meta.icon]=URL.createObjectURL(this.response);
-					u.forEach(function(i){i.src=x;});
-				};
-				x.onerror=function(){
-					icons[n.meta.icon]='';
-				};
-				x.send();
-			}
+	if(n) {
+		var u=icons[n];
+		if(u==1) (d.src=n);
+		else if(u) u.push(d);
+		else {
+			icons[n]=u=[d];
+			var x=document.createElement('img');
+			x.src=n;
+			x.onload=function(){
+				delete x;icons[n]=1;
+				u.forEach(function(i){i.src=n;});
+			};
 		}
 	}
 }
@@ -61,7 +56,7 @@ function loadItem(d,n,r){
 	a=d.querySelector('.descrip');
 	a.innerText=a.title=n.meta.description||'';
 	modifyItem(d,r);
-	getIcon(d.querySelector('.icon'),n);
+	getIcon(d.querySelector('.icon'),n.meta.icon);
 }
 function addItem(n){
 	var d=document.createElement('div');
