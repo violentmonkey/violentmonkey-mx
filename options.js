@@ -6,20 +6,26 @@ function split(t){return t.replace(/^\s+|\s+$/g,'').split(/\s*\n\s*/).filter(fun
 // Main options
 function allowUpdate(n){return n.update&&(n.custom.updateURL||n.meta.updateURL);}
 var icons={};
+function getIconByURL(d,n){
+	var u=icons[n];
+	if(u==1) (d.src=n);
+	else if(u) u.push(d);
+	else {
+		icons[n]=u=[d];
+		var x=document.createElement('img');
+		x.src=n;
+		x.onload=function(){
+			delete x;icons[n]=1;
+			u.forEach(function(i){i.src=n;});
+		};
+		x.onerror=function(){delete x;delete icons[n];};
+	}
+}
 function getIcon(d,n){
 	if(n) {
-		var u=icons[n];
-		if(u==1) (d.src=n);
-		else if(u) u.push(d);
-		else {
-			icons[n]=u=[d];
-			var x=document.createElement('img');
-			x.src=n;
-			x.onload=function(){
-				delete x;icons[n]=1;
-				u.forEach(function(i){i.src=n;});
-			};
-		}
+		var u=cache[n];
+		if(u) d.src='data:image/x;base64,'+u;
+		else getIconByURL(d,n);
 	}
 }
 function modifyItem(d,r){
@@ -182,7 +188,7 @@ H.onchange=function(e){
 				if(i) i.getData(writer,function(t){
 					var c={code:t};
 					if(vm.scripts&&(v=vm.scripts[i.filename.slice(0,-8)])) {
-						c.id=v.id;c.more=v;
+						delete v.id;c.more=v;
 					}
 					post({cmd:'ParseScript',data:c});
 					count++;
@@ -202,7 +208,7 @@ H.onchange=function(e){
 					console.log('Error parsing ViolentMonkey configuration.');
 				}
 				if(vm.values) for(z in vm.values) post({cmd:'SetValue',data:{uri:z,values:vm.values[z]}});
-				if(vm.settings) for(z in vm.settings) post({cmd:'SetOption',data:{key:z,value:vm.settings[z]}});
+				if(vm.settings) for(z in vm.settings) post({cmd:'SetOption',data:{key:z,value:vm.settings[z],check:true}});
 				getFiles();
 			}); else getFiles();
 		});
@@ -392,7 +398,6 @@ var ids,map,cache,post=initMessage({
 	},
 });
 rt.listen('UpdateItem',function(r){
-	console.log(r);
 	if(!r.id) return;
 	var m=map[r.id];
 	if(!m) map[r.id]=m={};

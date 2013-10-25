@@ -46,7 +46,7 @@ function initMessage(map){
 	};
 }
 
-function injectContent(s){br.executeScript('if(window.mx){'+s+'}');}
+function injectContent(s){br.executeScript('if(window.mx)try{'+s+'}catch(e){}');}
 function notify(msg){
 	window.webkitNotifications.createNotification('',_('extName'),msg).show();
 }

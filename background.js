@@ -39,17 +39,21 @@ function older(o,n){
  * 		position: Integer
  * 		code: String
  * }
+ * require {
+ * 		uri: String
+ * 		data: TEXT
+ * }
  * cache {
  * 		uri: String
- * 		data: BLOB
+ * 		data: Base64 encoded TEXT
  * }
  * values {
  * 		uri: String
- * 		values: String
+ * 		values: TEXT
  * }
  */
 function dbError(t,e){
-	opera.postError('Database error: '+e.message);
+	console.log('Database error: '+e.message);
 }
 function initDatabase(callback){
 	db=openDatabase('Violentmonkey','0.5','Violentmonkey data',10*1024*1024);
@@ -61,7 +65,7 @@ function initDatabase(callback){
 		}
 		var count=0,sql=[
 			'CREATE TABLE IF NOT EXISTS scripts(id INTEGER PRIMARY KEY,uri VARCHAR,meta TEXT,custom TEXT,enabled INTEGER,"update" INTEGER,position INTEGER,code TEXT)',
-			'CREATE TABLE IF NOT EXISTS cache(uri VARCHAR UNIQUE,data BLOB)',
+			'CREATE TABLE IF NOT EXISTS cache(uri VARCHAR UNIQUE,data TEXT)',
 			'CREATE TABLE IF NOT EXISTS require(uri VARCHAR UNIQUE,data TEXT)',
 			'CREATE TABLE IF NOT EXISTS "values"(uri VARCHAR UNIQUE,data TEXT)',
 		];
@@ -106,7 +110,7 @@ function upgradeData(callback){
 				o=JSON.parse(v);
 				if(!o.uri) o.uri=getNameURI(o);
 				o.position=ids.indexOf(o.id)+1;
-				saveScript(o);
+				delete o.id;saveScript(o);
 			} else if(k in settings) {i++;continue;}
 			localStorage.removeItem(k);
 		}
@@ -151,12 +155,14 @@ function saveScript(o,src,callback){
 		},dbError);
 	});
 }
-function removeScript(i,src,callback){
-	var id=ids.splice(i,1)[0];
+function removeScript(id,src,callback){
+	var i=ids.indexOf(id);if(i>=0) ids.splice(i,1);
 	db.transaction(function(t){
-		t.executeSql('DELETE FROM scripts WHERE id=?',[id],function(t,r){delete metas[id];},dbError);
+		t.executeSql('DELETE FROM scripts WHERE id=?',[id],function(t,r){
+			delete metas[id];
+			if(callback) callback();
+		},dbError);
 	});
-	if(callback) callback();
 }
 function str2RE(s){return s.replace(/(\.|\?|\/)/g,'\\$1').replace(/\*/g,'.*?');}
 function autoReg(s,w){	// w: forced wildcard mode
@@ -188,7 +194,7 @@ function testURL(url,e){
 	if(e.custom.include) inc=inc.concat(e.custom.include);
 	if(e.custom._exclude!=false&&e.meta.exclude) exc=exc.concat(e.meta.exclude);
 	if(e.custom.exclude) exc=exc.concat(e.custom.exclude);
-	if(mat.length) {for(i=0;i<mat.length;i++) if(f=matchTest(mat[i],u)) break;}	// @match
+	if(mat.length) {for(i=0;i<mat.length;i++) if(f=u&&matchTest(mat[i],u)) break;}	// @match
 	else for(i=0;i<inc.length;i++) if(f=autoReg(inc[i]).test(url)) break;	// @include
 	if(f) for(i=0;i<exc.length;i++) if(!(f=!autoReg(exc[i]).test(url))) break;	// @exclude
 	return f;
@@ -239,17 +245,10 @@ function getData(d,src,callback) {
 	ids.forEach(function(i){
 		var o=metas[i];
 		data.scripts.push(o);
-		//if(o.meta.icon) cache[o.meta.icon]=1;
+		if(o.meta.icon) cache[o.meta.icon]=1;
 	});
-	getCache('cache',Object.getOwnPropertyNames(cache),function(o){
+	getCache({table:'cache',uris:Object.getOwnPropertyNames(cache),objectURL:true},function(o){
 		data.cache=o;if(callback) callback(data);
-	});
-}
-function editScript(id,src,callback){
-	db.readTransaction(function(t){
-		t.executeSql('SELECT * FROM scripts WHERE id=?',[id],function(t,r){
-			if(r.rows.length) callback(getScript(r.rows.item(0)));
-		});
 	});
 }
 function updateMeta(o,src,callback){
@@ -281,12 +280,12 @@ function getValues(uris,callback,t){
 	}
 	if(t) query(t); else db.readTransaction(query);
 }
-function getCache(table,uris,callback,t){
+function getCache(args,callback,t){
 	var data={};
 	function query(t){
 		function loop(){
-			var i=uris.pop();
-			if(i) t.executeSql('SELECT data FROM '+table+' WHERE uri=?',[i],function(t,r){
+			var i=args.uris.pop();
+			if(i) t.executeSql('SELECT data FROM '+args.table+' WHERE uri=?',[i],function(t,r){
 				if(r.rows.length) data[i]=r.rows.item(0).data;
 				loop();
 			}); else if(callback) callback(data);
@@ -310,9 +309,9 @@ function getInjected(o,src,callback){
 		});
 		getScripts(scripts,false,function(o){
 			data.scripts=o;
-			getCache('require',Object.getOwnPropertyNames(require),function(o){
+			getCache({table:'require',uris:Object.getOwnPropertyNames(require)},function(o){
 				data.require=o;
-				getCache('cache',Object.getOwnPropertyNames(cache),function(o){
+				getCache({table:'cache',uris:Object.getOwnPropertyNames(cache)},function(o){
 					data.cache=o;
 					getValues(Object.getOwnPropertyNames(values),function(o){
 						data.values=o;
@@ -364,7 +363,7 @@ function fetchCache(url){
 		var r=new FileReader();
 		r.onload=function(e){
 			db.transaction(function(t){
-				t.executeSql('REPLACE INTO cache(uri,data) VALUES(?,?)',[url,e.target.result],null,dbError);
+				t.executeSql('REPLACE INTO cache(uri,data) VALUES(?,?)',[url,window.btoa(r.result)],null,dbError);
 			});
 		};
 		r.readAsBinaryString(this.response);
@@ -415,17 +414,15 @@ function parseScript(d,src,callback){
 		var meta=parseMeta(d.code);
 		queryScript(d.id,meta,function(c){
 			if(!c.id){r.status=1;r.message=_('msgInstalled');}
-			if(d.more) for(i in d.more) c[i]=d.more[i];	// for import and user edit
+			if(d.more) for(i in d.more) if(i in c) c[i]=d.more[i];	// for import and user edit
 			c.meta=meta;c.code=d.code;c.uri=getNameURI(c);
 			if(src.url&&!c.meta.homepage&&!c.custom.homepage&&!/^(file|data):/.test(src.url)) c.custom.homepage=src.url;
 			if(!c.meta.downloadURL&&!c.custom.downloadURL&&d.url) c.custom.downloadURL=d.url;
-			saveScript(c,null,function(){
-				r.obj=metas[r.id=c.id];finish();
-			});
+			saveScript(c,null,function(){r.obj=metas[r.id=c.id];finish();});
 		});
 		meta.require.forEach(fetchCache);	// @require
 		for(d in meta.resources) fetchCache(meta.resources[d]);	// @resource
-		//if(meta.icon) fetchCache(meta.icon);	// @icon
+		if(meta.icon) fetchCache(meta.icon);	// @icon
 	}
 }
 function installScript(url,src,callback){
@@ -475,7 +472,7 @@ function vacuum(o,src,callback){
 		for(i=0;i<ids.length;i++) {
 			o=metas[ids[i]];
 			values[o.uri]=1;
-			//if(o.meta.icon) cache[o.meta.icon]=1;
+			if(o.meta.icon) cache[o.meta.icon]=1;
 			if(o.meta.require) o.meta.require.forEach(function(i){require[i]=1;});
 			for(j in o.meta.resources) cache[o.meta.resources[j]]=1;
 			if(o.position!=i+1) s.push([i+1,o.id]);
@@ -587,8 +584,10 @@ function getOption(k,src,callback){
 	return true;
 }
 function setOption(o,src,callback){
-	localStorage.setItem(o.key,JSON.stringify(o.value));
-	settings[o.key]=o.value;
+	if(!o.check||(o.key in settings)) {
+		localStorage.setItem(o.key,JSON.stringify(o.value));
+		settings[o.key]=o.value;
+	}
 	if(callback) callback(o.value);
 }
 function initSettings(){
@@ -669,7 +668,13 @@ initDatabase(function(){
 					ExportZip: exportZip,
 					ParseScript: parseScript,
 					InstallScript: installScript,
-					GetScript: editScript,	// for user edit
+					GetScript: function(id,src,callback){	// for user edit
+						db.readTransaction(function(t){
+							t.executeSql('SELECT * FROM scripts WHERE id=?',[id],function(t,r){
+								if(r.rows.length) callback(getScript(r.rows.item(0)));
+							});
+						});
+					},
 					GetMetas: function(ids,src,callback){	// for popup menu
 						getScripts(ids,true,callback);
 					},
