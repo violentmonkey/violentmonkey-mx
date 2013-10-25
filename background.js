@@ -334,9 +334,10 @@ function parseScript(o,d,c){
 	rt.post('UpdateItem',r);
 }
 rt.listen('ExportZip',function(o){
+	function get(l,f){l.forEach(function(i){r.settings[i]=f(i);});}
 	var r={data:[],settings:{}};
 	o.data.forEach(function(c){var o=map[c];if(o) r.data.push(o);});
-	settings.o.concat(settings.s).forEach(function(i){r.settings[i]=getString(i);});
+	get(settings.o,getItem);get(settings.s,getString);
 	rt.post('ExportStart',r);
 });
 

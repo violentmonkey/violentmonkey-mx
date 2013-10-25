@@ -48,7 +48,6 @@ fieldset{border-radius:5px;}
 #sList .panelB>button{width:80px;}
 #overlay{position:fixed;top:0;bottom:0;left:0;right:0;-webkit-transition:all .5s linear;opacity:0;}
 #advanced{padding:20px;}
-#advanced fieldset>*:not(:first-child){display:inline-block;}
 #advanced legend{margin:0;}
 #tExclude{min-height:100px;}
 .list{overflow-x:hidden;overflow-y:auto;}

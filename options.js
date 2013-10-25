@@ -172,14 +172,14 @@ function confirmCancel(dirty){
 initFont();initI18n(function(){switchTo(N);});
 
 // Advanced
-var A=$('advanced');
+var A=$('advanced'),H=$('iImport');
 $('bAdvanced').onclick=function(){showDialog(A);};
 $('cUpdate').onchange=function(){rt.post('AutoUpdate',this.checked);};
 $('cBadge').onchange=function(){rt.post('ShowBadge',this.checked);};
 $('tSearch').title=_('hintSearchLink');
 $('bDefSearch').onclick=function(){$('tSearch').value=_('defaultSearch');};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
-function importFile(e){
+H.onchange=function(e){
 	console.log('Start import...');
 	zip.createReader(new zip.BlobReader(e.target.files[0]),function(r){
 		console.log('Zip file loaded.');
@@ -212,12 +212,11 @@ function importFile(e){
 			}); else getFiles();
 		});
 	});
-}
+};
 $('aImport').onclick=function(){
-	var e=document.createEvent('MouseEvent'),iH=document.createElement('input');
-	iH.setAttribute('type','file');iH.onchange=importFile;
+	var e=document.createEvent('MouseEvent');
 	e.initMouseEvent('click',true,true,window,0,0,0,0,0,false,false,false,false,0,null);
-	iH.dispatchEvent(e);
+	H.dispatchEvent(e);
 };
 $('aVacuum').onclick=function(){rt.post('Vacuum');};
 $('aVacuum').title=_('hintVacuumData');
