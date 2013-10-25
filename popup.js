@@ -10,6 +10,7 @@ function loadItem(d,c){
 		d.firstChild.innerText='';
 		d.classList.add('disabled');
 	}
+	d.data=c;
 }
 function addItem(h,c){
 	var d=document.createElement('div');
@@ -24,13 +25,14 @@ function addItem(h,c){
 	else if('data' in c) c.symbol='✓';
 	for(h in c) d[h]=c[h];
 	if('data' in c) loadItem(d,c.data);
+	return d;
 }
-function menuCommand(e){e=e.target;rt.post(e.source,{topic:'Command',data:e.cmd});}
-function menuScript(i) {
-	var s=getItem('vm:'+i);if(!s) return;
+function menuCommand(e){e=e.target;rt.post(e.source,{cmd:'Command',data:e.cmd});}
+function menuScript(s) {
 	var n=s.meta.name?s.meta.name.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('labelNoName')+'</em>';
 	addItem(n,{holder:pB,data:s.enabled,title:s.meta.name,onclick:function(e){
-		loadItem(this,s.enabled=!s.enabled);rt.post('EnableScript',{id:i,data:s.enabled});
+		var t=this;s.enabled=s.enabled?0:1;
+		post({cmd:'UpdateMeta',data:{id:s.id,enabled:s.enabled}},function(){loadItem(t,s.enabled);});
 	}});
 }
 function getPopup(){
@@ -40,7 +42,7 @@ function getPopup(){
 	},200);
 }
 getPopup.flag=0;
-function load(o){
+function load(o,src,callback){
 	pT.innerHTML=pB.innerHTML=cT.innerHTML=cB.innerHTML='';C.classList.add('hide');P.classList.remove('hide');
 	addItem(_('menuManageScripts'),{holder:pT,symbol:'➤',title:true,onclick:function(){
 		br.tabs.newTab({url:rt.getPrivateUrl()+'options.html',activate:true});
@@ -49,33 +51,44 @@ function load(o){
 		var q='site:userscripts.org+inurl:show+'+br.tabs.getCurrentTab().url.replace(/^.*?:\/\/([^\/]*?)\.\w+\/.*$/,function(v,g){
 			return g.replace(/\.(com|..)$/,'').replace(/\./g,'+');
 		});
-		br.tabs.newTab({url:getString('search').replace('*',q),activate:true});
+		post({cmd:'GetOption',data:'search'},function(o){
+			br.tabs.newTab({url:o.replace('*',q),activate:true});
+		});
 	}});
-	var d=o&&o.data;
-	if(d&&d[0]&&d[0].length) {
+	if(o&&o[0]&&o[0].length) {
 		addItem(_('menuBack'),{holder:cT,symbol:'◄',title:true,onclick:function(){
 			C.classList.add('hide');P.classList.remove('hide');
 		}});
-		d[0].forEach(function(i){addItem(i[0],{holder:cB,symbol:'➤',title:true,onclick:menuCommand,cmd:i[0],source:o.source});});
+		o[0].forEach(function(i){addItem(i[0],{holder:cB,symbol:'➤',title:true,onclick:menuCommand,cmd:i[0],source:src.id});});
 		addItem(_('menuCommands'),{holder:pT,symbol:'➤',title:true,onclick:function(){
 			P.classList.add('hide');C.classList.remove('hide');
 		}});
 	}
-	var isApplied=getItem('isApplied');
-	addItem(_('menuScriptEnabled'),{holder:pT,data:isApplied,title:true,onclick:function(e){
-		rt.post('EnableScript',{data:isApplied=!isApplied});
-		loadItem(this,isApplied);
+	var a=addItem(_('menuScriptEnabled'),{holder:pT,data:true,title:true,onclick:function(e){
+		post({cmd:'SetOption',data:{key:'isApplied',value:this.data=!this.data}});
+		loadItem(this,this.data);rt.icon.setIconImage('icon'+(this.data?'':'w'));
 	}});
-	if(d&&d[1]&&d[1].length) {
+	post({cmd:'GetOption',data:'isApplied'},function(o){loadItem(a,o);});
+	if(o&&o[1]&&o[1].length) {
 		pR.classList.remove('hide');
-		d[1].forEach(menuScript);
+		post({cmd:'GetMetas',data:o[1]},function(o){
+			o.forEach(menuScript);
+		});
 	} else pR.classList.add('hide');
 	if(!o) getPopup();
 }
-initFont();
-load();
-rt.listen('GetPopup',getPopup);
-rt.listen('SetPopup',load);
+initCSS();
+rt.listen('Popup',function(o){
+	var maps={
+		GetPopup:getPopup,
+		SetPopup:load,
+	},f=maps[o.cmd];
+	function callback(d){
+		rt.post(o.src.id,{cmd:'Callback',data:{id:o.callback,data:d}});
+	}
+	if(f) f(o.data,o.src,callback);
+});
+var post=initMessage({});load();
 br.onBrowserEvent=function(o){
 	switch(o.type){
 		case 'TAB_SWITCH':

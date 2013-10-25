@@ -24,21 +24,27 @@ function utf8decode (utftext) {
 }
 
 // Messages
-var rt=window.external.mxGetRuntime(),id=Date.now()+Math.random().toString().slice(1);
-function post(topic,data,o){
-	if(!o) o={};
-	if(!o.source) o.source=id;
-	if(!o.origin) o.origin=window.location.href;
-	o.data=data;
-	rt.post(topic,o);
+var rt=window.external.mxGetRuntime(),id=Date.now()+Math.random().toString().slice(1),
+		callbacks={};
+function post(d,o,callback){
+	o.src={id:id,url:window.location.href};
+	if(callback) {
+		o.callback=Math.random().toString();
+		callbacks[o.callback]=callback;
+	}
+	rt.post(d,o);
 }
 rt.listen(id,function(o){
 	var maps={
-		FoundScript:loadScript,
 		Command:command,
 		ConfirmInstall:confirmInstall,
 		ShowMessage:showMessage,
-	},f=maps[o.topic];
+		Callback:function(o){
+			var f=callbacks[o.id];
+			if(f) f(o.data);
+			delete callbacks[o.id];
+		},
+	},f=maps[o.cmd];
 	if(f) f(o.data);
 });
 function showMessage(data){
@@ -54,14 +60,14 @@ function showMessage(data){
 }
 function confirmInstall(data){
 	if(!data||!confirm(data)) return;
-	if(installCallback) installCallback(); else post('ParseScript',{code:document.body.innerText});
+	if(installCallback) installCallback(); else post('Background',{cmd:'ParseScript',data:{code:document.body.innerText}});
 }
 
 // For UserScripts installation
 var installCallback=null;
 if(/\.user\.js$/.test(window.location.href)) (function(){
 	function install(){
-		if(document&&document.body&&!document.querySelector('title')) post('InstallScript');
+		if(document&&document.body&&!document.querySelector('title')) post('Background',{cmd:'InstallScript'});
 	}
 	if(document.readyState!='complete') window.addEventListener('load',install,false);
 	else install();
@@ -69,8 +75,8 @@ if(/\.user\.js$/.test(window.location.href)) (function(){
 	var o=e.target;while(o&&o.tagName!='A') o=o.parentNode;
 	if(o&&/\.user\.js$/.test(o.href)) {
 		e.preventDefault();
-		installCallback=function(){post('InstallScript',o.href);};
-		post('InstallScript');
+		installCallback=function(){post('Background',{cmd:'InstallScript',data:o.href});};
+		post('Background',{cmd:'InstallScript'});
 	}
 },false);
 
@@ -82,6 +88,7 @@ var comm={
 	elements:null,
 	state:0,
 	load:function(){},
+	utf8decode:utf8decode,
 	prop1:Object.getOwnPropertyNames(window),
 	prop2:(function(n,p){
 		while(n=Object.getPrototypeOf(n)) p=p.concat(Object.getOwnPropertyNames(n));
@@ -207,7 +214,7 @@ var comm={
 			}});
 			addProperty('GM_getResourceText',{value:function(name){
 				var b=getCache(name);
-				if(b) b=utf8decode(b);
+				if(b) b=comm.utf8decode(b);
 				return b;
 			}});
 			addProperty('GM_getResourceURL',{value:function(name){
@@ -261,11 +268,11 @@ var comm={
 		}
 		function run(l){while(l.length) runCode(l.shift());}
 		function runCode(c){
-			var req=c.meta.require||[],i,r=[],code=[],w=new wrapper(c);
+			var req=c.meta.require||[],r=[],code=[],w=new wrapper(c);
 			comm.elements.forEach(function(i){r.push(i+'=window.'+i);});
 			code=['(function(){'];
 			if(r.length) code.push('var '+r.join(',')+';');
-			for(i=0;i<req.length;i++) if(r=require[req[i]]) code.push(r);
+			req.forEach(function(i){r=require[i];if(r) code.push(r);});
 			code.push(c.code);code.push('}).call(window);');
 			code=code.join('\n');
 			try{
@@ -298,7 +305,7 @@ var comm={
 },menu=[],ids=[];
 function handleC(e){
 	var o=JSON.parse(e.attrName),maps={
-		SetValue:function(o){post('SetValue',o);},
+		SetValue:function(o){post('Background',{cmd:'SetValue',data:o});},
 		RegisterMenu:menu.push.bind(menu),
 		GetRequestId:getRequestId,
 		HttpRequest:httpRequest,
@@ -372,7 +379,7 @@ document.addEventListener("readystatechange",function(){c.state=["loading","inte
 document.addEventListener("DOMContentLoaded",function(){c.state=2;c.load();},false);})();';
 	d.appendChild(s);d.removeChild(s);
 	comm.handleC=handleC;comm.init(C,R);
-	post('FindScript',window.location.href);
+	post('Background',{cmd:'GetInjected'},loadScript);
 }
 function loadScript(o){
 	o.scripts.forEach(function(i){ids.push(i.id);});
@@ -380,7 +387,7 @@ function loadScript(o){
 }
 initCommunicator();
 
-window.setPopup=function(){post('SetPopup',[menu,ids]);};
-window.setBadge=function(){post('SetBadge',ids.length);};
-document.addEventListener("DOMContentLoaded",function(){post('GetPopup');},false);
+window.setPopup=function(){post('Popup',{cmd:'SetPopup',data:[menu,ids]});};
+window.setBadge=function(){post('Background',{cmd:'SetBadge',data:ids.length});};
+document.addEventListener("DOMContentLoaded",function(){post('Popup',{cmd:'GetPopup'});},false);
 })();
