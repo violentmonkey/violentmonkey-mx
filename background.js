@@ -87,7 +87,7 @@ function upgradeData(callback){
 			loop();
 		});
 	}
-	var i,j,k,l,o,cache=[],val={},values=[],count=0;
+	var i,j,k,o,cache=[],values=[],require={},count=0;
 	if(older(localStorage.version_storage||'','0.5')) {
 		var ids=localStorage.ids||'';
 		try{
@@ -95,29 +95,25 @@ function upgradeData(callback){
 		}catch(e){
 			ids=[];
 		}
+		pos=localStorage.length-1;	// put scripts without `position` in the end
 		for(i=0;k=localStorage.key(i);) {
 			v=localStorage.getItem(k);
 			if(/^cache:/.test(k)) cache.push([k.slice(6),v]);
 			else if(/^val:/.test(k)) {
-				l=k.slice(4);j=0;
-				j=l.slice(j+1).indexOf(':');
-				j=l.slice(j+1).indexOf(':');
-				j=l.slice(j+1).indexOf(':');
-				o=l.slice(j);l=l.slice(0,j);j=o;
-				o=val[l];if(!o) val[l]=o={};
-				o[j]=v;
+				if(j=k.match(/^val:([^:]*:[^:]*:[^:]*)$/)) values.push([j[1],v]);
 			} else if(/^vm:/.test(k)) {
 				o=JSON.parse(v);
 				if(!o.uri) o.uri=getNameURI(o);
 				o.position=ids.indexOf(o.id)+1;
+				if(o.meta.require) o.meta.require.forEach(function(i){require[i]=1;});
 				delete o.id;saveScript(o);
 			} else if(k in settings) {i++;continue;}
 			localStorage.removeItem(k);
 		}
-		for(i in val) values.push([i,JSON.stringify(val[i])]);
 		localStorage.version_storage='0.5';
 		upgradeDB('cache',cache);
 		upgradeDB('values',values);
+		for(i in require) fetchRequire(i);
 	} else finish();
 }
 
@@ -149,8 +145,10 @@ function saveScript(o,src,callback){
 		d.push(o.code);
 		t.executeSql('REPLACE INTO scripts(id,uri,meta,custom,enabled,"update",position,code) VALUES(?,?,?,?,?,?,?,?)',d,function(t,r){
 			if(!o.id) o.id=r.insertId;
-			if(!(o.id in metas)) ids.push(o.id);
-			metas[o.id]=getScript(o,true);
+			if(ids) {		// avoid update in data upgradation
+				if(!(o.id in metas)) ids.push(o.id);
+				metas[o.id]=getScript(o,true);
+			}
 			if(callback) callback(o);
 		},dbError);
 	});
@@ -235,7 +233,7 @@ function initScripts(callback){
 				o=getScript(v,true);
 				ids.push(o.id);metas[o.id]=o;
 			}
-			if(o) pos=o.position;
+			pos=o?o.position:0;
 			if(callback) callback();
 		});
 	});
@@ -633,11 +631,11 @@ function showBadge(o,src,callback){
 	if(callback) callback(o);
 }
 
-var db,_,button,checking=false,settings={},ids,metas,pos=0;
+var db,_,button,checking=false,settings={},ids=null,metas,pos;
 initSettings();
 initDatabase(function(){
-	initScripts(function(){
-		upgradeData(function(){
+	upgradeData(function(){
+		initScripts(function(){
 			rt.listen('Background',function(o){
 				/*
 				 * o={
