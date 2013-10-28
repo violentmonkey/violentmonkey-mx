@@ -419,7 +419,7 @@ function parseScript(d,src,callback){
 			saveScript(c,null,function(){r.obj=metas[r.id=c.id];finish();});
 		});
 		meta.require.forEach(fetchCache);	// @require
-		for(d in meta.resources) fetchCache(meta.resources[d]);	// @resource
+		for(i in meta.resources) fetchCache(meta.resources[i]);	// @resource
 		if(meta.icon) fetchCache(meta.icon);	// @icon
 	}
 }

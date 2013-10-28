@@ -429,7 +429,13 @@ function loadScript(o){
 }
 initCommunicator();
 
-function updatePopup(){post('Popup',{cmd:'GetPopup'});}
+var popup=0;
+function updatePopup(){
+	popup++;
+	setTimeout(function(){
+		if(!--popup) post('Popup',{cmd:'GetPopup'});
+	},100);
+}
 function updateBadge(){post('Background',{cmd:'GetBadge'});}
 window.setPopup=function(){post('Popup',{cmd:'SetPopup',data:[menu,ids]});};
 window.setBadge=function(){post('Background',{cmd:'SetBadge',data:ids.length});};
