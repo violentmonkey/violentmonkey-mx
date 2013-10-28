@@ -559,7 +559,7 @@ function checkUpdateAll(e,src,callback) {
 
 function exportZip(o,src,callback){
 	var d={scripts:[],settings:settings},values=[];
-	function finish(){callback(d);}
+	function finish(o){if(o) d.values=o;callback(d);}
 	getScripts(o.data,false,function(s){
 		s.forEach(function(c){
 			d.scripts.push(c);
