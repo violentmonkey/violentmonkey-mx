@@ -558,14 +558,14 @@ function checkUpdateAll(e,src,callback) {
 }
 
 function exportZip(o,src,callback){
-	var d={scripts:[],settings:settings},values=[];
-	function finish(o){if(o) d.values=o;callback(d);}
+	var data={scripts:[],settings:settings},values=[];
+	function finish(){callback(data);}
 	getScripts(o.data,false,function(s){
 		s.forEach(function(c){
-			d.scripts.push(c);
+			data.scripts.push(c);
 			if(o.values) values.push(c.uri);
 		});
-		if(o.values) getValues(values,finish);
+		if(o.values) getValues(values,function(o){data.values=o;finish();});
 		else finish();
 	});
 }
@@ -616,14 +616,23 @@ function autoUpdate(o,src,callback){
 	if(callback) callback(o);
 }
 
+var badge=0,hideBadge;
 function getBadge(o,src,callback){
-	getBadge.flag++;	// avoid frequent asking for popup menu
-	setTimeout(function(){
-		if(!--getBadge.flag) injectContent('setBadge();');	// avoid error in compatible mode
-	},200);
+	if(settings.showBadge) {
+		badge++;	// avoid frequent asking for badge
+		setTimeout(function(){
+			if(!--badge) {
+				hideBadge=true;
+				injectContent('setBadge();');	// avoid error in compatible mode
+				setTimeout(function(){
+					if(hideBadge) rt.icon.hideBadge();
+				},200);
+			}
+		},100);
+	}
 }
-getBadge.flag=0;
 function setBadge(o,src,callback){
+	hideBadge=false;
 	if(settings.showBadge) rt.icon.showBadge(o);
 }
 function showBadge(o,src,callback){
@@ -697,7 +706,7 @@ initDatabase(function(){
 		switch(o.type){
 			case 'TAB_SWITCH':
 			case 'ON_NAVIGATE':
-				rt.icon.hideBadge();getBadge();
+				getBadge();
 				var tab=br.tabs.getCurrentTab(),i,t;
 				if(tab.url.slice(0,l)==url) {
 					for(i=0;i<br.tabs.length;i++) {

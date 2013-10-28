@@ -348,7 +348,7 @@ var comm={
 function handleC(e){
 	var o=JSON.parse(e.attrName),maps={
 		SetValue:function(o){post('Background',{cmd:'SetValue',data:o});},
-		RegisterMenu:menu.push.bind(menu),
+		RegisterMenu:function(o){menu.push(o);updatePopup();},
 		GetRequestId:getRequestId,
 		HttpRequest:httpRequest,
 		AbortRequest:abortRequest,
@@ -429,7 +429,10 @@ function loadScript(o){
 }
 initCommunicator();
 
+function updatePopup(){post('Popup',{cmd:'GetPopup'});}
+function updateBadge(){post('Background',{cmd:'GetBadge'});}
 window.setPopup=function(){post('Popup',{cmd:'SetPopup',data:[menu,ids]});};
 window.setBadge=function(){post('Background',{cmd:'SetBadge',data:ids.length});};
-document.addEventListener("DOMContentLoaded",function(){post('Popup',{cmd:'GetPopup'});},false);
+document.addEventListener("DOMContentLoaded",updatePopup,false);
+document.addEventListener("DOMContentLoaded",updateBadge,false);
 })();

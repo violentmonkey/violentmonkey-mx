@@ -39,7 +39,7 @@ function getPopup(){
 	getPopup.flag++;	// avoid frequent asking for popup menu
 	setTimeout(function(){
 		if(!--getPopup.flag) injectContent('setPopup();');
-	},200);
+	},100);
 }
 getPopup.flag=0;
 function load(o,src,callback){
