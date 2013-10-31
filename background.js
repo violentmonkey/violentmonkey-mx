@@ -414,7 +414,7 @@ function parseScript(d,src,callback){
 			if(!c.id){r.status=1;r.message=_('msgInstalled');}
 			if(d.more) for(i in d.more) if(i in c) c[i]=d.more[i];	// for import and user edit
 			c.meta=meta;c.code=d.code;c.uri=getNameURI(c);
-			if(src.url&&!c.meta.homepage&&!c.custom.homepage&&!/^(file|data):/.test(src.url)) c.custom.homepage=src.url;
+			if(src&&src.url&&!c.meta.homepage&&!c.custom.homepage&&!/^(file|data):/.test(src.url)) c.custom.homepage=src.url;
 			if(!c.meta.downloadURL&&!c.custom.downloadURL&&d.url) c.custom.downloadURL=d.url;
 			saveScript(c,null,function(){r.obj=metas[r.id=c.id];finish();});
 		});
