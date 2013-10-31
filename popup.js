@@ -1,3 +1,4 @@
+(function(){
 function $(i){return document.getElementById(i);}
 var P=$('popup'),C=$('commands'),pR=P.querySelector('.expand'),
 	pT=P.querySelector('td'),pB=P.querySelector('.expanda'),
@@ -96,3 +97,4 @@ br.onBrowserEvent=function(o){
 			load();
 	}
 };
+})();
