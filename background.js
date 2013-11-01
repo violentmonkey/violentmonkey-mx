@@ -296,14 +296,17 @@ function getCache(args,callback,t){
 function getInjected(o,src,callback){
 	var i,j,data={isApplied:settings.isApplied},cache={},require={},values={};
 	function finish(){callback(data);}
-	if(src.url.slice(0,5)!='data:') {
+	if(settings.isApplied&&src.url.slice(0,5)!='data:') {
 		var scripts=[];
 		ids.forEach(function(i){
 			var j,s=metas[i];if(!s) return;
 			if(testURL(src.url,s)) {
-				scripts.push(i);values[s.uri]=1;
-				if(s.meta.require) s.meta.require.forEach(function(i){require[i]=1;});
-				for(j in s.meta.resources) cache[s.meta.resources[j]]=1;
+				scripts.push(i);
+				if(s.enabled) {
+					values[s.uri]=1;
+					if(s.meta.require) s.meta.require.forEach(function(i){require[i]=1;});
+					for(j in s.meta.resources) cache[s.meta.resources[j]]=1;
+				}
 			}
 		});
 		getScripts(scripts,false,function(o){
@@ -402,8 +405,7 @@ function queryScript(id,meta,callback){
 }
 function parseScript(d,src,callback){
 	function finish(){
-		if(src) rt.post(src.id,{cmd:'ShowMessage',data:r.message});
-		updateItem(r);if(callback) callback();
+		updateItem(r);if(callback) callback(r);
 	}
 	var i,r={status:0,message:'message' in d?d.message:_('msgUpdated')};
 	if(d.status&&d.status!=200||!d.code) {
@@ -425,11 +427,7 @@ function parseScript(d,src,callback){
 	}
 }
 function installScript(url,src,callback){
-	if(!url)
-		rt.post(src.id,{cmd:'ConfirmInstall',data:_('msgConfirm')});
-	else fetchURL(url,function(){
-		parseScript({status:this.status,code:this.responseText,url:url},src,callback);
-	});
+	br.tabs.newTab({url:rt.getPrivateUrl()+'confirm.html?url='+url,activate:true});
 }
 function move(o,src,callback){
 	function update(o){
@@ -599,6 +597,7 @@ function initSettings(){
 	init('showDetails',false);
 	init('showBadge',true);
 	init('withData',true);
+	init('closeAfterInstall',true);
 	init('search',_('defaultSearch'));
 	if(settings.search.indexOf('*')<0) setOption({key:'search',value:_('defaultSearch')});
 	rt.icon.setIconImage('icon'+(settings.isApplied?'':'w'));
