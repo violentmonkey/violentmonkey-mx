@@ -294,34 +294,35 @@ function getCache(args,callback,t){
 	if(t) query(t); else db.readTransaction(query);
 }
 function getInjected(o,src,callback){
-	var i,j,data={isApplied:settings.isApplied},cache={},require={},values={};
+	var data={isApplied:settings.isApplied},cache={},require={},values={};
 	function finish(){callback(data);}
 	if(settings.isApplied&&src.url.slice(0,5)!='data:') {
-		var scripts=[];
-		ids.forEach(function(i){
-			var j,s=metas[i];if(!s) return;
-			if(testURL(src.url,s)) {
-				scripts.push(i);
-				if(s.enabled) {
-					values[s.uri]=1;
-					if(s.meta.require) s.meta.require.forEach(function(i){require[i]=1;});
-					for(j in s.meta.resources) cache[s.meta.resources[j]]=1;
+		getScripts(
+			ids.filter(function(i){
+				var j,s=metas[i];
+				if(s&&testURL(src.url,s)) {
+					if(s.enabled) {
+						values[s.uri]=1;
+						if(s.meta.require) s.meta.require.forEach(function(i){require[i]=1;});
+						for(j in s.meta.resources) cache[s.meta.resources[j]]=1;
+					}
+					return true;
 				}
-			}
-		});
-		getScripts(scripts,false,function(o){
-			data.scripts=o;
-			getCache({table:'require',uris:Object.getOwnPropertyNames(require)},function(o){
-				data.require=o;
-				getCache({table:'cache',uris:Object.getOwnPropertyNames(cache)},function(o){
-					data.cache=o;
-					getValues(Object.getOwnPropertyNames(values),function(o){
-						data.values=o;
-						finish();
+				return false;
+			}),false,function(o){
+				data.scripts=o;
+				getCache({table:'require',uris:Object.getOwnPropertyNames(require)},function(o){
+					data.require=o;
+					getCache({table:'cache',uris:Object.getOwnPropertyNames(cache)},function(o){
+						data.cache=o;
+						getValues(Object.getOwnPropertyNames(values),function(o){
+							data.values=o;
+							finish();
+						});
 					});
 				});
-			});
-		});
+			}
+		);
 	} else finish();
 }
 function setValue(data,src,callback){
@@ -425,9 +426,6 @@ function parseScript(d,src,callback){
 		for(i in meta.resources) fetchCache(meta.resources[i]);	// @resource
 		if(meta.icon) fetchCache(meta.icon);	// @icon
 	}
-}
-function installScript(url,src,callback){
-	br.tabs.newTab({url:rt.getPrivateUrl()+'confirm.html?url='+url,activate:true});
 }
 function move(o,src,callback){
 	function update(o){
@@ -674,7 +672,6 @@ initDatabase(function(){
 					SetOption: setOption,
 					ExportZip: exportZip,
 					ParseScript: parseScript,
-					InstallScript: installScript,
 					GetScript: function(id,src,callback){	// for user edit
 						db.readTransaction(function(t){
 							t.executeSql('SELECT * FROM scripts WHERE id=?',[id],function(t,r){
@@ -701,15 +698,40 @@ initDatabase(function(){
 });
 
 (function(url){
-	var l=url.length;
+	function installScript(id,t){
+		if(!tids[id]) {
+			tids[id]=1;
+			br.tabs.newTab(t);
+			setTimeout(function(){delete tids[id];},1000);
+		}
+	}
+	var l=url.length,tids={};
 	br.onBrowserEvent=function(o){
+		var t,tab;
 		switch(o.type){
-			case 'TAB_SWITCH':
 			case 'ON_NAVIGATE':
+				if(/\.user\.js([\?#]|$)/.test(o.url)&&!tids[o.id]) {
+					t=new XMLHttpRequest();
+					t.open('GET',o.url,true);
+					t.onloadend=function(){
+						if((!t.status||t.status==200)&&/^\s*[^<]/.test(t.responseText)) {
+							t={
+								activate:true,
+								url:rt.getPrivateUrl()+'confirm.html?url='+encodeURIComponent(o.url)
+							};
+							tab=br.tabs.getTabById(o.id);
+							injectContent('if(history.length==1)window.close();else{window.stop();history.back();}',o.id);
+							if(/^https?:/.test(tab.url)) t.url+='&from='+encodeURIComponent(tab.url);
+							installScript(o.id,t);
+						}
+					};
+					t.send();
+				}
+			case 'TAB_SWITCH':
+				tab=br.tabs.getCurrentTab();
 				getBadge();
-				var tab=br.tabs.getCurrentTab(),i,t;
 				if(tab.url.slice(0,l)==url) {
-					for(i=0;i<br.tabs.length;i++) {
+					for(var i=0;i<br.tabs.length;i++) {
 						t=br.tabs.getTab(i);
 						if(t.id!=tab.id&&t.url.slice(0,l)==url) {
 							tab.close();t.activate();

@@ -78,24 +78,6 @@ rt.listen(id,function(o){
 	if(f) f(o.data);
 });
 
-// For UserScripts installation
-if(/\.user\.js$/.test(window.location.href)) (function(){
-	function install(){
-		if(document&&document.body&&!document.querySelector('title')) {
-			post('Background',{cmd:'InstallScript',data:location.href});
-			window.close();
-		}
-	}
-	if(document.readyState!='complete') window.addEventListener('load',install,false);
-	else install();
-})(); else if(['userscripts.org','j.mozest.com'].indexOf(window.location.host)>=0) window.addEventListener('click',function(e){
-	var o=e.target;while(o&&o.tagName!='A') o=o.parentNode;
-	if(o&&/\.user\.js$/.test(o.href)) {
-		e.preventDefault();
-		post('Background',{cmd:'InstallScript',data:o.href});
-	}
-},false);
-
 // Communicator
 var comm={
 	vmid:'VM'+Math.random(),

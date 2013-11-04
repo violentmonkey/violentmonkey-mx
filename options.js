@@ -314,12 +314,12 @@ var E=$('editor'),U=$('eUpdate'),M=$('meta'),
     cI=$('cInclude'),cE=$('cExclude'),cM=$('cMatch'),
 		eS=$('eSave'),eSC=$('eSaveClose'),T;
 function markClean(){
-	T.clearHistory();
 	eS.disabled=eSC.disabled=true;
 }
 function gotScript(o){
 	switchTo(E);E.scr=o;U.checked=o.update;
-	T.setValueAndFocus(o.code);markClean();
+	T.setValueAndFocus(o.code);
+	T.clearHistory();markClean();
 }
 function eSave(){
 	post({
