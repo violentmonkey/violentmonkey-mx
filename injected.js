@@ -83,7 +83,6 @@ var comm={
 	vmid:'VM'+Math.random(),
 	sid:null,
 	did:null,
-	elements:null,
 	state:0,
 	load:function(){},
 	utf8decode:utf8decode,
@@ -121,9 +120,7 @@ var comm={
 	loadScript:function(o){
 		var start=[],idle=[],end=[],cache,urls={},require,values,comm=this;
 		comm.command={};comm.requests={};comm.qrequests=[];
-		function wrapper(c){
-			var t=this,value=values[c.uri];if(!value) value={};
-
+		function wrapper(){
 			// functions and properties
 			function wrapFunction(o,i,c){
 				var f=function(){
@@ -147,19 +144,23 @@ var comm={
 					});
 				}catch(e){}
 			}
-			var itemWrapper=null;comm.prop1.forEach(wrapItem);
-			itemWrapper=wrapFunction;comm.prop2.forEach(wrapItem);
-
+			var t=this,itemWrapper=null;
+			comm.prop1.forEach(wrapItem);
+			itemWrapper=wrapFunction;
+			comm.prop2.forEach(wrapItem);
+		}
+		function wrapGM(c){
+			var gm={},value=values[c.uri];if(!value) value={};
 			function getCache(name){for(var i in resources) if(name==i) return cache[resources[i]];}
 			function propertyToString(){return 'Property for Violentmonkey: designed by Gerald';}
 			function addProperty(name,prop,obj){
 				if('value' in prop) prop.writable=false;
 				prop.configurable=false;
-				if(!obj) {obj=t;ele.push(name);}
+				if(!obj) obj=gm;
 				Object.defineProperty(obj,name,prop);
 				if(typeof obj[name]=='function') obj[name].toString=propertyToString;
 			}
-			var resources=c.meta.resources||{},ele=[];
+			var resources=c.meta.resources||{};
 			addProperty('unsafeWindow',{value:window});
 
 			// GM functions
@@ -272,19 +273,23 @@ var comm={
 				var r=new Request(details);
 				return r.req;
 			}});
-			if(!comm.elements) comm.elements=ele;
+			return gm;
 		}
 		function run(l){while(l.length) runCode(l.shift());}
 		function runCode(c){
-			var req=c.meta.require||[],r=[],code=[],w=new wrapper(c);
-			comm.elements.forEach(function(i){r.push(i+'=window.'+i);});
-			code=['(function(){'];
-			if(r.length) code.push('var '+r.join(',')+';');
-			req.forEach(function(i){r=require[i];if(r) code.push(r);});
+			var w,req=c.meta.require||[],i,r=[],code=[],g;
+			if(w=i=c.meta.namespace) w=wrappers[w];
+			if(!w) w=new wrapper();
+			if(i) wrappers[i]=w;
+			g=wrapGM(c);
+			Object.getOwnPropertyNames(g).forEach(function(i){r.push(i+'=g["'+i+'"]');});
+			code=[];
+			if(r.length) code.push('var '+r.join(',')+';delete g;with(this)(function(){');
+			for(i=0;i<req.length;i++) if(r=require[req[i]]) code.push(r);
 			code.push(c.code);code.push('}).call(window);');
 			code=code.join('\n');
 			try{
-				(new Function('w','with(w) '+code)).call(this,w);
+				(new Function('g',code)).call(w,g);
 			}catch(e){
 				console.log('Error running script: '+(c.custom.name||c.meta.name||c.id)+'\n'+e);
 			}
@@ -294,7 +299,7 @@ var comm={
 			if(comm.state>1) run(end);
 		};
 
-		var l;
+		var l,wrappers={};
 		o.scripts.forEach(function(i){
 			if(i&&i.enabled) {
 				switch(i.custom['run-at']||i.meta['run-at']){
