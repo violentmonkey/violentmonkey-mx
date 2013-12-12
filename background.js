@@ -22,9 +22,9 @@ function older(o,n){
 	if(older(l,v)) {	// first use or new update
 		localStorage.lastVersion=v;
 		if(older(v,'4.1.1.1600'))	// early versions may have bugs
-			br.tabs.newTab({url:'https://github.com/gera2ld/Violentmonkey-for-Maxthon/wiki/ObsoleteMaxthon',activate:true});
+			br.tabs.newTab({url:'https://github.com/gera2ld/Violentmonkey-mx/wiki/ObsoleteMaxthon',activate:true});
 		else if(l&&older(l,'4.1.1.1600'))	// update caused data loss
-			br.tabs.newTab({url:'https://github.com/gera2ld/Violentmonkey-for-Maxthon/wiki/DataLoss',activate:true});
+			br.tabs.newTab({url:'https://github.com/gera2ld/Violentmonkey-mx/wiki/DataLoss',activate:true});
 	}
 })(localStorage.lastVersion||'',window.external.mxVersion);
 
@@ -598,7 +598,6 @@ function initSettings(){
 	init('closeAfterInstall',true);
 	init('search',_('defaultSearch'));
 	if(settings.search.indexOf('*')<0) setOption({key:'search',value:_('defaultSearch')});
-	rt.icon.setIconImage('icon'+(settings.isApplied?'':'w'));
 }
 function autoCheck(o){	// check for updates automatically in 20 seconds
 	function check(){
@@ -636,6 +635,24 @@ function setBadge(o,src,callback){
 function showBadge(o,src,callback){
 	setOption({key:'showBadge',value:o=!!o},src,o&&getBadge);
 	if(callback) callback(o);
+}
+function reinit(){
+	var f=function(f){
+		var c=0;
+		if(!f) f=window.delayedReload=function(){
+			c++;
+			setTimeout(function(){
+				if(!--c) location.reload();
+			},1000);
+		};
+		f();
+	};
+	f='('+f.toString()+')(window.delayedReload)';
+	f='(function(s){var o=document.createElement("script");o.innerHTML=s;document.body.appendChild(o);document.body.removeChild(o);})('+JSON.stringify(f)+')';
+	for(var i=0;i<br.tabs.length;i++) {
+		var t=br.tabs.getTab(i);
+		br.executeScript(f,t.id);
+	}
 }
 
 var db,button,checking=false,settings={},ids=null,metas,pos;
@@ -693,6 +710,8 @@ initDatabase(function(){
 				return true;
 			});
 			if(settings.autoUpdate) autoCheck(2e4);
+			rt.icon.setIconImage('icon'+(settings.isApplied?'':'w'));
+			reinit();
 		});
 	});
 });
