@@ -415,4 +415,15 @@ window.setPopup=function(){post('Popup',{cmd:'SetPopup',data:[menu,ids]});};
 window.setBadge=function(){post('Background',{cmd:'SetBadge',data:count});};
 document.addEventListener("DOMContentLoaded",updatePopup,false);
 document.addEventListener("DOMContentLoaded",updateBadge,false);
+
+// For installation
+function checkJS() {
+	if(document&&document.body) {
+		if(!document.querySelector('title'))	// plain text
+			post('Background',{cmd:'InstallScript',data:location.href},window.close);
+		return true;
+	}
+}
+if(/\.user\.js$/.test(location.pathname))
+	checkJS()||document.addEventListener('DOMContentLoaded',checkJS,false);
 })();

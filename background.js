@@ -655,7 +655,7 @@ function reinit(){
 	}
 }
 
-var db,button,checking=false,settings={},ids=null,metas,pos;
+var db,checking=false,settings={},ids=null,metas,pos;
 initSettings();
 initDatabase(function(){
 	upgradeData(function(){
@@ -697,7 +697,10 @@ initDatabase(function(){
 						});
 					},
 					GetMetas: function(ids,src,callback){	// for popup menu
-						getScripts(ids,true,callback);
+						//getScripts(ids,true,callback);
+						var d=[];
+						ids.forEach(function(i){d.push(metas[i]);});
+						callback(d);
 					},
 					AutoUpdate: autoUpdate,
 					Vacuum: vacuum,
@@ -705,6 +708,13 @@ initDatabase(function(){
 					GetBadge: getBadge,
 					SetBadge: setBadge,
 					ShowBadge: showBadge,
+					InstallScript:function(url,src,callback) {
+						callback();
+						br.tabs.newTab({
+							activate:true,
+							url:rt.getPrivateUrl()+'confirm.html?url='+encodeURIComponent(url)
+						});
+					},
 				},f=maps[o.cmd];
 				if(f) f(o.data,o.src,callback);
 				return true;
@@ -717,46 +727,20 @@ initDatabase(function(){
 });
 
 (function(url){
-	function installScript(id,t){
-		if(!tids[id]) {
-			tids[id]=1;
-			br.tabs.newTab(t);
-			setTimeout(function(){delete tids[id];},1000);
-		}
-	}
-	var l=url.length,tids={};
+	var l=url.length;
 	br.onBrowserEvent=function(o){
 		var t,tab;
 		switch(o.type){
-			case 'ON_NAVIGATE':
-				if(/\.user\.js([\?#]|$)/.test(o.url)&&!tids[o.id]) {
-					t=new XMLHttpRequest();
-					t.open('GET',o.url,true);
-					t.onloadend=function(){
-						if((!t.status||t.status==200)&&/^\s*[^<]/.test(t.responseText)) {
-							t={
-								activate:true,
-								url:rt.getPrivateUrl()+'confirm.html?url='+encodeURIComponent(o.url)
-							};
-							tab=br.tabs.getTabById(o.id);
-							injectContent('if(history.length==1)window.close();else{window.stop();history.back();}',o.id);
-							if(/^https?:/.test(tab.url)) t.url+='&from='+encodeURIComponent(tab.url);
-							installScript(o.id,t);
-						}
-					};
-					t.send();
-				}
 			case 'TAB_SWITCH':
 				tab=br.tabs.getCurrentTab();
 				getBadge();
-				if(tab.url.slice(0,l)==url) {
+				if(tab.url.slice(0,l)==url)
 					for(var i=0;i<br.tabs.length;i++) {
 						t=br.tabs.getTab(i);
 						if(t.id!=tab.id&&t.url.slice(0,l)==url) {
 							tab.close();t.activate();
 						}
 					}
-				}
 		}
 	};
 })(rt.getPrivateUrl()+'options.html');

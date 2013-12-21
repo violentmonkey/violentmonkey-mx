@@ -1,6 +1,6 @@
 (function(){
-function $(i){return document.getElementById(i);}
-var P=$('popup'),C=$('commands'),pR=P.querySelector('.expand'),
+var $=document.getElementById.bind(document),P=$('popup'),
+	C=$('commands'),pR=P.querySelector('.expand'),
 	pT=P.querySelector('td'),pB=P.querySelector('.expanda'),
 	cT=C.querySelector('td'),cB=C.querySelector('.expanda');
 function loadItem(d,c){
@@ -37,12 +37,12 @@ function menuScript(s) {
 	}});
 }
 function getPopup(){
-	getPopup.flag++;	// avoid frequent asking for popup menu
+	count++;	// avoid frequent asking for popup menu
 	setTimeout(function(){
-		if(!--getPopup.flag) injectContent('setPopup();');
+		if(!--count) injectContent('setPopup();');
 	},100);
 }
-getPopup.flag=0;
+var count=0;
 function load(o,src,callback){
 	pT.innerHTML=pB.innerHTML=cT.innerHTML=cB.innerHTML='';C.classList.add('hide');P.classList.remove('hide');
 	addItem(_('menuManageScripts'),{holder:pT,symbol:'➤',title:true,onclick:function(){

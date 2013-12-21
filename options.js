@@ -1,3 +1,4 @@
+(function(){
 var $=document.getElementById.bind(document),
 		N=$('main'),L=$('sList'),O=$('overlay');
 zip.workerScriptsPath='lib/zip.js/';
@@ -420,3 +421,4 @@ post({cmd:'GetData'},function(o){
 	if(!($('cDetail').checked=o.settings.showDetails)) L.classList.add('simple');
 	xD.checked=o.settings.withData;
 });
+})();
