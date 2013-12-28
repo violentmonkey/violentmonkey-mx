@@ -3,7 +3,9 @@ var rt=window.external.mxGetRuntime(),br=rt.create('mx.browser');
 function _(k,a){
 	var v=rt.locale.t(k);
 	try{
-		v=JSON.parse(v).replace(/\$(?:\{(\d+)\}|(\d+))/g,function(v,g1,g2){v=g1||g2;return a[v-1]||'';});
+		v=JSON.parse(v).replace(/\$(?:\{(\d+)\}|(\d+))/g,function(v,g1,g2){
+			v=g1||g2;v=a[v-1];return v==null?'':v;
+		});
 	}catch(e){
 		v='';
 	}

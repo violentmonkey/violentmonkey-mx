@@ -372,13 +372,14 @@ function fetchCache(url){
 		r.readAsBinaryString(this.response);
 	},'blob');
 }
+function saveRequire(url,data){
+	db.transaction(function(t){
+		t.executeSql('REPLACE INTO require(uri,data) VALUES(?,?)',[url,data],null,dbError);
+	});
+}
 function fetchRequire(url){
 	fetchURL(url,function(){
-		if(this.status!=200) return;
-		var r=this.responseText;
-		db.transaction(function(t){
-			t.executeSql('REPLACE INTO require(uri,data) VALUES(?,?)',[url,r],null,dbError);
-		});
+		if(this.status==200) saveRequire(url,this.responseText);
 	});
 }
 
@@ -422,7 +423,10 @@ function parseScript(d,src,callback){
 			if(!c.meta.downloadURL&&!c.custom.downloadURL&&d.url) c.custom.downloadURL=d.url;
 			saveScript(c,null,function(){r.obj=metas[r.id=c.id];finish();});
 		});
-		meta.require.forEach(fetchRequire);	// @require
+		meta.require.forEach(function(u){
+			var r=d.require&&d.require[u];
+			if(r) saveRequire(u,r); else fetchRequire(u);
+		});	// @require
 		for(i in meta.resources) fetchCache(meta.resources[i]);	// @resource
 		if(meta.icon) fetchCache(meta.icon);	// @icon
 	}
@@ -715,6 +719,7 @@ initDatabase(function(){
 							url:rt.getPrivateUrl()+'confirm.html?url='+encodeURIComponent(url)
 						});
 					},
+					ParseMeta: function(o,src,callback){callback(parseMeta(o));},
 				},f=maps[o.cmd];
 				if(f) f(o.data,o.src,callback);
 				return true;

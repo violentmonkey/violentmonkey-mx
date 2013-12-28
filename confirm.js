@@ -1,5 +1,7 @@
+(function(){
 var $=document.getElementById.bind(document),M=$('msg'),I=$('bInstall'),data={},
-		B=$('bClose'),C=$('cClose'),T,post=initMessage({});
+		U=$('url'),B=$('bClose'),C=$('cClose'),T,post=initMessage({});
+function showMsg(m,t){M.innerHTML=m;M.setAttribute('title',t||m);}
 B.onclick=function(){window.close();};
 C.onchange=function(){
 	post({cmd:'SetOption',data:{key:'closeAfterInstall',value:C.checked}});
@@ -11,9 +13,10 @@ I.onclick=function(){
 			url:data.url,
 			from:data.from,
 			code:T.getValue(),
+			require:data.require,
 		},
 	},function(o){
-		M.innerHTML=o.message;
+		showMsg(o.message);
 		if(o.status>=0&&C.checked) window.close();
 	});
 	I.disabled=true;
@@ -24,19 +27,42 @@ initEditor(function(o){
 	o.split('&').forEach(function(i){
 		i.replace(/^([^=]*)=(.*)$/,function(r,g1,g2){data[g1]=decodeURIComponent(g2);});
 	});
-	function error(){M.innerHTML=_('msgErrorLoadingURL',[data.url]);}
+	U.innerHTML=_('msgScriptURL',[data.url]);
+	U.setAttribute('title',data.url);
+	function error(){showMsg(_('msgErrorLoadingJS'));}
 	if(!data.url) error(); else {
-		M.innerHTML=_('msgLoadingURL',[data.url]);
+		showMsg(_('msgLoadingJS'));
 		var x=new XMLHttpRequest();
 		x.open('GET',data.url,true);
 		x.onloadend=function(){
 			if((!this.status||this.status==200)&&this.responseText) {
-				M.innerHTML=_('msgLoadedJS',[data.url]);
 				T.setValueAndFocus(this.responseText);
-				I.disabled=false;
+				post({cmd:'ParseMeta',data:this.responseText},function(o){
+					var i=0,l=o.require.length,err=[];
+					showMsg(_('msgLoadingRequirements',[i,l]));
+					data.require={};
+					o.require.forEach(function(u){
+						var x=new XMLHttpRequest();
+						x.open('GET',u,true);
+						x.onloadend=function(){
+							i++;
+							if(this.status==200) data.require[u]=this.responseText;
+							else err.push(u);
+							if(i>=l) {
+								if(err.length) showMsg(_('msgErrorLoadingRequirements'),err.join('\n'));
+								else {
+									showMsg(_('msgLoadedJS'));
+									I.disabled=false;
+								}
+							}
+						};
+						x.send();
+					});
+				});
 			} else error();
 		};
 		x.send();
 	}
 },{exit:B.onclick,readonly:true});
 initCSS();initI18n();
+})();
