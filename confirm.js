@@ -30,6 +30,7 @@ initEditor(function(o){
 	U.innerHTML=_('msgScriptURL',[data.url]);
 	U.setAttribute('title',data.url);
 	function error(){showMsg(_('msgErrorLoadingJS'));}
+	function loaded(){showMsg(_('msgLoadedJS'));I.disabled=false;}
 	if(!data.url) error(); else {
 		showMsg(_('msgLoadingJS'));
 		var x=new XMLHttpRequest();
@@ -39,25 +40,24 @@ initEditor(function(o){
 				T.setValueAndFocus(this.responseText);
 				post({cmd:'ParseMeta',data:this.responseText},function(o){
 					var i=0,l=o.require.length,err=[];
-					showMsg(_('msgLoadingRequirements',[i,l]));
-					data.require={};
-					o.require.forEach(function(u){
-						var x=new XMLHttpRequest();
-						x.open('GET',u,true);
-						x.onloadend=function(){
-							i++;
-							if(this.status==200) data.require[u]=this.responseText;
-							else err.push(u);
-							if(i>=l) {
-								if(err.length) showMsg(_('msgErrorLoadingRequirements'),err.join('\n'));
-								else {
-									showMsg(_('msgLoadedJS'));
-									I.disabled=false;
+					if(l) {
+						showMsg(_('msgLoadingRequirements',[i,l]));
+						data.require={};
+						o.require.forEach(function(u){
+							var x=new XMLHttpRequest();
+							x.open('GET',u,true);
+							x.onloadend=function(){
+								i++;
+								if(this.status==200) data.require[u]=this.responseText;
+								else err.push(u);
+								if(i>=l) {
+									if(err.length) showMsg(_('msgErrorLoadingRequirements'),err.join('\n'));
+									else loaded();
 								}
-							}
-						};
-						x.send();
-					});
+							};
+							x.send();
+						});
+					} else loaded();
 				});
 			} else error();
 		};
