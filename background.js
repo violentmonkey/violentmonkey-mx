@@ -294,7 +294,7 @@ function getCache(args,callback,t){
 	if(t) query(t); else db.readTransaction(query);
 }
 function getInjected(o,src,callback){
-	var data={isApplied:settings.isApplied},cache={},require={},values={};
+	var data={isApplied:settings.isApplied,defaultIcon:defaultIcon},cache={},require={},values={};
 	function finish(){callback(data);}
 	if(settings.isApplied&&src.url.slice(0,5)!='data:') {
 		getScripts(
@@ -357,29 +357,28 @@ function fetchURL(url,cb,type){
 	var req=new XMLHttpRequest();
 	req.open('GET',url,true);
 	if(type) req.responseType=type;
-	req.onloadend=function(){if(cb) cb.call(this);delete _fetching[url];};
+	req.onloadend=function(){if(cb) cb.call(req);delete _fetching[url];};
 	req.send();
 }
-function fetchCache(url){
+function saveData(url,table,data){
+	db.transaction(function(t){
+		t.executeSql('REPLACE INTO "'+table+'"(uri,data) VALUES(?,?)',[url,data],null,dbError);
+	});
+}
+function fetchCache(url,callback){
 	fetchURL(url,function(){
 		if(this.status!=200) return;
 		var r=new FileReader();
 		r.onload=function(e){
-			db.transaction(function(t){
-				t.executeSql('REPLACE INTO cache(uri,data) VALUES(?,?)',[url,window.btoa(r.result)],null,dbError);
-			});
+			e=window.btoa(r.result);
+			if(callback) callback(e); else saveData(url,'cache',e);
 		};
 		r.readAsBinaryString(this.response);
 	},'blob');
 }
-function saveRequire(url,data){
-	db.transaction(function(t){
-		t.executeSql('REPLACE INTO require(uri,data) VALUES(?,?)',[url,data],null,dbError);
-	});
-}
 function fetchRequire(url){
 	fetchURL(url,function(){
-		if(this.status==200) saveRequire(url,this.responseText);
+		if(this.status==200) saveData(url,'require',this.responseText);
 	});
 }
 
@@ -425,7 +424,7 @@ function parseScript(d,src,callback){
 		});
 		meta.require.forEach(function(u){
 			var r=d.require&&d.require[u];
-			if(r) saveRequire(u,r); else fetchRequire(u);
+			if(r) saveData(u,'require',r); else fetchRequire(u);
 		});	// @require
 		for(i in meta.resources) fetchCache(meta.resources[i]);	// @resource
 		if(meta.icon) fetchCache(meta.icon);	// @icon
@@ -602,6 +601,7 @@ function initSettings(){
 	init('closeAfterInstall',true);
 	init('search',_('defaultSearch'));
 	if(settings.search.indexOf('*')<0) setOption({key:'search',value:_('defaultSearch')});
+	fetchCache('icons/icon_64.png',function(o){defaultIcon=o;});
 }
 function autoCheck(o){	// check for updates automatically in 20 seconds
 	function check(){
@@ -659,7 +659,7 @@ function reinit(){
 	}
 }
 
-var db,checking=false,settings={},ids=null,metas,pos;
+var db,checking=false,settings={},ids=null,metas,pos,defaultIcon=null;
 initSettings();
 initDatabase(function(){
 	upgradeData(function(){

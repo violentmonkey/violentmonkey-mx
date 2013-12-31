@@ -118,7 +118,7 @@ var comm={
 		if(f) f(o.data);
 	},
 	loadScript:function(o){
-		var start=[],idle=[],end=[],cache,urls={},require,values,comm=this;
+		var start=[],idle=[],end=[],cache,urls={},require,values,comm=this,defaultIcon='data:image/png;base64,'+o.defaultIcon;
 		comm.command={};comm.requests={};comm.qrequests=[];
 		function wrapper(){
 			// functions and properties
@@ -240,6 +240,11 @@ var comm={
 			addProperty('GM_openInTab',{value:function(url){window.open(url);}});
 			addProperty('GM_registerMenuCommand',{value:function(cap,func,acc){
 				comm.command[cap]=func;comm.post({cmd:'RegisterMenu',data:[cap,acc]});
+			}});
+			addProperty('GM_notification',{value:function(msg,title,icon,callback){
+				icon=icon||c.meta.icon||defaultIcon;
+				var n=window.webkitNotifications.createNotification(icon,title,msg);
+				n.onclick=callback;n.show();
 			}});
 			function Request(details){
 				this.callback=function(d){

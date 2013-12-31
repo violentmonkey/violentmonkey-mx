@@ -27,11 +27,11 @@ initEditor(function(o){
 	o.split('&').forEach(function(i){
 		i.replace(/^([^=]*)=(.*)$/,function(r,g1,g2){data[g1]=decodeURIComponent(g2);});
 	});
-	U.innerHTML=_('msgScriptURL',[data.url]);
-	U.setAttribute('title',data.url);
+	U.innerHTML=_('msgScriptURL',[data.url||'-']);
 	function error(){showMsg(_('msgErrorLoadingJS'));}
 	function loaded(){showMsg(_('msgLoadedJS'));I.disabled=false;}
-	if(!data.url) error(); else {
+	if(data.url) {
+		U.setAttribute('title',data.url);
 		showMsg(_('msgLoadingJS'));
 		var x=new XMLHttpRequest();
 		x.open('GET',data.url,true);
@@ -62,7 +62,7 @@ initEditor(function(o){
 			} else error();
 		};
 		x.send();
-	}
+	} else error();
 },{exit:B.onclick,readonly:true});
 initCSS();initI18n();
 })();
