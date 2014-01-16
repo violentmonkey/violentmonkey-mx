@@ -178,6 +178,7 @@ var A=$('advanced'),H=$('iImport');
 $('bAdvanced').onclick=function(){showDialog(A);};
 $('cUpdate').onchange=function(){post({cmd:'AutoUpdate',data:this.checked});};
 $('cBadge').onchange=function(){post({cmd:'ShowBadge',data:this.checked});};
+$('cReload').onchange=function(){post({cmd:'SetOption',data:{key:'startReload',value:this.checked}});};
 $('tSearch').title=_('hintSearchLink');
 $('bDefSearch').onclick=function(){$('tSearch').value=_('defaultSearch');};
 $('aExport').onclick=function(){showDialog(X);xLoad();};
@@ -417,6 +418,7 @@ post({cmd:'GetData'},function(o){
 	});
 	$('cUpdate').checked=o.settings.autoUpdate;
 	$('cBadge').checked=o.settings.showBadge;
+	$('cReload').checked=o.settings.startReload;
 	$('tSearch').value=o.settings.search;
 	if(!($('cDetail').checked=o.settings.showDetails)) L.classList.add('simple');
 	xD.checked=o.settings.withData;

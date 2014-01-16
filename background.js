@@ -593,6 +593,7 @@ function initSettings(){
 		if(!getOption(k)) setOption({key:k,value:v});
 	}
 	init('isApplied',true);
+	init('startReload',true);
 	init('autoUpdate',true);
 	init('lastUpdate',0);
 	init('showDetails',false);
@@ -726,7 +727,7 @@ initDatabase(function(){
 			});
 			if(settings.autoUpdate) autoCheck(2e4);
 			rt.icon.setIconImage('icon'+(settings.isApplied?'':'w'));
-			reinit();
+			if(settings.startReload) reinit();
 		});
 	});
 });
