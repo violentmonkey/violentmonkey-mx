@@ -54,6 +54,8 @@ function older(o,n){
  * }
  */
 function dbError(t,e){
+	var n=window.webkitNotifications.createNotification('','Error - Violentmonkey','Database error >>> '+e.message);
+	n.show();
 	console.log('Database error: '+e.message);
 }
 function initDatabase(callback){
