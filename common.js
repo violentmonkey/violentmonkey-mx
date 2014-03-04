@@ -1,5 +1,15 @@
 var rt=window.external.mxGetRuntime(),br=rt.create('mx.browser');
 
+// Debug
+var bugs={};
+window.addEventListener('error',function(e){
+	if(!bugs[e.lineno]) {
+		bugs[e.lineno]=e.message;
+		var n=window.webkitNotifications.createNotification('','Error - Violentmonkey','Line '+e.lineno+' >>> '+e.message);
+		n.show();
+	}
+});
+
 function _(k,a){
 	var v=rt.locale.t(k);
 	try{
