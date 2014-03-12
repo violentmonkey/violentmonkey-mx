@@ -25,16 +25,14 @@ function getIconByURL(d,n){
 function getIcon(d,n){
 	if(n) {
 		var u=cache[n];
-		if(u) d.src='data:image/x;base64,'+u;
+		if(u) d.src='data:image/png;base64,'+u;
 		else getIconByURL(d,n);
 	}
 }
 function modifyItem(d,r){
 	if(r) {
 		if(r.message) d.querySelector('.message').innerHTML=r.message;
-		with(d.querySelector('.update'))
-			if(r.hideUpdate) classList.add('hide');
-			else classList.remove('hide');
+		if(d=d.querySelector('.update')) d.classList[r.hideUpdate?'add':'remove']('hide');
 	}
 }
 function loadItem(o,r){
@@ -399,17 +397,6 @@ var ids,map,cache,post=initMessage({
 		$('aVacuum').innerHTML=_('buttonVacuumed');
 	},
 });
-rt.listen('UpdateItem',function(r){
-	if(!r.id) return;
-	var m=map[r.id];
-	if(!m) map[r.id]=m={};
-	if(r.obj) m.obj=r.obj;
-	switch(r.status){
-		case 0:loadItem(m,r);break;
-		case 1:ids.push(r.id);addItem(m);break;
-		default:modifyItem(m.div,r);
-	}
-});
 post({cmd:'GetData'},function(o){
 	ids=[];map={};L.innerHTML='';
 	cache=o.cache;
@@ -422,5 +409,16 @@ post({cmd:'GetData'},function(o){
 	$('tSearch').value=o.settings.search;
 	if(!($('cDetail').checked=o.settings.showDetails)) L.classList.add('simple');
 	xD.checked=o.settings.withData;
+	rt.listen('UpdateItem',function(r){
+		if(!r.id) return;
+		var m=map[r.id];
+		if(!m) map[r.id]=m={};
+		if(r.obj) m.obj=r.obj;
+		switch(r.status){
+			case 0:loadItem(m,r);break;
+			case 1:ids.push(r.id);addItem(m);break;
+			default:modifyItem(m.div,r);
+		}
+	});
 });
 })();

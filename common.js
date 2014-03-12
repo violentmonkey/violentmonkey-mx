@@ -3,6 +3,7 @@ var rt=window.external.mxGetRuntime(),br=rt.create('mx.browser');
 // Debug
 var bugs={};
 window.addEventListener('error',function(e){
+	console.log(e);
 	if(!bugs[e.lineno]) {
 		bugs[e.lineno]=e.message;
 		var n=window.webkitNotifications.createNotification('','Error - Violentmonkey','Line '+e.lineno+' >>> '+e.message);
