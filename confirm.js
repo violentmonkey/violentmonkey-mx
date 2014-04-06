@@ -64,5 +64,5 @@ initEditor(function(o){
 		x.send();
 	} else error();
 },{exit:B.onclick,readonly:true});
-initCSS();initI18n();
+initI18n();
 })();
