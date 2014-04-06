@@ -78,7 +78,6 @@ function load(o,src,callback){
 	} else pR.classList.add('hide');
 	if(!o) getPopup();
 }
-initCSS();
 rt.listen('Popup',function(o){
 	var maps={
 		GetPopup:getPopup,
