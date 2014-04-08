@@ -1,6 +1,5 @@
 (function(){
-var $=document.getElementById.bind(document),P=$('popup'),
-	C=$('commands'),pR=P.querySelector('.expand'),
+var P=$('#popup'),C=$('#commands'),pR=P.querySelector('.expand'),
 	pT=P.querySelector('td'),pB=P.querySelector('.expanda'),
 	cT=C.querySelector('td'),cB=C.querySelector('.expanda');
 function loadItem(d,c){

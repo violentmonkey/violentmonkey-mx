@@ -1,5 +1,5 @@
 (function(){
-var $=document.querySelector.bind(document),L=$('#sList'),cur=null,C=$('.content');
+var L=$('#sList'),cur=null,C=$('.content');
 zip.workerScriptsPath='lib/zip.js/';
 initI18n();
 function split(t){return t.replace(/^\s+|\s+$/g,'').split(/\s*\n\s*/).filter(function(e){return e;});}
@@ -38,7 +38,7 @@ function modifyItem(r){
 	if(r.message) d.querySelector('.message').innerHTML=r.message;
 	d.className=n.enabled?'':'disabled';
 	var a=d.querySelector('.update');
-	if(a) a.classList[r.hideUpdate?'add':'remove']('hide');
+	if(a) a.disabled=r.updating;
 	a=d.querySelector('.name');
 	getName(a,n.custom.name||n.meta.name);
 	if(o=n.custom.homepage||n.meta.homepage) a.href=o;
@@ -52,13 +52,13 @@ function modifyItem(r){
 function loadItem(o,r){
 	var d=o.div,n=o.obj;if(!r) r={id:n.id};
 	d.innerHTML='<img class=icon src=icons/icon_64.png>'
-	+'<h3><a class="name ellipsis" target=_blank></a></h3>'
+	+'<a class="name ellipsis" target=_blank></a>'
 	+'<span class=version>'+(n.meta.version?'v'+n.meta.version:'')+'</span>'
 	+'<span class=author></span>'
 	+'<div class=panelT>'
 		+'<span class=move data=move>&equiv;</span>'
 	+'</div>'
-	+'<div class="descrip ellipsis"></div>'
+	+'<p class="descrip ellipsis"></p>'
 	+'<div class=panelB>'
 		+'<button data=edit>'+_('buttonEdit')+'</button> '
 		+'<button data=enable class=enable></button> '
@@ -168,8 +168,8 @@ $('#cUpdate').onchange=function(){post({cmd:'AutoUpdate',data:this.checked});};
 $('#cBadge').onchange=function(){post({cmd:'ShowBadge',data:this.checked});};
 $('#cReload').onchange=function(){post({cmd:'SetOption',data:{key:'startReload',value:this.checked}});};
 S.title=_('hintSearchLink');
-S.onchange=function(){post({cmd:'SetOption',data:{key:'search',value:this.value}});};
-$('#bDefSearch').onclick=function(){S.value=_('defaultSearch');};
+S.onchange=function(){post({cmd:'SetOption',data:{key:'search',value:S.value}});};
+$('#bDefSearch').onclick=function(){S.value=_('defaultSearch');S.onchange();};
 H.onchange=function(e){
 	zip.createReader(new zip.BlobReader(e.target.files[0]),function(r){
 		r.getEntries(function(e){
@@ -203,7 +203,7 @@ H.onchange=function(e){
 			}); else getFiles();
 		});
 	},function(e){console.log(e);});
-}
+};
 $('#bImport').onclick=function(){
 	var e=document.createEvent('MouseEvent');
 	e.initMouseEvent('click',true,true,window,0,0,0,0,0,false,false,false,false,0,null);
@@ -223,9 +223,9 @@ var xL=$('#xList'),xE=$('#bExport'),xD=$('#cWithData');
 function xLoad() {
 	xL.innerHTML='';xE.disabled=false;
 	ids.forEach(function(i){
-		var d=document.createElement('div');
+		var d=document.createElement('div'),n=map[i].obj;
 		d.className='ellipsis';
-		getName(d,map[i].obj.meta.name);
+		getName(d,n.custom.name||n.meta.name);
 		xL.appendChild(d);
 	});
 }
