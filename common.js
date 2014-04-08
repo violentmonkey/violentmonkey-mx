@@ -1,4 +1,4 @@
-var rt=window.external.mxGetRuntime(),br=rt.create('mx.browser');
+var rt=window.external.mxGetRuntime(),br=rt.create('mx.browser'),$=document.querySelector.bind(document);
 
 // Debug
 var bugs={};

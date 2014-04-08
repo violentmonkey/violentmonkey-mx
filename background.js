@@ -522,7 +522,7 @@ var _update={};
 function checkUpdateO(o){
 	if(_update[o.id]) return;_update[o.id]=1;
 	function finish(){delete _update[o.id];}
-	var r={id:o.id,hideUpdate:1,status:2};
+	var r={id:o.id,updating:1,status:2};
 	function update(){
 		var u=o.custom.downloadURL||o.meta.downloadURL;
 		if(u) {
@@ -543,7 +543,7 @@ function checkUpdateO(o){
 				if(older(o.meta.version,m.version)) return update();
 				r.message=_('msgNoUpdate');
 			}catch(e){}
-			delete r.hideUpdate;
+			delete r.updating;
 			updateItem(r);finish();
     },null,{Accept:'text/x-userscript-meta'});
 	} else finish();
@@ -600,7 +600,6 @@ function initSettings(){
 	init('startReload',true);
 	init('autoUpdate',true);
 	init('lastUpdate',0);
-	init('showDetails',false);
 	init('showBadge',true);
 	init('withData',true);
 	init('closeAfterInstall',true);
