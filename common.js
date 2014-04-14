@@ -1,7 +1,7 @@
 var rt=window.external.mxGetRuntime(),br=rt.create('mx.browser'),$=document.querySelector.bind(document);
 
 // Debug
-var bugs={};
+/*var bugs={};
 window.addEventListener('error',function(e){
 	console.log(e);
 	if(!bugs[e.lineno]) {
@@ -9,7 +9,7 @@ window.addEventListener('error',function(e){
 		var n=window.webkitNotifications.createNotification('','Error - Violentmonkey','Line '+e.lineno+' >>> '+e.message);
 		n.show();
 	}
-});
+});*/
 
 function _(k,a){
 	var v=rt.locale.t(k);

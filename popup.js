@@ -29,11 +29,13 @@ function addItem(h,c){
 }
 function menuCommand(e){e=e.target;rt.post(e.source,{cmd:'Command',data:e.cmd});}
 function menuScript(s) {
-	var n=s.meta.name?s.meta.name.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('labelNoName')+'</em>';
-	addItem(n,{holder:pB,data:s.enabled,title:s.meta.name,onclick:function(e){
-		var t=this;s.enabled=s.enabled?0:1;
-		post({cmd:'UpdateMeta',data:{id:s.id,enabled:s.enabled}},function(){loadItem(t,s.enabled);});
-	}});
+	if(s) {
+		var n=s.meta.name?s.meta.name.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('labelNoName')+'</em>';
+		addItem(n,{holder:pB,data:s.enabled,title:s.meta.name,onclick:function(e){
+			var t=this;s.enabled=s.enabled?0:1;
+			post({cmd:'UpdateMeta',data:{id:s.id,enabled:s.enabled}},function(){loadItem(t,s.enabled);});
+		}});
+	}
 }
 function getPopup(){
 	count++;	// avoid frequent asking for popup menu
