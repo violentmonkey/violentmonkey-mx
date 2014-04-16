@@ -216,7 +216,7 @@ $('#bVacuum').onclick=function(){
 		t.innerHTML=_('buttonVacuumed');
 	});
 };
-$('#bVacuum').title=_('hintVacuumData');
+$('#bVacuum').title=_('hintVacuum');
 
 // Export
 var xL=$('#xList'),xE=$('#bExport'),xD=$('#cWithData');
