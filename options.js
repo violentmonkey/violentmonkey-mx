@@ -9,7 +9,9 @@ function getName(d,n,def){
 }
 
 // Main options
-function allowUpdate(n){return n.update&&(n.custom.updateURL||n.meta.updateURL);}
+function allowUpdate(n){
+	return n.update&&(n.custom.updateURL||n.meta.updateURL||n.custom.downloadURL||n.meta.downloadURL);
+}
 var icons={};
 function getIconByURL(d,n){
 	var u=icons[n];

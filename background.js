@@ -524,16 +524,16 @@ function checkUpdateO(o){
 	function finish(){delete _update[o.id];}
 	var r={id:o.id,updating:1,status:2};
 	function update(){
-		var u=o.custom.downloadURL||o.meta.downloadURL;
-		if(u) {
+		if(du) {
 			r.message=_('msgUpdating');
-			fetchURL(u,function(){
+			fetchURL(du,function(){
 				parseScript({id:o.id,status:this.status,code:this.responseText});
 			});
 		} else r.message='<span class=new>'+_('msgNewVersion')+'</span>';
 		updateItem(r);finish();
 	}
-	var u=o.custom.updateURL||o.meta.updateURL;
+	var du=o.custom.downloadURL||o.meta.downloadURL,
+			u=o.custom.updateURL||o.meta.updateURL||du;
 	if(u) {
 		r.message=_('msgCheckingForUpdate');updateItem(r);
 		fetchURL(u,function(){
