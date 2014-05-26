@@ -10,7 +10,10 @@ function getName(d,n,def){
 
 // Main options
 function allowUpdate(n){
-	return n.update&&(n.custom.updateURL||n.meta.updateURL||n.custom.downloadURL||n.meta.downloadURL);
+	return n.update&&(
+		n.custom.updateURL||n.meta.updateURL
+		||n.custom.downloadURL||n.meta.downloadURL||n.custom.lastInstallURL
+	);
 }
 var icons={};
 function getIconByURL(d,n){

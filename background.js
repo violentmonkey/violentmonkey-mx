@@ -423,7 +423,7 @@ function parseScript(d,src,callback){
 			if(d.more) for(i in d.more) if(i in c) c[i]=d.more[i];	// for import and user edit
 			c.meta=meta;c.code=d.code;c.uri=getNameURI(c);
 			if(src&&src.url&&!c.meta.homepage&&!c.custom.homepage&&!/^(file|data):/.test(src.url)) c.custom.homepage=src.url;
-			if(!c.meta.downloadURL&&!c.custom.downloadURL&&d.url) c.custom.downloadURL=d.url;
+			if(d.url&&!/^(file|data):/.test(d.url)) c.custom.lastInstallURL=d.url;
 			saveScript(c,null,function(){r.obj=metas[r.id=c.id];finish();});
 		});
 		meta.require.forEach(function(u){
@@ -532,7 +532,7 @@ function checkUpdateO(o){
 		} else r.message='<span class=new>'+_('msgNewVersion')+'</span>';
 		updateItem(r);finish();
 	}
-	var du=o.custom.downloadURL||o.meta.downloadURL,
+	var du=o.custom.downloadURL||o.meta.downloadURL||o.custom.lastInstallURL,
 			u=o.custom.updateURL||o.meta.updateURL||du;
 	if(u) {
 		r.message=_('msgCheckingForUpdate');updateItem(r);
