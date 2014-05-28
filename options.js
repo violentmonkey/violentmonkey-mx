@@ -147,31 +147,42 @@ $('#bNew').onclick=function(){post({cmd:'NewScript'},function(o){
 });};
 $('#bUpdate').onclick=function(){post({cmd:'CheckUpdateAll'});};
 function switchTab(e){
-	var t=e.target,i=t.id.slice(2),o=C.querySelector('#tab'+i);
-	if(!o) return;
+	var h,o;
+	if(e) {
+		e=e.target;h=e.getAttribute('href').substr(1);
+	} else {
+		h=location.hash||'#Installed';
+		h=h.substr(1);
+		e=$('#sm'+h);
+	}
+	o=C.querySelector('#tab'+h);
+	if(!o) return switchTab({target:$('#smInstalled')});
 	if(cur) {
 		if(cur.tab==o) return;
 		cur.menu.classList.remove('selected');
 		cur.tab.classList.add('hide');
 	}
-	cur={menu:t,tab:o};
-	t.classList.add('selected');
+	cur={menu:e,tab:o};
+	e.classList.add('selected');
 	o.classList.remove('hide');
-	switch(i) {	// init
+	switch(h) {	// init
 		case 'Settings':xLoad();break;
 	}
 }
 $('.sidemenu').onclick=switchTab;
-switchTab({target:$('#smInstalled')});
 function confirmCancel(dirty){
 	return !dirty||confirm(_('confirmNotSaved'));
 }
 
 // Advanced
-var H=$('#iImport'),S=$('#tSearch');
+var H=$('#iImport'),S=$('#tSearch'),R=$('#cReload'),Rs=$('#cReloadHTTPS');
 $('#cUpdate').onchange=function(){post({cmd:'AutoUpdate',data:this.checked});};
 $('#cBadge').onchange=function(){post({cmd:'ShowBadge',data:this.checked});};
-$('#cReload').onchange=function(){post({cmd:'SetOption',data:{key:'startReload',value:this.checked}});};
+R.onchange=function(){
+	post({cmd:'SetOption',data:{key:'startReload',value:this.checked}});
+	Rs.disabled=!this.checked;
+};
+Rs.onchange=function(){post({cmd:'SetOption',data:{key:'reloadHTTPS',value:this.checked}});};
 S.title=_('hintSearchLink');
 S.onchange=function(){post({cmd:'SetOption',data:{key:'search',value:S.value}});};
 $('#bDefSearch').onclick=function(){S.value=_('defaultSearch');S.onchange();};
@@ -393,7 +404,9 @@ post({cmd:'GetData'},function(o){
 	});
 	$('#cUpdate').checked=o.settings.autoUpdate;
 	$('#cBadge').checked=o.settings.showBadge;
-	$('#cReload').checked=o.settings.startReload;
+	R.checked=o.settings.startReload;
+	Rs.checked=o.settings.reloadHTTPS;
+	Rs.disabled=!o.settings.startReload;
 	S.value=o.settings.search;
 	xD.checked=o.settings.withData;
 	rt.listen('UpdateItem',function(r){
@@ -407,5 +420,6 @@ post({cmd:'GetData'},function(o){
 			default:modifyItem(r);
 		}
 	});
+	switchTab();
 });
 })();

@@ -54,7 +54,6 @@ function b64ToArr(sBase64, nBlocksSize) {
   return taBytes;		// taBytes.buffer is ArrayBuffer
 }
 
-
 // Messages
 var rt=window.external.mxGetRuntime(),id=Date.now()+Math.random().toString().slice(1),
 		callbacks={};

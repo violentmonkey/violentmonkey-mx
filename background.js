@@ -598,6 +598,7 @@ function initSettings(){
 	}
 	init('isApplied',true);
 	init('startReload',true);
+	init('reloadHTTPS',false);
 	init('autoUpdate',true);
 	init('lastUpdate',0);
 	init('showBadge',true);
@@ -657,6 +658,7 @@ function reinit(){
 	};
 	f='('+f.toString()+')(window.delayedReload)';
 	f='(function(s){var o=document.createElement("script");o.innerHTML=s;document.body.appendChild(o);document.body.removeChild(o);})('+JSON.stringify(f)+')';
+	if(!settings.reloadHTTPS) f='if(location.protocol!="https:")'+f;
 	for(var i=0;i<br.tabs.length;i++) {
 		var t=br.tabs.getTab(i);
 		br.executeScript(f,t.id);
