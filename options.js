@@ -158,7 +158,6 @@ function switchTab(e){
 	o=C.querySelector('#tab'+h);
 	if(!o) return switchTab({target:$('#smInstalled')});
 	if(cur) {
-		if(cur.tab==o) return;
 		cur.menu.classList.remove('selected');
 		cur.tab.classList.add('hide');
 	}
@@ -395,9 +394,9 @@ E.close=$('#eClose').onclick=function(){if(confirmCancel(!eS.disabled)) eClose()
 initEditor(function(o){T=o;},{save:eSave,exit:E.close,onchange:E.markDirty});
 
 // Message
-var ids,map,cache,post=initMessage({});
+var ids=[],map={},cache,post=initMessage({});
 post({cmd:'GetData'},function(o){
-	ids=[];map={};L.innerHTML='';
+	L.innerHTML='';
 	cache=o.cache;
 	o.scripts.forEach(function(i){
 		ids.push(i.id);addItem(map[i.id]={obj:i});
@@ -422,4 +421,5 @@ post({cmd:'GetData'},function(o){
 	});
 	switchTab();
 });
+switchTab();
 })();
