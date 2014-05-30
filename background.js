@@ -352,16 +352,13 @@ function parseMeta(d){
 	delete meta.resource;
 	return meta;
 }
-_fetching={};
 function fetchURL(url,cb,type,headers){
-	if(_fetching[url]) return;
-	_fetching[url]=1;
 	var req=new XMLHttpRequest(),i;
 	req.open('GET',url,true);
 	if(type) req.responseType=type;
 	if(headers) for(i in headers)
 		req.setRequestHeader(i,headers[i]);
-	req.onloadend=function(){if(cb) cb.call(req);delete _fetching[url];};
+	req.onloadend=function(){if(cb) cb.call(req);};
 	req.send();
 }
 function saveData(url,table,data){
@@ -369,7 +366,10 @@ function saveData(url,table,data){
 		t.executeSql('REPLACE INTO "'+table+'"(uri,data) VALUES(?,?)',[url,data],null,dbError);
 	});
 }
+var _cache={},_require={};
 function fetchCache(url,callback){
+	if(_cache[url]) return;
+	_cache[url]=1;
 	fetchURL(url,function(){
 		if(this.status!=200) return;
 		var r=new FileReader();
@@ -381,6 +381,8 @@ function fetchCache(url,callback){
 	},'blob');
 }
 function fetchRequire(url){
+	if(_require[url]) return;
+	_require[url]=1;
 	fetchURL(url,function(){
 		if(this.status==200) saveData(url,'require',this.responseText);
 	});
