@@ -38,6 +38,11 @@ function getIcon(d,n){
 		else getIconByURL(d,n);
 	}
 }
+function getAuthor(a,n){
+	var m=n.match(/^(.*?)\s<(\S*?@\S*?)>$/),t=_('labelAuthor');
+	if(m) a.innerHTML=t+'<a href=mailto:'+m[2]+'>'+m[1]+'</a>';
+	else a.innerText=t+n;
+}
 function modifyItem(r){
 	var o=map[r.id],d=o.div,n=o.obj;
 	if(r.message) d.querySelector('.message').innerHTML=r.message;
@@ -47,7 +52,7 @@ function modifyItem(r){
 	a=d.querySelector('.name');
 	getName(a,n.custom.name||n.meta.name);
 	if(o=n.custom.homepage||n.meta.homepage) a.href=o;
-	if(n.meta.author) d.querySelector('.author').innerText=_('labelAuthor')+n.meta.author;
+	getAuthor(d.querySelector('.author'),n.meta.author||'');
 	a=d.querySelector('.descrip');
 	getName(a,n.meta.description||'','&nbsp;');
 	getIcon(d.querySelector('.icon'),n.meta.icon);
