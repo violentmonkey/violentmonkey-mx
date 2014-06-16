@@ -22,37 +22,6 @@ function utf8decode (utftext) {
 	}
 	return string;
 }
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding
-function b64ToArr(sBase64, nBlocksSize) {
-	function b64ToUint6 (nChr) {
-		return nChr > 64 && nChr < 91 ?
-				nChr - 65
-			: nChr > 96 && nChr < 123 ?
-				nChr - 71
-			: nChr > 47 && nChr < 58 ?
-				nChr + 4
-			: nChr === 43 ?
-				62
-			: nChr === 47 ?
-				63
-			:
-				0;
-	}
-  var
-    sB64Enc = sBase64.replace(/[^A-Za-z0-9\+\/]/g, ""), nInLen = sB64Enc.length,
-    nOutLen = nBlocksSize ? Math.ceil((nInLen * 3 + 1 >> 2) / nBlocksSize) * nBlocksSize : nInLen * 3 + 1 >> 2, taBytes = new Uint8Array(nOutLen);
-  for (var nMod3, nMod4, nUint24 = 0, nOutIdx = 0, nInIdx = 0; nInIdx < nInLen; nInIdx++) {
-    nMod4 = nInIdx & 3;
-    nUint24 |= b64ToUint6(sB64Enc.charCodeAt(nInIdx)) << 18 - 6 * nMod4;
-    if (nMod4 === 3 || nInLen - nInIdx === 1) {
-      for (nMod3 = 0; nMod3 < 3 && nOutIdx < nOutLen; nMod3++, nOutIdx++) {
-        taBytes[nOutIdx] = nUint24 >>> (16 >>> nMod3 & 24) & 255;
-      }
-      nUint24 = 0;
-    }
-  }
-  return taBytes;		// taBytes.buffer is ArrayBuffer
-}
 
 // Messages
 var rt=window.external.mxGetRuntime(),id=Date.now()+Math.random().toString().slice(1),
@@ -85,7 +54,6 @@ var comm={
 	state:0,
 	load:function(){},
 	utf8decode:utf8decode,
-	b64ToArr:b64ToArr,
 	prop1:Object.getOwnPropertyNames(window),
 	prop2:(function(n,p){
 		while(n=Object.getPrototypeOf(n)) p=p.concat(Object.getOwnPropertyNames(n));
@@ -150,7 +118,6 @@ var comm={
 		}
 		function wrapGM(c){
 			var gm={},value=values[c.uri];if(!value) value={};
-			function getCache(name){for(var i in resources) if(name==i) return cache[resources[i]];}
 			function propertyToString(){return 'Property for Violentmonkey: designed by Gerald';}
 			function addProperty(name,prop,obj){
 				if('value' in prop) prop.writable=false;
@@ -212,16 +179,23 @@ var comm={
 				value[key]=val;comm.post({cmd:'SetValue',data:{uri:c.uri,values:value}});
 			}});
 			addProperty('GM_getResourceText',{value:function(name){
-				var b=getCache(name);
-				if(b) b=comm.utf8decode(b);
+				var i,b=null;
+				for(i in resources) if(name==i) {
+					b=cache[resources[i]];
+					if(b) b=comm.utf8decode(b);
+					break;
+				}
 				return b;
 			}});
 			addProperty('GM_getResourceURL',{value:function(name){
-				var i,u=null,b;
+				var i,j,u=null,b,r;
 				for(i in resources) if(name==i) {
 					i=resources[i];u=urls[i];
-					if(!u&&(b=cache[i])) {
-						b=new Blob([comm.b64ToArr(b)]);
+					if(!u&&(r=cache[i])) {
+						r=window.atob(r);
+						b=new Uint8Array(r.length);
+						for(j=0;j<r.length;j++) b[j]=r.charCodeAt(j);
+						b=new Blob([b]);
 						urls[i]=u=URL.createObjectURL(b);
 					}
 					break;

@@ -335,8 +335,7 @@ function setValue(data,src,callback){
 	});
 }
 function parseMeta(d){
-	var o=-1,meta={include:[],exclude:[],match:[],require:[],resources:{}};
-	meta.resource=[];
+	var o=-1,meta={include:[],exclude:[],match:[],require:[],resource:[],resources:{}};
 	d.replace(/(?:^|\n)\/\/\s*([@=]\S+)(.*)/g,function(m,k,v){
 		if(o<0&&k=='==UserScript==') o=1;
 		else if(k=='==/UserScript==') o=0;
@@ -432,7 +431,10 @@ function parseScript(d,src,callback){
 			var r=d.require&&d.require[u];
 			if(r) saveData(u,'require',r); else fetchRequire(u);
 		});	// @require
-		for(i in meta.resources) fetchCache(meta.resources[i]);	// @resource
+		for(i in meta.resources) {	// @resource
+			var u=meta.resources[i],c=d.resources&&d.resources[u];
+			if(c) saveData(u,'cache',c); else fetchCache(u);
+		}
 		if(meta.icon) fetchCache(meta.icon);	// @icon
 	}
 }
