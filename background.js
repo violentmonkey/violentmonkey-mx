@@ -345,10 +345,11 @@ function parseMeta(d){
 		else if(!(k in meta)) meta[k]=v;	// only first value will be stored
 	});
 	meta.resource.forEach(function(i){
-		o=i.match(/^(\w+)\s+(.*)/);
+		o=i.match(/^(\w\S*)\s+(.*)/);
 		if(o) meta.resources[o[1]]=o[2];
 	});
 	delete meta.resource;
+	if(!meta.homepageURL&&meta.homepage) meta.homepageURL=meta.homepage;	// @homepageURL instead of @homepage
 	return meta;
 }
 function fetchURL(url,cb,type,headers){
@@ -423,7 +424,7 @@ function parseScript(d,src,callback){
 			if(!c.id){r.status=1;r.message=_('msgInstalled');}
 			if(d.more) for(i in d.more) if(i in c) c[i]=d.more[i];	// for import and user edit
 			c.meta=meta;c.code=d.code;c.uri=getNameURI(c);
-			if(src&&src.url&&!c.meta.homepage&&!c.custom.homepage&&!/^(file|data):/.test(src.url)) c.custom.homepage=src.url;
+			if(src&&src.url&&!c.meta.homepageURL&&!c.custom.homepageURL&&!/^(file|data):/.test(src.url)) c.custom.homepageURL=src.url;
 			if(d.url&&!/^(file|data):/.test(d.url)) c.custom.lastInstallURL=d.url;
 			saveScript(c,null,function(){r.obj=metas[r.id=c.id];finish();});
 		});
