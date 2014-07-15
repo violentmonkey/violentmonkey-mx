@@ -272,7 +272,7 @@ function getCache(args,callback,t){
 	if(t) query(t); else db.readTransaction(query);
 }
 function getInjected(o,src,callback){
-	var data={isApplied:settings.isApplied,defaultIcon:defaultIcon},cache={},require={},values={};
+	var data={isApplied:settings.isApplied},cache={},require={},values={};
 	function finish(){callback(data);}
 	if(settings.isApplied&&src.url.slice(0,5)!='data:') {
 		getScripts(
@@ -588,8 +588,6 @@ function initSettings(){
 	init('closeAfterInstall',true);
 	init('search',_('defaultSearch'));
 	init('dataVer',0);
-	// XXX
-	fetchCache('icons/icon_64.png',function(o){defaultIcon=o;});
 }
 function autoCheck(o){	// check for updates automatically in 20 seconds
 	function check(){
@@ -648,7 +646,7 @@ function reinit(){
 	}
 }
 
-var db,checking=false,settings={},ids=null,metas,pos,defaultIcon=null;
+var db,checking=false,settings={},ids=null,metas,pos;
 initSettings();
 initDatabase(function(){
 	upgradeData(function(){

@@ -85,7 +85,7 @@ var comm={
 		if(f) f(o.data);
 	},
 	loadScript:function(o){
-		var start=[],idle=[],end=[],cache,urls={},require,values,comm=this,defaultIcon='data:image/png;base64,'+o.defaultIcon;
+		var start=[],idle=[],end=[],cache,urls={},require,values,comm=this;
 		comm.command={};comm.requests={};comm.qrequests=[];
 		function Request(details){
 			this.callback=function(d){
@@ -276,10 +276,12 @@ var comm={
 				GM_registerMenuCommand:{value:function(cap,func,acc){
 					comm.command[cap]=func;comm.post({cmd:'RegisterMenu',data:[cap,acc]});
 				}},
-				GM_notification:{value:function(msg,title,icon,callback){
-					icon=icon||c.meta.icon||defaultIcon;
-					var n=window.webkitNotifications.createNotification(icon,title,msg);
-					n.onclick=callback;n.show();
+				GM_notification:{value:function(msg,title,callback,more){
+					msg={body:msg};more=more||{};
+					var n=more.icon||c.meta.icon;if(n) msg.icon=n;
+					n=new Notification(title,msg);n.onclick=callback;
+					if(more.onclose) n.onclose=more.onclose;
+					setTimeout(function(){n.close();},more.timeout||5000);
 				}},
 				GM_xmlhttpRequest:{value:function(details){
 					var r=new Request(details);
