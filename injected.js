@@ -409,6 +409,11 @@ function abortRequest(id) {
 }
 
 // For injected scripts
+function injectScript(s,d) {
+	var e=document.createElement('script');
+	e.innerHTML=s;
+	d.appendChild(e);//d.removeChild(e);
+}
 function objEncode(o){
 	var t=[],i;
 	for(i in o) {
@@ -419,11 +424,16 @@ function objEncode(o){
 	return '{'+t.join(',')+'}';
 }
 function initCommunicator(){
-	var s=document.createElement('script'),d=document.documentElement,C='C',R='R';
-	s.innerHTML='(function(){var c='+objEncode(comm)+';c.init("'+R+'","'+C+'");\
-document.addEventListener("readystatechange",function(){c.state=["loading","interactive","complete"].indexOf(document.readyState);c.load();},false);\
-document.addEventListener("DOMContentLoaded",function(){c.state=2;c.load();},false);})();';
-	d.appendChild(s);d.removeChild(s);
+	var C='C',R='R';
+	injectScript('('+(function(c,R,C){
+		function updateState(){
+			c.state=["loading","interactive","complete"].indexOf(document.readyState);
+			c.load();
+		}
+		c.init(R,C);
+		document.addEventListener("readystatechange",updateState,false);
+		updateState();
+	}).toString()+')('+objEncode(comm)+',"'+R+'","'+C+'")',document.documentElement);
 	comm.handleC=handleC;comm.init(C,R);
 	post('Background',{cmd:'GetInjected'},loadScript);
 }
@@ -453,7 +463,7 @@ document.addEventListener("DOMContentLoaded",updateBadge,false);
 function checkJS() {
 	if(document&&document.body) {
 		if(!document.querySelector('title'))	// plain text
-			post('Background',{cmd:'InstallScript',data:location.href},window.close);
+			post('Background',{cmd:'InstallScript',data:location.href},function(){history.go(-1);});
 		return true;
 	}
 }
