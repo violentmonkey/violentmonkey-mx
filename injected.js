@@ -113,6 +113,10 @@ var comm={
 						}
 						d.data.response=this.data[0];
 					}
+					// finalUrl not supported
+					Object.defineProperty(d.data,'finalUrl',{
+						get:function(){console.log('[Violentmonkey]Warning: finalUrl not supported for GM_xmlhttpRequest yet!');}
+					});
 					c(d.data);
 				}
 				if(!this.id)	// synchronous, not tested yet
@@ -272,7 +276,7 @@ var comm={
 					return v;
 				}},
 				GM_log:{value:function(d){console.log(d);}},
-				GM_openInTab:{value:function(url){window.open(url);}},
+				GM_openInTab:{value:function(url){comm.post({cmd:'NewTab',data:url});}},
 				GM_registerMenuCommand:{value:function(cap,func,acc){
 					comm.command[cap]=func;comm.post({cmd:'RegisterMenu',data:[cap,acc]});
 				}},
@@ -330,6 +334,7 @@ function handleC(e){
 	var o=JSON.parse(e.attrName),maps={
 		SetValue:function(o){post('Background',{cmd:'SetValue',data:o});},
 		RegisterMenu:function(o){menu.push(o);updatePopup();},
+		NewTab:function(o){post('Background',{cmd:'NewTab',data:o});},
 		GetRequestId:getRequestId,
 		HttpRequest:httpRequest,
 		AbortRequest:abortRequest,
