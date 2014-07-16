@@ -409,11 +409,6 @@ function abortRequest(id) {
 }
 
 // For injected scripts
-function injectScript(s,d) {
-	var e=document.createElement('script');
-	e.innerHTML=s;
-	d.appendChild(e);//d.removeChild(e);
-}
 function objEncode(o){
 	var t=[],i;
 	for(i in o) {
@@ -424,8 +419,8 @@ function objEncode(o){
 	return '{'+t.join(',')+'}';
 }
 function initCommunicator(){
-	var C='C',R='R';
-	injectScript('('+(function(c,R,C){
+	var s=document.createElement('script'),d=document.documentElement,C='C',R='R';
+	s.innerHTML='('+(function(c,R,C){
 		function updateState(){
 			c.state=["loading","interactive","complete"].indexOf(document.readyState);
 			c.load();
@@ -433,7 +428,8 @@ function initCommunicator(){
 		c.init(R,C);
 		document.addEventListener("readystatechange",updateState,false);
 		updateState();
-	}).toString()+')('+objEncode(comm)+',"'+R+'","'+C+'")',document.documentElement);
+	}).toString()+')('+objEncode(comm)+',"'+R+'","'+C+'")';
+	d.appendChild(s);d.removeChild(s);
 	comm.handleC=handleC;comm.init(C,R);
 	post('Background',{cmd:'GetInjected'},loadScript);
 }
