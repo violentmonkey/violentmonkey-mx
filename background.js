@@ -707,7 +707,6 @@ initDatabase(function(){
 						});
 					},
 					ParseMeta: function(o,src,callback){callback(parseMeta(o));},
-					NewTab: function(o,src,callback){br.tabs.newTab({url:o,activate:true});},
 				},f=maps[o.cmd];
 				if(f) f(o.data,o.src,callback);
 				return true;
