@@ -733,6 +733,7 @@ initDatabase(function(){
 							tab.close();t.activate();
 						}
 					}
+				break;
 		}
 	};
 })(rt.getPrivateUrl()+'options.html');
