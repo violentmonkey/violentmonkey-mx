@@ -54,9 +54,9 @@ function modifyItem(r){
 	a=d.querySelector('.name');
 	getName(a,n.custom.name||n.meta.name);
 	if(o=n.custom.homepageURL||n.meta.homepageURL||n.meta.homepage) a.href=o;	// compatible with @homepage
-	a=d.querySelector('.support');
 	if(o=n.meta.supportURL) {
-		a.classList.remove('hide');a.href=o;a.title=_('hintSupportPage');
+		a=d.querySelector('.support');a.classList.remove('hide');
+		a.href=o;a.title=_('hintSupportPage');
 	}
 	getAuthor(d.querySelector('.author'),n.meta.author||'');
 	d.querySelector('.descrip').innerText=n.meta.description||'';

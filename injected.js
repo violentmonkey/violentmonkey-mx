@@ -1,5 +1,5 @@
 (function(){
-if(document.readyState=='complete') return;	// already loaded, run repeatedly due to document.write, etc.
+if(window.VM) return;window.VM=1;	// avoid running repeatedly due to new document.documentElement
 
 /**
 * http://www.webtoolkit.info/javascript-utf8.html
