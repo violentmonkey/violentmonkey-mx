@@ -462,7 +462,10 @@ document.addEventListener("DOMContentLoaded",updateBadge,false);
 function checkJS() {
 	if(document&&document.body) {
 		if(!document.querySelector('title'))	// plain text
-			post('Background',{cmd:'InstallScript',data:location.href},function(){history.go(-1);});
+			post('Background',{cmd:'InstallScript',data:location.href},function(){
+				if(history.length>1) history.go(-1);
+				else window.close();
+			});
 		return true;
 	}
 }
