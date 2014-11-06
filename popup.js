@@ -49,14 +49,12 @@ function load(o,src,callback){
 	addItem(_('menuManageScripts'),{holder:pT,symbol:'➤',title:true,onclick:function(){
 		br.tabs.newTab({url:rt.getPrivateUrl()+'options.html',activate:true});
 	}});
-	/*if(o) addItem(_('menuFindScripts'),{holder:pT,symbol:'➤',title:true,onclick:function(){
-		var q='site:userscripts.org+inurl:show+'+br.tabs.getCurrentTab().url.replace(/^.*?:\/\/([^\/]*?)\.\w+\/.*$/,function(v,g){
-			return g.replace(/\.(com|..)$/,'').replace(/\./g,'+');
-		});
+	if(o) addItem(_('menuFindScripts'),{holder:pT,symbol:'➤',title:true,onclick:function(){
+		var h=br.tabs.getCurrentTab().url.match(/:\/\/(?:www\.)?([^\/]*)/);
 		post({cmd:'GetOption',data:'search'},function(o){
-			br.tabs.newTab({url:o.replace('*',q),activate:true});
+			br.tabs.newTab({url:'https://greasyfork.org/scripts/search?q='+h[1],activate:true});
 		});
-	}});*/
+	}});
 	if(o&&o[0]&&o[0].length) {
 		addItem(_('menuBack'),{holder:cT,symbol:'◄',title:true,onclick:function(){
 			C.classList.add('hide');P.classList.remove('hide');
