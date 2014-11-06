@@ -586,7 +586,6 @@ function initSettings(){
 	init('showBadge',true);
 	init('withData',true);
 	init('closeAfterInstall',true);
-	init('search',_('defaultSearch'));
 	init('dataVer',0);
 }
 function autoCheck(o){	// check for updates automatically in 20 seconds

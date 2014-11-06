@@ -187,7 +187,7 @@ function confirmCancel(dirty){
 }
 
 // Advanced
-var H=$('#iImport'),S=$('#tSearch'),R=$('#cReload'),Rs=$('#cReloadHTTPS');
+var H=$('#iImport'),R=$('#cReload'),Rs=$('#cReloadHTTPS');
 $('#cUpdate').onchange=function(){post({cmd:'AutoUpdate',data:this.checked});};
 $('#cBadge').onchange=function(){post({cmd:'ShowBadge',data:this.checked});};
 R.onchange=function(){
@@ -195,9 +195,6 @@ R.onchange=function(){
 	Rs.disabled=!this.checked;
 };
 Rs.onchange=function(){post({cmd:'SetOption',data:{key:'reloadHTTPS',value:this.checked}});};
-S.title=_('hintSearchLink');
-S.onchange=function(){post({cmd:'SetOption',data:{key:'search',value:S.value}});};
-$('#bDefSearch').onclick=function(){S.value=_('defaultSearch');S.onchange();};
 H.onchange=function(e){
 	zip.createReader(new zip.BlobReader(e.target.files[0]),function(r){
 		r.getEntries(function(e){
@@ -430,7 +427,6 @@ post({cmd:'GetData'},function(o){
 	R.checked=o.settings.startReload;
 	Rs.checked=o.settings.reloadHTTPS;
 	Rs.disabled=!o.settings.startReload;
-	S.value=o.settings.search;
 	xD.checked=o.settings.withData;
 	rt.listen('UpdateItem',function(r){
 		if(!r.id) return;
