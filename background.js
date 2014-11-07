@@ -51,10 +51,20 @@ function older(o,n){
  * 		values: TEXT
  * }
  */
+function notify(title,options) {
+	function show() {
+		var n=new Notification(title+' - Violentmonkey',{
+			body:options.body,
+		});
+		n.onclick=options.onclick;
+	}
+	if(Notification.permission=='granted') show();
+	else Notification.requestPermission(function(e){
+		if(e=='granted') show(); else console.log('Notification: '+options.body);
+	});
+}
 function dbError(t,e){
-	var n=window.webkitNotifications.createNotification('','Error - Violentmonkey','Database error >>> '+e.message);
-	n.show();
-	console.log('Database error: '+e.message);
+	notify(_('Error'),{body:'Database error >>> '+e.message});
 }
 function initDatabase(callback){
 	db=openDatabase('Violentmonkey','0.5','Violentmonkey data',10*1024*1024);
@@ -403,7 +413,20 @@ function parseScript(d,src,callback){
 			c.meta=meta;c.code=d.code;c.uri=getNameURI(c);
 			if(src&&src.url&&!c.meta.homepageURL&&!c.custom.homepageURL&&!/^(file|data):/.test(src.url)) c.custom.homepageURL=src.url;
 			if(d.url&&!/^(file|data):/.test(d.url)) c.custom.lastInstallURL=d.url;
-			saveScript(c,null,function(){r.obj=metas[r.id=c.id];finish();});
+			saveScript(c,null,function(){
+				r.obj=metas[r.id=c.id];finish();
+				if(!meta.grant.length)
+					notify(_('Warning'),{
+						body:_('msgWarnGrant',[meta.name||_('labelNoName')]),
+						onclick:function(){
+							br.tabs.newTab({
+								activate:true,
+								url:'http://wiki.greasespot.net/@grant',
+							});
+							this.close();
+						},
+					});
+			});
 		});
 		meta.require.forEach(function(u){
 			var r=d.require&&d.require[u];
