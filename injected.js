@@ -190,7 +190,7 @@ var comm={
 				}
 			}
 			var t=this;
-			comm.prop1.forEach(wrapItem);
+			comm.prop1.forEach(function(i){wrapItem(i);});
 			comm.prop2.forEach(function(i){wrapItem(i,true);});
 		}
 		function wrapGM(c){
