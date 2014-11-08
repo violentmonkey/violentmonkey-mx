@@ -53,7 +53,7 @@ function older(o,n){
  */
 function notify(title,options) {
 	function show() {
-		var n=new Notification(title+' - Violentmonkey',{
+		var n=new Notification(title+' - '+_('extName'),{
 			body:options.body,
 		});
 		n.onclick=options.onclick;
