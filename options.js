@@ -52,14 +52,15 @@ function modifyItem(r){
 	var a=d.querySelector('.update');
 	if(a) a.disabled=r.updating;
 	a=d.querySelector('.name');
-	getName(a,n.custom.name||n.meta.name);
+	getName(a,n.custom.name||getLocaleString(n.meta,'name'));
 	if(o=n.custom.homepageURL||n.meta.homepageURL||n.meta.homepage) a.href=o;	// compatible with @homepage
 	if(o=n.meta.supportURL) {
 		a=d.querySelector('.support');a.classList.remove('hide');
 		a.href=o;a.title=_('hintSupportPage');
 	}
 	getAuthor(d.querySelector('.author'),n.meta.author||'');
-	d.querySelector('.descrip').innerText=n.meta.description||'';
+	a=d.querySelector('.descrip');
+	getName(a,getLocaleString(n.meta,'description'),'&nbsp;');
 	getIcon(d.querySelector('.icon'),n.meta.icon);
 	a=d.querySelector('.enable');
 	a.innerHTML=n.enabled?_('buttonDisable'):_('buttonEnable');
@@ -250,7 +251,7 @@ function xLoad() {
 	ids.forEach(function(i){
 		var d=document.createElement('div'),n=map[i].obj;
 		d.className='ellipsis selected';
-		getName(d,n.custom.name||n.meta.name);
+		getName(d,n.custom.name||getLocaleString(n.meta,'name'));
 		xL.appendChild(d);
 	});
 }
