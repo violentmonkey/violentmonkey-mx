@@ -30,6 +30,13 @@ function initI18n(callback){
 		if(callback) callback();
 	},true);
 }
+function getLocaleString(dict,key){
+	// Maxthon does not support navigator.languages
+	var lang=navigator.language,i,lkey;
+	lkey=key+':'+lang;
+	if(lkey in dict) key=lkey;
+	return dict[key]||'';
+}
 function getUniqueId(){return Date.now()+Math.random().toString().slice(1);}
 function initMessage(map){
 	var id=getUniqueId(),callbacks={};
