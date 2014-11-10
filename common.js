@@ -31,10 +31,15 @@ function initI18n(callback){
 	},true);
 }
 function getLocaleString(dict,key){
-	// Maxthon does not support navigator.languages
-	var lang=navigator.language,i,lkey;
-	lkey=key+':'+lang;
-	if(lkey in dict) key=lkey;
+	var lang=[navigator.language],i,lkey;
+	i=lang[0].indexOf('-');
+	if(i>0) lang.push(lang[0].substr(0,i));
+	for(i=0;i<lang.length;i++) {
+		lkey=key+':'+lang[i];
+		if(lkey in dict) {
+			key=lkey;break;
+		}
+	}
 	return dict[key]||'';
 }
 function getUniqueId(){return Date.now()+Math.random().toString().slice(1);}
