@@ -22,7 +22,7 @@ function getIconByURL(d,n){
 	else if(u) u.push(d);
 	else {
 		icons[n]=u=[d];
-		var x=document.createElement('img');
+		var x=new Image();
 		x.src=n;
 		x.onload=function(){
 			delete x;icons[n]=1;

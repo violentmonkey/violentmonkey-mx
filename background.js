@@ -106,6 +106,9 @@ function upgradeData(callback){
 	} else finish();
 }
 
+function isRemote(url){
+	return url&&!/^data:/.test(url);
+}
 function getNameURI(i){
 	var ns=i.meta.namespace||'',n=i.meta.name||'',k=escape(ns)+':'+escape(n)+':';
 	if(!ns&&!n) k+=i.id;return k;
@@ -161,8 +164,10 @@ function matchTest(s,u){
 	var m=s.match(match_reg);
 	if(!m) return false;
 	// scheme
-	if(m[1]=='*') {if(u[1]!='http'&&u[1]!='https') return false;}	// * = http|https
-	else if(m[1]!=u[1]) return false;
+	if(!(
+		m[1]=='*'&&/^https?$/i.test(u[1])	// * = http|https
+		||m[1]==u[1]
+	)) return false;
 	// host
 	if(m[2]!='*') {
 		if(m[2].slice(0,2)=='*.') {
@@ -232,7 +237,7 @@ function getData(d,src,callback) {
 	ids.forEach(function(i){
 		var o=metas[i];
 		data.scripts.push(o);
-		if(o.meta.icon) cache[o.meta.icon]=1;
+		if(isRemote(o.meta.icon)) cache[o.meta.icon]=1;
 	});
 	getCache({table:'cache',uris:Object.getOwnPropertyNames(cache),objectURL:true},function(o){
 		data.cache=o;if(callback) callback(data);
@@ -436,7 +441,7 @@ function parseScript(d,src,callback){
 			var u=meta.resources[i],c=d.resources&&d.resources[u];
 			if(c) saveData(u,'cache',c); else fetchCache(u);
 		}
-		if(meta.icon) fetchCache(meta.icon);	// @icon
+		if(isRemote(meta.icon)) fetchCache(meta.icon);	// @icon
 	}
 }
 function move(o,src,callback){
@@ -479,7 +484,7 @@ function vacuum(o,src,callback){
 		for(i=0;i<ids.length;i++) {
 			o=metas[ids[i]];
 			values[o.uri]=1;
-			if(o.meta.icon) cache[o.meta.icon]=1;
+			if(isRemote(o.meta.icon)) cache[o.meta.icon]=1;
 			if(o.meta.require) o.meta.require.forEach(function(i){require[i]=1;});
 			for(j in o.meta.resources) cache[o.meta.resources[j]]=1;
 			if(o.position!=i+1) s.push([i+1,o.id]);
