@@ -191,9 +191,13 @@ function confirmCancel(dirty){
 var H=$('#iImport'),R=$('#cReload'),Rs=$('#cReloadHTTPS');
 $('#cUpdate').onchange=function(){post({cmd:'AutoUpdate',data:this.checked});};
 $('#cBadge').onchange=function(){post({cmd:'ShowBadge',data:this.checked});};
+function updateSuboptions(e){
+	var b=e.parentNode.nextElementSibling.querySelectorAll('input');
+	Array.prototype.forEach.call(b,function(i){i.disabled=!e.checked;});
+}
 R.onchange=function(){
 	post({cmd:'SetOption',data:{key:'startReload',value:this.checked}});
-	Rs.disabled=!this.checked;
+	updateSuboptions(this);
 };
 Rs.onchange=function(){post({cmd:'SetOption',data:{key:'reloadHTTPS',value:this.checked}});};
 H.onchange=function(e){
@@ -427,7 +431,7 @@ post({cmd:'GetData'},function(o){
 	$('#cBadge').checked=o.settings.showBadge;
 	R.checked=o.settings.startReload;
 	Rs.checked=o.settings.reloadHTTPS;
-	Rs.disabled=!o.settings.startReload;
+	updateSuboptions(R);
 	xD.checked=o.settings.withData;
 	rt.listen('UpdateItem',function(r){
 		if(!r.id) return;
