@@ -70,12 +70,12 @@ function loadItem(o,r){
 	d.innerHTML='<img class=icon src=icons/icon_64.png>'
 	+'<div class=panelH>'
 		+'<a class="name ellipsis" target=_blank></a>'
-		+'<a class="support hide" target=_blank>?</a>'
+		+'<a class="support hide" target=_blank><i class="fa fa-question-circle"></i></a>'
 		+'<span class=version>'+(n.meta.version?'v'+n.meta.version:'')+'</span>'
 		+'<span class=author></span>'
 	+'</div>'
 	+'<div class=panelT>'
-		+'<span class=move data=move>&equiv;</span>'
+		+'<i class="fa fa-arrows move" data="move"></i>'
 	+'</div>'
 	+'<p class=descrip></p>'
 	+'<div class=panelB>'
@@ -335,7 +335,6 @@ function markClean(){
 }
 function mReset(){
 	M.classList.add('hide');
-	sC.innerHTML='&laquo;';
 	var e=[],c=E.scr.custom,m=E.scr.meta;
 	M.dirty=false;
 	mN.value=c.name||'';
@@ -406,7 +405,7 @@ M.markDirty=function(){M.dirty=true;E.markDirty();};
 [mN,mH,mR,mU,mD,mI,mM,mE,cI,cM,cE].forEach(function(i){i.onchange=M.markDirty;});
 $('#bCustom').onclick=function(){
 	var r=M.classList.toggle('hide');
-	sC.innerHTML=r?'&laquo;':'&raquo;';
+	sC.className='fa '+(r?'fa-caret-down':'fa-caret-up');
 };
 eS.onclick=eSave;
 eSC.onclick=function(){eSave();eClose();};

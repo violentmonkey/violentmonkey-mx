@@ -1,30 +1,28 @@
 (function(){
-var P=$('#popup'),C=$('#commands'),pR=P.querySelector('.expand'),
-	pT=P.querySelector('td'),pB=P.querySelector('.expanda'),
-	cT=C.querySelector('td'),cB=C.querySelector('.expanda');
+var P=$('#main'),C=$('#commands'),pR=P.querySelector('.expand'),
+	pT=P.querySelector('.top'),pB=P.querySelector('.bot'),
+	cT=C.querySelector('.top'),cB=C.querySelector('.bot');
 function loadItem(d,c){
-	if(c) {
-		d.firstChild.innerText=d.symbol;
-		d.classList.remove('disabled');
-	} else {
-		d.firstChild.innerText='';
-		d.classList.add('disabled');
-	}
 	d.data=c;
+	if(d.symbols) {
+		d.firstChild.className='fa '+d.symbols[c?1:0];
+		if(d.symbols.length>1) {
+			if(c) d.classList.remove('disabled');
+			else d.classList.add('disabled');
+		}
+	}
 }
 function addItem(h,c){
 	var d=document.createElement('div');
-	d.innerHTML='<span></span>'+h;
+	d.innerHTML='<i></i> '+h;
 	if('title' in c) {
 		d.title=typeof c.title=='string'?c.title:h;
 		delete c.title;
 	}
 	d.className='ellipsis';
 	c.holder.appendChild(d);
-	if('symbol' in c) d.firstChild.innerText=c.symbol;
-	else if('data' in c) c.symbol='✓';
 	for(h in c) d[h]=c[h];
-	if('data' in c) loadItem(d,c.data);
+	if(d.symbols) loadItem(d,d.data);
 	return d;
 }
 function menuCommand(e){e=e.target;rt.post(e.source,{cmd:'Command',data:e.cmd});}
@@ -32,10 +30,17 @@ function menuScript(s) {
 	if(s) {
 		var n=s.custom.name||getLocaleString(s.meta,'name');
 		n=n?n.replace(/&/g,'&amp;').replace(/</g,'&lt;'):'<em>'+_('labelNoName')+'</em>';
-		addItem(n,{holder:pB,data:s.enabled,title:s.meta.name,onclick:function(e){
-			var t=this;s.enabled=s.enabled?0:1;
-			post({cmd:'UpdateMeta',data:{id:s.id,enabled:s.enabled}},function(){loadItem(t,s.enabled);});
-		}});
+		addItem(n,{
+			holder:pB,
+			symbols: ['fa-times','fa-check'],
+			className: 'ellipsis',
+			title:s.meta.name,
+			onclick:function(e){
+				var t=this;s.enabled=s.enabled?0:1;
+				post({cmd:'UpdateMeta',data:{id:s.id,enabled:s.enabled}},function(){loadItem(t,s.enabled);});
+			},
+			data:s.enabled,
+		});
 	}
 }
 function getPopup(){
@@ -47,15 +52,25 @@ function getPopup(){
 var count=0;
 function load(o,src,callback){
 	pT.innerHTML=pB.innerHTML=cT.innerHTML=cB.innerHTML='';C.classList.add('hide');P.classList.remove('hide');
-	addItem(_('menuManageScripts'),{holder:pT,symbol:'➤',title:true,onclick:function(){
+	addItem(_('menuManageScripts'),{
+		holder:pT,
+    symbols: ['fa-hand-o-right'],
+		//title:true,
+		onclick:function(){
 		br.tabs.newTab({url:rt.getPrivateUrl()+'options.html',activate:true});
-	}});
-	if(o) addItem(_('menuFindScripts'),{holder:pT,symbol:'➤',title:true,onclick:function(){
-		var h=br.tabs.getCurrentTab().url.match(/:\/\/(?:www\.)?([^\/]*)/);
-		post({cmd:'GetOption',data:'search'},function(o){
-			br.tabs.newTab({url:'https://greasyfork.org/scripts/search?q='+h[1],activate:true});
-		});
-	}});
+		},
+	});
+	if(o) addItem(_('menuFindScripts'),{
+		holder:pT,
+		symbols: ['fa-hand-o-right'],
+		//title:true,
+		onclick:function(){
+			var h=br.tabs.getCurrentTab().url.match(/:\/\/(?:www\.)?([^\/]*)/);
+			post({cmd:'GetOption',data:'search'},function(o){
+				br.tabs.newTab({url:'https://greasyfork.org/scripts/search?q='+h[1],activate:true});
+			});
+		},
+	});
 	if(o&&o[0]&&o[0].length) {
 		addItem(_('menuBack'),{holder:cT,symbol:'◄',title:true,onclick:function(){
 			C.classList.add('hide');P.classList.remove('hide');
@@ -65,10 +80,15 @@ function load(o,src,callback){
 			P.classList.add('hide');C.classList.remove('hide');
 		}});
 	}
-	var a=addItem(_('menuScriptEnabled'),{holder:pT,data:true,title:true,onclick:function(e){
-		post({cmd:'SetOption',data:{key:'isApplied',value:this.data=!this.data}});
-		loadItem(this,this.data);rt.icon.setIconImage('icon'+(this.data?'':'w'));
-	}});
+	var a=addItem(_('menuScriptEnabled'),{
+		holder:pT,
+		symbols: ['fa-times','fa-check'],
+		//title:true,
+		onclick:function(e){
+			post({cmd:'SetOption',data:{key:'isApplied',value:this.data=!this.data}});
+			loadItem(this,this.data);rt.icon.setIconImage('icon'+(this.data?'':'w'));
+		},
+	});
 	post({cmd:'GetOption',data:'isApplied'},function(o){loadItem(a,o);});
 	if(o&&o[1]&&o[1].length) {
 		pR.classList.remove('hide');
