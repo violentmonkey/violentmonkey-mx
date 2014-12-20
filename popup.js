@@ -19,7 +19,6 @@ function addItem(h,c){
 		d.title=typeof c.title=='string'?c.title:h;
 		delete c.title;
 	}
-	d.className='ellipsis';
 	c.holder.appendChild(d);
 	for(h in c) d[h]=c[h];
 	if(d.symbols) loadItem(d,d.data);
@@ -72,13 +71,32 @@ function load(o,src,callback){
 		},
 	});
 	if(o&&o[0]&&o[0].length) {
-		addItem(_('menuBack'),{holder:cT,symbol:'◄',title:true,onclick:function(){
-			C.classList.add('hide');P.classList.remove('hide');
-		}});
-		o[0].forEach(function(i){addItem(i[0],{holder:cB,symbol:'➤',title:true,onclick:menuCommand,cmd:i[0],source:src.id});});
-		addItem(_('menuCommands'),{holder:pT,symbol:'➤',title:true,onclick:function(){
-			P.classList.add('hide');C.classList.remove('hide');
-		}});
+		addItem(_('menuBack'),{
+			holder:cT,
+      symbols: ['fa-arrow-left'],
+      //title: true,
+			onclick:function(){
+				C.classList.add('hide');P.classList.remove('hide');
+			},
+		});
+		o[0].forEach(function(i){addItem(i[0],{
+			holder:cB,
+			className: 'ellipsis',
+			symbols: ['fa-hand-o-right'],
+			//title: true,
+			onclick:menuCommand,
+			cmd:i[0],
+			source:src.id,
+		});});
+		addItem(_('menuCommands'),{
+			holder:pT,
+      symbols: ['fa-arrow-right'],
+      //title: true,
+			onclick:function(){
+				P.classList.add('hide');
+				C.classList.remove('hide');
+			},
+		});
 	}
 	var a=addItem(_('menuScriptEnabled'),{
 		holder:pT,
