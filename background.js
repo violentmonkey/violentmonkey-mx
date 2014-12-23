@@ -161,6 +161,7 @@ function autoReg(s,w){	// w: forced wildcard mode
 }
 var match_reg=/(.*?):\/\/([^\/]*)\/(.*)/;
 function matchTest(s,u){
+	if(s=='<all_urls>') return true;
 	var m=s.match(match_reg);
 	if(!m) return false;
 	// scheme
