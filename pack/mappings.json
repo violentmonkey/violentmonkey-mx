@@ -1,0 +1,18 @@
+{
+	"P:":[
+		"editor.js"
+	],
+	"D:":[
+		"R:.*\\.less"
+	],
+	"lib/CodeMirror.js":[
+		"lib/CodeMirror/lib/codemirror.js",
+		"R:lib/CodeMirror/.*\\.js",
+		"mylib/CodeMirror/search.js"
+	],
+	"lib/CodeMirror.css":[
+		"R:lib/CodeMirror/.*\\.css",
+		"mylib/CodeMirror/fold.css",
+		"mylib/CodeMirror/search.css"
+	]
+}
