@@ -1,3 +1,4 @@
+#!node
 var fs=require('fs'),path=require('path'),
 		uglifyjs=require('uglify-js'),less=require('less'),
 		BOM=new Buffer([0xef,0xbb,0xbf]);	// UTF8 BOM
