@@ -1,6 +1,6 @@
 (function(){
-if(window.VM) return;window.VM=1;	// avoid running repeatedly due to new document.documentElement
-
+// avoid running repeatedly due to new document.documentElement
+if(window.VM) return;window.VM=1;
 /**
 * http://www.webtoolkit.info/javascript-utf8.html
 */
@@ -53,6 +53,26 @@ var comm={
 	vmid:'VM'+Math.random(),
 	state:0,
 	utf8decode:utf8decode,
+
+	// Array functions
+	// to avoid using prototype functions
+	// since they may be changed by page scripts
+	inArray:function(arr, item) {
+		for(var i=0;i<arr.length;i++)
+			if(arr[i]==item) return true;
+		return false;
+	},
+	extendArray:function(arr, arr2) {
+		for(var i=0;i<arr2.length;i++) arr.push(arr2[i]);
+	},
+	forEach:function(arr, func, args) {
+		for(var i=0;i<arr.length;i++) {
+			var a=[arr[i]];
+			if(args) this.extendArray(a,args);
+			func.apply(arr,a);
+		}
+	},
+
 	prop1:Object.getOwnPropertyNames(window),
 	prop2:(function(n,p){
 		while(n=Object.getPrototypeOf(n)) p=p.concat(Object.getOwnPropertyNames(n));
@@ -86,33 +106,36 @@ var comm={
 		if(f) f(o.data);
 	},
 	loadScript:function(o){
-		var start=[],idle=[],end=[],cache,urls={},require,values,comm=this;
-		comm.command={};comm.requests={};comm.qrequests=[];
-		function Request(details){
-			this.callback=function(d){
-				var i,c=details['on'+d.type];
+		var start=[],idle=[],end=[],cache,require,values,comm=this,urls={},
+		Request=(function(){
+			// request functions
+			function reqAbort(){comm.post({cmd:'AbortRequest',data:this.id});}
+
+			// request object functions
+			function callback(d){
+				var i,t=this,c=t.details['on'+d.type];
 				if(c) {
 					if(d.data.response) {
-						if(!this.data.length) {
+						if(!t.data.length) {
 							if(d.resType) {	// blob or arraybuffer
 								var m=d.data.response.match(/^data:(.*?);base64,(.*)$/);
 								if(!m) d.data.response=null;
 								else {
 									var b=window.atob(m[2]);
-									if(details.responseType=='blob') {
-										this.data.push(new Blob([b],{type:m[1]}));
+									if(t.details.responseType=='blob') {
+										t.data.push(new Blob([b],{type:m[1]}));
 									} else {	// arraybuffer
 										m=new Uint8Array(b.length);
 										for(i=0;i<b.length;i++) m[i]=b.charCodeAt(i);
-										this.data.push(m.buffer);
+										t.data.push(m.buffer);
 									}
 								}
-							} else if(details.responseType=='json')	// json
-								this.data.push(JSON.parse(d.data.response));
+							} else if(t.details.responseType=='json')	// json
+								t.data.push(JSON.parse(d.data.response));
 							else	// text
-								this.data.push(d.data.response);
+								t.data.push(d.data.response);
 						}
-						d.data.response=this.data[0];
+						d.data.response=t.data[0];
 					}
 					// finalUrl not supported
 					Object.defineProperty(d.data,'finalUrl',{
@@ -120,32 +143,45 @@ var comm={
 					});
 					c(d.data);
 				}
-				if(d.type=='loadend') delete comm.requests[this.id];
-			};
-			this.start=function(id){
-				this.id=id;
-				comm.requests[id]=this;
-				var data={
+				if(d.type=='loadend') delete comm.requests[t.id];
+			}
+			function start(id){
+				var t=this,data={
 					id:id,
-					method:details.method,
-					url:details.url,
-					data:details.data,
-					//async:!details.synchronous,
-					user:details.user,
-					password:details.password,
-					headers:details.headers,
-					overrideMimeType:details.overrideMimeType,
+					method:t.details.method,
+					url:t.details.url,
+					data:t.details.data,
+					//async:!t.details.synchronous,
+					user:t.details.user,
+					password:t.details.password,
+					headers:t.details.headers,
+					overrideMimeType:t.details.overrideMimeType,
 				};
-				if(['arraybuffer','blob'].indexOf(details.responseType)>=0) data.responseType='blob';
+				t.id=id;
+				comm.requests[id]=t;
+				if(comm.inArray(['arraybuffer','blob'],t.details.responseType)) data.responseType='blob';
 				comm.post({cmd:'HttpRequest',data:data});
+			}
+
+			return function(details){
+				var t={
+					details:details,
+					callback:callback,
+					start:start,
+					req:{
+						abort:reqAbort,
+					},
+					data:[],
+				},a=document.createElement('a');
+				a.setAttribute('href',details.url);
+				details.url=a.href;
+				comm.qrequests.push(t);
+				comm.post({cmd:'GetRequestId'});
+				return t.req;
 			};
-			this.req={
-				abort:function(){comm.post({cmd:'AbortRequest',data:this.id});}
-			};
-			this.data=[];
-			comm.qrequests.push(this);
-			comm.post({cmd:'GetRequestId'});
-		};
+		})();
+		comm.command={};comm.requests={};comm.qrequests=[];
+
 		/*
 		 * Wrap functions and properties
 		 */
@@ -153,14 +189,8 @@ var comm={
 		function wrapper(){
 			function wrapItem(key,wrap){
 				var type=null,value,apply=Function.apply;
-				// avoid using prototype functions
-				// since some script authors change them unexpectedly
-				// (e.g. Array.indexOf)
 				function initProperty() {
-					var ignored_types=['function','custom'],i;
-					for(i=0;i<ignored_types.length;i++)
-						if(ignored_types[i]==type) break;
-					if(i==ignored_types.length) {
+					if(!comm.inArray(['function','custom'],type)) {
 						value=window[key];
 						type=typeof value;
 						if(type=='function'&&wrap) {
@@ -170,7 +200,7 @@ var comm={
 								try {
 									r=apply.apply(o,[window,arguments]);
 								} catch(e) {
-									console.log('Error calling '+key+':\n'+e.stack);
+									console.log('[Violentmonkey] Error calling '+key+':\n'+e.stack);
 								}
 								return r===window?t:r;
 							};
@@ -197,25 +227,24 @@ var comm={
 				}
 			}
 			var t=this;
-			comm.prop1.forEach(function(i){wrapItem(i);});
-			comm.prop2.forEach(function(i){wrapItem(i,true);});
+			comm.forEach(comm.prop1,wrapItem,[]);
+			comm.forEach(comm.prop2,wrapItem,[true]);
 		}
+
 		function wrapGM(c){
 			// Add GM functions
 			// Reference: http://wiki.greasespot.net/Greasemonkey_Manual:API
-			var gm={},value=values[c.uri],w,g=c.meta.grant||[];
+			var gm={},value=values[c.uri]||{},g=c.meta.grant||[];
 			if(!g.length||g.length==1&&g[0]=='none') {	// @grant none
-				w={};g.pop();
+				g.pop();
 			} else {
-				w=new wrapper();
+				gm['window']=new wrapper();
 			}
-			if(g.indexOf('unsafeWindow')<0) g.push('unsafeWindow');
-			if(!value) value={};
+			if(!comm.inArray(g,'unsafeWindow')) g.push('unsafeWindow');
 			function propertyToString(){return 'Property for Violentmonkey: designed by Gerald';}
 			function addProperty(name,prop,obj){
 				if('value' in prop) prop.writable=false;
 				prop.configurable=false;
-				if(!obj) obj=gm;
 				Object.defineProperty(obj,name,prop);
 				if(typeof obj[name]=='function') obj[name].toString=propertyToString;
 			}
@@ -278,7 +307,7 @@ var comm={
 					return b;
 				}},
 				GM_getResourceURL:{value:function(name){
-					var i,j,u=null,b,r;
+					var i,u,r,j,b;
 					for(i in resources) if(name==i) {
 						i=resources[i];u=urls[i];
 						if(!u&&(r=cache[i])) {
@@ -288,9 +317,8 @@ var comm={
 							b=new Blob([b]);
 							urls[i]=u=URL.createObjectURL(b);
 						}
-						break;
+						return u;
 					}
-					return u;
 				}},
 				GM_addStyle:{value:function(css){
 					if(document.head) {
@@ -316,37 +344,36 @@ var comm={
 					setTimeout(function(){n.close();},more.timeout||5000);
 				}},
 				GM_xmlhttpRequest:{value:function(details){
-					var r=new Request(details);
-					return r.req;
+					return Request(details);
 				}},
 			};
-			g.forEach(function(i){var o=gf[i];if(o) addProperty(i,o,gm);});
-			return [w,gm];
+			comm.forEach(g,function(i){var o=gf[i];if(o) addProperty(i,o,gm);});
+			return gm;
 		}
 		function run(l){while(l.length) runCode(l.shift());}
 		function runCode(c){
 			var req=c.meta.require||[],i,r=[],code=[],w=wrapGM(c);
-			Object.getOwnPropertyNames(w[1]).forEach(function(i){r.push(i+'=g["'+i+'"]');});
+			comm.forEach(Object.getOwnPropertyNames(w),function(i){r.push(i+'=g["'+i+'"]');});
 			if(r.length) code.push('var '+r.join(',')+';delete g;with(this)(function(){');
 			for(i=0;i<req.length;i++) if(r=require[req[i]]) code.push(r);
-			code.push(c.code);code.push('}).call(window);');
-			code=code.join('\n');
+			code.push('(function(){'+c.code+'\n}).call(this);');	// to make 'use strict' work
+			code.push('}).call(this);');code=code.join('\n');
 			try{
-				(new Function('g',code)).call(w[0],w[1]);
+				(new Function('g',code)).call(w.window,w);
 			}catch(e){
-				console.log('Error running script: '+(c.custom.name||c.meta.name||c.id)+'\n'+e);
+				console.log('Error running script: '+(c.custom.name||c.meta.name||c.id)+'\n'+e.message);
 			}
 		}
 		comm.load=function(){run(end);run(idle);};
 		comm.checkLoad=function(){
-			if(!comm.state&&['interactive','complete'].indexOf(document.readyState)>=0) comm.state=1;
+			if(!comm.state&&comm.inArray(['interactive','complete'],document.readyState)) comm.state=1;
 			if(comm.state) comm.load();
 		};
 
 		require=o.require;
 		cache=o.cache;
 		values=o.values;
-		o.scripts.forEach(function(i,l){
+		comm.forEach(o.scripts,function(i,l){
 			if(i&&i.enabled) {
 				switch(i.custom['run-at']||i.meta['run-at']){
 					case 'document-start': l=start;break;
@@ -358,7 +385,7 @@ var comm={
 		});
 		run(start);comm.checkLoad();
 	},
-},menu=[],ids=[],count=0;
+},menu=[],ids=[],total=0;
 function handleC(e){
 	var o=JSON.parse(e.attrName),maps={
 		SetValue:function(o){post('Background',{cmd:'SetValue',data:o});},
@@ -461,13 +488,10 @@ function initCommunicator(){
 	post('Background',{cmd:'GetInjected'},loadScript);
 }
 function loadScript(o){
-	if(o.scripts) {
-		o.scripts.forEach(function(i){
-			ids.push(i.id);
-			if(i.enabled) count+=1;
-		});
-		comm.post({cmd:'LoadScript',data:o});
-	}
+	o.scripts.forEach(function(i){
+		ids.push(i.id);if(i.enabled) total++;
+	});
+	comm.post({cmd:'LoadScript',data:o});
 }
 initCommunicator();
 
@@ -480,7 +504,7 @@ function updatePopup(){
 }
 function updateBadge(){post('Background',{cmd:'GetBadge'});}
 window.setPopup=function(){post('Popup',{cmd:'SetPopup',data:[menu,ids]});};
-window.setBadge=function(){post('Background',{cmd:'SetBadge',data:count});};
+window.setBadge=function(){post('Background',{cmd:'SetBadge',data:total});};
 document.addEventListener("DOMContentLoaded",updatePopup,false);
 document.addEventListener("DOMContentLoaded",updateBadge,false);
 
