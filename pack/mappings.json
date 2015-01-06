@@ -8,11 +8,10 @@
 	"lib/CodeMirror.js":[
 		"lib/CodeMirror/lib/codemirror.js",
 		"R:lib/CodeMirror/.*\\.js",
-		"mylib/CodeMirror/search.js"
+		"R:mylib/CodeMirror/.*\\.js"
 	],
 	"lib/CodeMirror.css":[
 		"R:lib/CodeMirror/.*\\.css",
-		"mylib/CodeMirror/fold.css",
-		"mylib/CodeMirror/search.css"
+		"R:mylib/CodeMirror/.*\\.css"
 	]
 }
