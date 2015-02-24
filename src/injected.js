@@ -1,4 +1,6 @@
-(function(){
+(function(documentElement){
+// make sure this is an HTML page, ignore XML, etc.
+if(documentElement.tagName.toLowerCase()!='html') return;
 // avoid running repeatedly due to new document.documentElement
 if(window.VM) return;window.VM=1;
 /**
@@ -475,7 +477,7 @@ function objEncode(o){
 	return '{'+t.join(',')+'}';
 }
 function initCommunicator(){
-	var s=document.createElement('script'),d=document.documentElement,C='C',R='R';
+	var s=document.createElement('script'),C='C',R='R';
 	s.innerHTML='('+(function(c,R,C){
 		c.init(R,C);
 		document.addEventListener("DOMContentLoaded",function(e){
@@ -483,7 +485,7 @@ function initCommunicator(){
 		},false);
 		c.checkLoad();
 	}).toString()+')('+objEncode(comm)+',"'+R+'","'+C+'")';
-	d.appendChild(s);d.removeChild(s);
+	documentElement.appendChild(s);documentElement.removeChild(s);
 	comm.handleC=handleC;comm.init(C,R);
 	post('Background',{cmd:'GetInjected'},loadScript);
 }
@@ -521,4 +523,4 @@ function checkJS() {
 }
 if(/\.user\.js$/.test(location.pathname))
 	checkJS()||document.addEventListener('DOMContentLoaded',checkJS,false);
-})();
+})(document.documentElement);
