@@ -228,7 +228,8 @@ label>*{
 				color: blueviolet;
 			}
 			.icon{
-				opacity: 0.5;
+				//opacity: 0.5;
+				-webkit-filter: grayscale(.5);
 			}
 		}
 		&.moving{
@@ -315,6 +316,7 @@ label>*{
 	min-height: 100px;
 	border: 1px solid gray;
 	&>div{
+		cursor: pointer;
 		display: inline-block;
 		width: 180px;
 		margin: 2px;
