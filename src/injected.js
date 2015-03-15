@@ -28,12 +28,13 @@ function utf8decode (utftext) {
 }
 
 // Messages
-var rt=window.external.mxGetRuntime(),id=Date.now()+Math.random().toString().slice(1),
+var rt=window.external.mxGetRuntime(),
+		id=Date.now().toString(36)+Math.random().toString(36).slice(2,6),
 		callbacks={};
 function post(d,o,callback){
 	o.src={id:id,url:window.location.href};
 	if(callback) {
-		o.callback=Math.random().toString();
+		o.callback=Math.random().toString(36).slice(2);
 		callbacks[o.callback]=callback;
 	}
 	rt.post(d,o);

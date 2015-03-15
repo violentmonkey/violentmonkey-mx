@@ -2,6 +2,7 @@
 var L=$('#sList'),cur=null,C=$('.content');
 zip.workerScriptsPath='lib/zip.js/';
 initI18n();
+$('#lang').innerHTML=navigator.language;
 function split(t){return t.replace(/^\s+|\s+$/g,'').split(/\s*\n\s*/).filter(function(e){return e;});}
 function getName(d,n,def){
 	d.title=n||'';
