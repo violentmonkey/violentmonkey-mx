@@ -1,30 +1,39 @@
 <!doctype html>
 <html>
 	<head>
-		<meta http-equiv="content-type" content="text/html;charset=utf-8">
+		<meta charset="utf-8">
 		<link rel="shortcut icon" type="image/png" href="icons/icon_32.png" />
 		<link rel="stylesheet" type="text/css" href="lib/font-awesome/font-awesome.min.css">
-		<link rel="stylesheet" type="text/css" href="style.min.css">
+		<!-- build:less style.css -->
+		<link rel="stylesheet/less" type="text/css" href="style.less">
+		<!-- endbuild -->
+		<!-- build:css lib/codemirror.css -->
+		<link rel="stylesheet" type="text/css" href="lib/CodeMirror/lib/codemirror.css">
+		<link rel="stylesheet" type="text/css" href="mylib/CodeMirror/fold.css">
+		<link rel="stylesheet" type="text/css" href="mylib/CodeMirror/search.css">
+		<!-- endbuild -->
+		<!-- build:remove -->
+		<script src="lib/less.min.js"></script>
+		<!-- endbuild -->
 		<script src="lib/zip.js/zip.js"></script>
-		<script src="load.js"></script>
 		<title data-i18n=extName></title>
 	</head>
 	<body id=options>
-		<div class=main>
-			<div class=sidebar>
+		<div class="main">
+			<div class="sidebar">
 				<img src=icons/icon_64.png>
 				<h2 data-i18n=extName></h2>
 				<p>2013-2015</p>
 				<hr>
-				<div class=sidemenu>
+				<div class="sidemenu">
 					<a id=smInstalled href=#Installed data-i18n=sideMenuInstalled></a>
 					<a id=smSettings href=#Settings data-i18n=sideMenuSettings></a>
 					<a id=smAbout href=#About data-i18n=sideMenuAbout></a>
 				</div>
 			</div>
-			<div class=content>
-				<div id=tabInstalled class=hide>
-					<div class=header>
+			<div class="content">
+				<div id=tabInstalled class="hide">
+					<div class="header">
 						<button id=bNew data-i18n=buttonNew></button>
 						<button id=bUpdate data-i18n=buttonUpdateAll></button>
 						<a href=https://greasyfork.org/scripts target=_blank data-i18n=anchorGetMoreScripts></a>
@@ -33,7 +42,7 @@
 						<span id=message data-i18n=msgLoading></span>
 					</div>
 				</div>
-				<div id=tabSettings class=hide>
+				<div id=tabSettings class="hide">
 					<h1 data-i18n=labelSettings></h1>
 					<div><label><input type=checkbox id=cUpdate><span data-i18n=labelAutoUpdate></span></label></div>
 					<div><label><input type=checkbox id=cBadge><span data-i18n=labelShowBadge></span></label></div>
@@ -43,12 +52,12 @@
 							<div><label><input type=checkbox id=cReloadHTTPS><span data-i18n=labelReloadHTTPS></span></label></div>
 						</div>
 					</div>
-					<fieldset class=title>
+					<fieldset class="title">
 						<legend data-i18n=labelDataImport></legend>
-						<button id=bImport data-i18n=buttonImportData></button><input type=file class=hide id=iImport>
+						<button id=bImport data-i18n=buttonImportData></button><input type=file class="hide" id=iImport>
 						<button id=bVacuum data-i18n=buttonVacuum></button>
 					</fieldset>
-					<fieldset class=title>
+					<fieldset class="title">
 						<legend data-i18n=labelDataExport></legend>
 						<b data-i18n=labelScriptsToExport></b>
 						<label><input type=checkbox id=cWithData><span data-i18n=labelExportScriptData></span></label>
@@ -57,7 +66,7 @@
 						<a id=xHelper></a><button id=bExport data-i18n=buttonExportData></button>
 					</fieldset>
 				</div>
-				<div id=tabAbout class=hide>
+				<div id=tabAbout class="hide">
 					<h1 data-i18n=labelAbout></h1>
 					<p data-i18n=extDescription></p>
 					<p><label data-i18n=labelRelated></label><span data-i18n=anchorSupportPage></span> | <a href=http://geraldl.net/donate target=_blank data-i18n=labelDonate></a> | <a href=https://github.com/gera2ld/Violentmonkey-mx/issues target=_blank data-i18n=labelFeedback></a></p>
@@ -65,7 +74,7 @@
 					<p><label data-i18n=labelTranslator></label><span data-i18n=anchorTranslator></span></p>
 					<p>
 						<label data-i18n=labelCurrentLang></label><span id=lang></span>
-						<a href=https://github.com/gera2ld/Violentmonkey-mx#multiple-language target=_blank class=multilang>
+						<a href=https://github.com/gera2ld/Violentmonkey-mx#multiple-language target=_blank class="multilang">
 							<i class="fa fa-language"></i><span data-i18n=anchorTranslate></span>
 						</a>
 					</p>
@@ -73,16 +82,16 @@
 			</div>
 		</div>
 		<div id=wndEditor class="frame hide">
-			<div class=header>
+			<div class="header">
 				<h2 data-i18n=labelScriptEditor></h2>
-				<div class=buttons><button id=bCustom><i id=sCustom class="fa fa-caret-down"></i> <span data-i18n=buttonCustomMeta></span></button></div>
+				<div class="buttons"><button id=bCustom><i id=sCustom class="fa fa-caret-down"></i> <span data-i18n=buttonCustomMeta></span></button></div>
 			</div>
-			<div class=body>
+			<div class="body">
 				<div id=eCode></div>
-				<div id=eMeta class=hide>
+				<div id=eMeta class="hide">
 					<table>
 						<tr>
-							<td title="@name" data-i18n=labelName></td><td class=expand><input type=text id=mName></td>
+							<td title="@name" data-i18n=labelName></td><td class="expand"><input type=text id=mName></td>
 							<td title="@run-at" data-i18n=labelRunAt></td><td>
 								<select id=mRunAt>
 									<option value=default data-i18n=labelRunAtDefault></option>
@@ -92,11 +101,11 @@
 								</select>
 							</td>
 						</tr>
-						<tr title="@homepageURL"><td data-i18n=labelHomepageURL></td><td colspan=3 class=expand><input type=text id=mHomepageURL></td></tr>
+						<tr title="@homepageURL"><td data-i18n=labelHomepageURL></td><td colspan=3 class="expand"><input type=text id=mHomepageURL></td></tr>
 					</table>
 					<table>
-						<tr title="@updateURL"><td data-i18n=labelUpdateURL></td><td class=expand><input type=text id=mUpdateURL></td></tr>
-						<tr title="@downloadURL"><td data-i18n=labelDownloadURL></td><td class=expand><input type=text id=mDownloadURL></td></tr>
+						<tr title="@updateURL"><td data-i18n=labelUpdateURL></td><td class="expand"><input type=text id=mUpdateURL></td></tr>
+						<tr title="@downloadURL"><td data-i18n=labelDownloadURL></td><td class="expand"><input type=text id=mDownloadURL></td></tr>
 					</table>
 					<fieldset title="@include">
 						<legend>
@@ -124,11 +133,11 @@
 					</fieldset>
 				</div>
 			</div>
-			<div class=footer>
-				<div class=options>
+			<div class="footer">
+				<div class="options">
 					<label><input type=checkbox id=eUpdate><span data-i18n=labelAllowUpdate></span></label>
 				</div>
-				<div class=right>
+				<div class="right">
 					<button id=eSave data-i18n=buttonSave></button>
 					<button id=eSaveClose data-i18n=buttonSaveClose></button>
 					<button id=eClose data-i18n=buttonClose></button>
@@ -137,6 +146,21 @@
 		</div>
 	</body>
 	<script src="common.js"></script>
-	<script src="editor.js"></script>
+	<!-- build:js editor.js -->
+	<script src="lib/CodeMirror/lib/codemirror.js"></script>
+	<script src="lib/CodeMirror/mode/javascript/javascript.js"></script>
+	<script src="lib/CodeMirror/addon/comment/continuecomment.js"></script>
+	<script src="lib/CodeMirror/addon/edit/matchbrackets.js"></script>
+	<script src="lib/CodeMirror/addon/edit/closebrackets.js"></script>
+	<script src="lib/CodeMirror/addon/fold/foldcode.js"></script>
+	<script src="lib/CodeMirror/addon/fold/foldgutter.js"></script>
+	<script src="lib/CodeMirror/addon/fold/brace-fold.js"></script>
+	<script src="lib/CodeMirror/addon/fold/comment-fold.js"></script>
+	<script src="lib/CodeMirror/addon/search/match-highlighter.js"></script>
+	<script src="lib/CodeMirror/addon/search/searchcursor.js"></script>
+	<script src="lib/CodeMirror/addon/selection/active-line.js"></script>
+	<script src="mylib/CodeMirror/search.js"></script>
+	<script src="mylib/editor.js"></script>
+	<!-- endbuild -->
 	<script src="options.js"></script>
 </html>
