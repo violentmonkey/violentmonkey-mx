@@ -4,17 +4,15 @@
 		<meta charset="utf-8">
 		<link rel="shortcut icon" type="image/png" href="icons/icon_32.png" />
 		<link rel="stylesheet" type="text/css" href="lib/font-awesome/font-awesome.min.css">
-		<!-- build:less style.css -->
+		<!-- common:css -->
 		<link rel="stylesheet/less" type="text/css" href="style.less">
-		<!-- endbuild -->
-		<!-- build:css lib/codemirror.css -->
+		<script src="lib/less.min.js"></script>
+		<!-- endinject -->
+		<!-- codemirror:css -->
 		<link rel="stylesheet" type="text/css" href="lib/CodeMirror/lib/codemirror.css">
 		<link rel="stylesheet" type="text/css" href="mylib/CodeMirror/fold.css">
 		<link rel="stylesheet" type="text/css" href="mylib/CodeMirror/search.css">
-		<!-- endbuild -->
-		<!-- build:remove -->
-		<script src="lib/less.min.js"></script>
-		<!-- endbuild -->
+		<!-- endinject -->
 		<script src="lib/zip.js/zip.js"></script>
 		<title data-i18n=extName></title>
 	</head>
@@ -145,8 +143,10 @@
 			</div>
 		</div>
 	</body>
+	<!-- common:js -->
 	<script src="common.js"></script>
-	<!-- build:js editor.js -->
+	<!-- endinject -->
+	<!-- codemirror:js -->
 	<script src="lib/CodeMirror/lib/codemirror.js"></script>
 	<script src="lib/CodeMirror/mode/javascript/javascript.js"></script>
 	<script src="lib/CodeMirror/addon/comment/continuecomment.js"></script>
@@ -161,6 +161,8 @@
 	<script src="lib/CodeMirror/addon/selection/active-line.js"></script>
 	<script src="mylib/CodeMirror/search.js"></script>
 	<script src="mylib/editor.js"></script>
-	<!-- endbuild -->
+	<!-- endinject -->
+	<!-- options:js -->
 	<script src="options.js"></script>
+	<!-- endinject -->
 </html>

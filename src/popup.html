@@ -1,14 +1,12 @@
 <!doctype html>
 <html id=popup>
 	<head>
-		<meta http-equiv="content-type" content="text/html;charset=utf-8">
-		<link rel="stylesheet" type="text/css" href="lib/font-awesome/font-awesome.min.css">
-		<!-- build:less style.css -->
-		<link rel="stylesheet/less" type="text/css" href="style.less">
-		<!-- endbuild -->
-		<!-- build:remove -->
+		<meta charset="utf-8" />
+		<link rel="stylesheet" type="text/css" href="lib/font-awesome/font-awesome.min.css" />
+		<!-- common:css -->
+		<link rel="stylesheet/less" type="text/css" href="style.less" />
 		<script src="lib/less.min.js"></script>
-		<!-- endbuild -->
+		<!-- endinject -->
 		<title>Popup Menu - Violentmonkey</title>
 	</head>
 	<body>
@@ -20,7 +18,11 @@
 			<tr><td class="top menu ellipsis"></td></tr>
 			<tr class=expand><td class="bot menu ellipsis"></td></tr>
 		</table>
+		<!-- common:js -->
 		<script src="common.js"></script>
+		<!-- endinject -->
+		<!-- popup:js -->
 		<script src="popup.js"></script>
+		<!-- endinject -->
 	</body>
 </html>
