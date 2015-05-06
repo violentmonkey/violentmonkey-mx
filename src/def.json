@@ -10,8 +10,10 @@
 		},
 		"name": "Violentmonkey",
 		"title": {
-			"en": "Violentmonkey",
-			"zh-cn": "暴力猴"
+			"_t": "extName"
+		},
+		"description": {
+			"_t": "extDescription"
 		},
 		"permissions":{
 			"httpRequest":["*"],

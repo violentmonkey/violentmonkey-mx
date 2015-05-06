@@ -20,9 +20,11 @@ window.addEventListener('error',function(e){
 function _() {
 	var args = arguments, data = '';
 	if(args[0]) {
-		try {
-			data = JSON.parse(rt.locale.t(args[0]));
+		data = rt.locale.t(args[0]);
+		if(/^".*"$/.test(data)) try {
+			data = JSON.parse(data);
 		} catch(e) {
+			data = data.slice(1,-1);
 		}
 		data = data.replace(/\$(?:\{(\d+)\}|(\d+))/g, function(value, group1, group2) {
 			var index = typeof group1 != 'undefined' ? group1 : group2;

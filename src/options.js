@@ -1,3 +1,4 @@
+!function(){
 'use strict';
 zip.workerScriptsPath='lib/zip.js/';
 var post = initMessage({});
@@ -828,4 +829,5 @@ var switchTab = function() {
 	});
 	initI18n();
 	switchTab();
+}();
 }();

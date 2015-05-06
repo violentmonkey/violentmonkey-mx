@@ -1,5 +1,5 @@
-'use strict';
 !function(){
+	'use strict';
 	var post = initMessage({});
 	var delay = 2000;
 	var data = {};

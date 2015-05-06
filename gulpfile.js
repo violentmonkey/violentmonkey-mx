@@ -10,6 +10,7 @@ var minifyHtml = require('gulp-minify-html');
 var merge2 = require('merge2');
 var through = require('through2');
 var gutil = require('gulp-util');
+var wrap = require('gulp-wrap');
 
 function addBOM() {
 	return through.obj(function(file, enc, cb) {
@@ -86,7 +87,10 @@ gulp.task('inject-html', function() {
 });
 
 gulp.task('build-files', function() {
-	return gulp.src('src/injected.js')
+	return gulp.src([
+		'src/injected.js',
+		'src/lib/zip.js/*',
+	], {base:'src'})
 		.pipe(uglify())
 		.pipe(gulp.dest('dist'));
 });
@@ -97,13 +101,14 @@ gulp.task('copy-files',function(){
 		'src/lib/**/*.*',
 		'!src/lib/*',
 		'!src/lib/CodeMirror/**/*',
-		'src/def.json',
+		'!src/lib/zip.js/*',
 	], {base:'src'})
 		.pipe(gulp.dest('dist/'));
 });
 
 gulp.task('copy-utf8bom-files',function(){
 	return gulp.src([
+		'src/def.json',
 		'src/locale/*',
 	], {base:'src'})
 		.pipe(addBOM())
