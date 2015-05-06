@@ -115,12 +115,15 @@ label>*{
 		max-width: 900px;
 		height: 100%;
 		margin: 0 auto;
+		position: relative;
 	}
 	.sidebar{
-		position: fixed;
+		transition: top 1s;
+		position: absolute;
 		background: #fafafa;
+		top: 50px;
+		left: 0;
 		width: 200px;
-		margin-top: 30px;
 		box-sizing: border-box;
 		border: 1px solid darkgray;
 		border-radius: 10px 0 0 10px;
@@ -133,6 +136,9 @@ label>*{
 		hr{
 			border: none;
 			border-top: 1px solid darkgray;
+		}
+		&.init {
+			top: -100%;
 		}
 	}
 	.sidemenu>a{
