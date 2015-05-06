@@ -253,7 +253,7 @@ function updateMeta(o,src,callback){
 	db.transaction(function(t){
 		t.executeSql('UPDATE scripts SET '+d+' WHERE id=?',v,function(t,r){
 			if(r.rowsAffected) {
-				updateItem({id:s.id,obj:s,status:0});
+				updateItem({id:s.id,script:s,code:0});
 				if(callback) callback();
 			}
 		},dbError);
@@ -407,20 +407,20 @@ function parseScript(d,src,callback){
 	function finish(){
 		updateItem(r);if(callback) callback(r);
 	}
-	var i,r={status:0,message:'message' in d?d.message:_('msgUpdated')};
+	var i,r={code:0,message:'message' in d?d.message:_('msgUpdated')};
 	if(d.status&&d.status!=200||!d.code) {
-		r.status=-1;r.message=_('msgErrorFetchingScript');
+		r.code=-1;r.message=_('msgErrorFetchingScript');
 		finish();
 	} else {
 		var meta=parseMeta(d.code);
 		queryScript(d.id,meta,function(c){
-			if(!c.id){r.status=1;r.message=_('msgInstalled');}
+			if(!c.id){r.code=1;r.message=_('msgInstalled');}
 			if(d.more) for(i in d.more) if(i in c) c[i]=d.more[i];	// for import and user edit
 			c.meta=meta;c.code=d.code;c.uri=getNameURI(c);
 			if(src&&src.url&&!c.meta.homepageURL&&!c.custom.homepageURL&&!/^(file|data):/.test(src.url)) c.custom.homepageURL=src.url;
 			if(d.url&&!/^(file|data):/.test(d.url)) c.custom.lastInstallURL=d.url;
 			saveScript(c,null,function(){
-				r.obj=metas[r.id=c.id];finish();
+				r.script=metas[r.id=c.id];finish();
 				if(!meta.grant.length)
 					notify(_('Warning'),{
 						body:_('msgWarnGrant',[meta.name||_('labelNoName')]),
@@ -533,7 +533,7 @@ var _update={};
 function checkUpdateO(o){
 	if(_update[o.id]) return;_update[o.id]=1;
 	function finish(){delete _update[o.id];}
-	var r={id:o.id,updating:1,status:2};
+	var r={id:o.id,updating:1,code:2};
 	function update(){
 		if(du) {
 			r.message=_('msgUpdating');
@@ -613,7 +613,7 @@ function initSettings(){
 	init('autoUpdate',true);
 	init('lastUpdate',0);
 	init('showBadge',true);
-	init('withData',true);
+	init('exportValues',true);
 	init('closeAfterInstall',true);
 	init('dataVer',0);
 }

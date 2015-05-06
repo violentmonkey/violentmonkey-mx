@@ -1,15 +1,17 @@
-function initEditor(callback,data){
-	data=data||{};
-	CodeMirror.keyMap.vm={'fallthrough':'default'};
-	if(data.save) {
-		CodeMirror.keyMap.vm['Ctrl-S']='save';
-		CodeMirror.commands.save=data.save;
+'use strict';
+
+function initEditor(options) {
+	options = options || {};
+	CodeMirror.keyMap.vm = {'fallthrough': 'default'};
+	if(options.onsave) {
+		CodeMirror.keyMap.vm['Ctrl-S'] = 'save';
+		CodeMirror.commands.save = options.onsave;
 	}
-	if(data.exit) {
-		CodeMirror.keyMap.vm['Esc']='exit';
-		CodeMirror.commands.exit=data.exit;
+	if(options.onexit) {
+		CodeMirror.keyMap.vm['Esc'] = 'exit';
+		CodeMirror.commands.exit = options.onexit;
 	}
-	var T=CodeMirror(document.getElementById('eCode'),{
+	var editor = CodeMirror(options.container, {
 		continueComments:true,
 		matchBrackets:true,
 		autoCloseBrackets:true,
@@ -24,9 +26,14 @@ function initEditor(callback,data){
 		foldGutter:true,
 		gutters:['CodeMirror-linenumbers','CodeMirror-foldgutter'],
 	});
-	T.clearHistory=function(){T.getDoc().clearHistory();};
-	T.setValueAndFocus=function(v){T.setValue(v);T.focus();};
-	if(data.onchange) T.on('change',data.onchange);
-	if(data.readonly) T.setOption('readOnly',data.readonly);
-	callback(T);
+	editor.clearHistory = function() {
+		this.getDoc().clearHistory();
+	};
+	editor.setValueAndFocus = function(value) {
+		this.setValue(value);
+		this.focus();
+	};
+	if(options.onchange) editor.on('change', options.onchange);
+	if(options.readonly) editor.setOption('readOnly', options.readonly);
+	if(options.callback) options.callback(editor);
 }

@@ -1,23 +1,22 @@
 // common styles
-.fill(){
-	height: 100%;
+* {
 	margin: 0;
 	padding: 0;
-}
-.fullsize(){
 	box-sizing: border-box;
-	width: 100%;
 }
-html{
-	.fill;
-}
-body{
-	.fill;
+html, body{
+	height: 100%;
 	background: #eee;
 	font: menu;
 }
-h1{
+h1 {
 	text-shadow: #999 3px 3px 5px;
+}
+h1, h2 {
+	margin: 10px 0;
+}
+button {
+	padding: 0 .5em;
 }
 .hide{
 	display: none;
@@ -101,14 +100,15 @@ table{
 a{
 	color: dodgerblue;
 }
-textarea{
-	.fullsize;
-}
-input[type=text]{
-	.fullsize;
+textarea, input[type=text]{
+	width: 100%;
 }
 label>*{
 	vertical-align: middle;
+}
+.line{
+	display: block;
+	margin: 1em 0;
 }
 #options{
 	.main{
@@ -178,15 +178,9 @@ label>*{
 			}
 		}
 	}
-	a.multilang{
-		margin-left: 1em;
-		span{
-			margin-left: .3em;
-		}
-	}
 }
-#lang{
-	color: orange;
+#currentLang {
+	color: green;
 	font-weight: bold;
 }
 .content{
@@ -210,20 +204,64 @@ label>*{
 	&>.header{
 		height: @menu-height;
 		line-height: @menu-height;
+		padding: 0 .5em;
+		border-bottom: 1px solid darkgray;
+	}
+	.right{
+		float: right;
 	}
 }
-#sList{
-	overflow-y: auto;
-	box-sizing: border-box;
-	border-top: 1px solid darkgray;
+.mask {
+	color: gray;
 	position: absolute;
 	top: @menu-height;
 	bottom: 0;
 	width: 100%;
-	&>div{
-		border-bottom: 1px dashed silver;
+	font-size: 0;
+	text-align: center;
+	background: white;
+	transition: opacity 1s;
+	&>*, &::after {
+		display: inline-block;
+		vertical-align: middle;
+	}
+	&>* {
+		font-size: 2rem;
+	}
+	&::after {
+		content: '.';
+		height: 100%;
+		width: 0;
+	}
+}
+#sList{
+	opacity: 0;
+	transition: opacity 1s;
+	overflow-y: auto;
+	box-sizing: border-box;
+	position: absolute;
+	top: @menu-height;
+	bottom: 0;
+	width: 100%;
+	.item {
+		border: 1px solid #ccc;
+		border-radius: 5px;
+		transition: top .5s;
 		padding: 10px;
-		position: relative;
+		left: 10px;
+		right: 10px;
+		position: absolute;
+		opacity: 1;
+		margin-bottom: 10px;
+		background: white;
+		&.dragging {
+			position: fixed;
+			background: lightgreen;
+			z-index: 1;
+		}
+		&:hover {
+			border-color: darkgray;
+		}
 		.move{
 			cursor: pointer;
 			color: gray;
@@ -242,18 +280,20 @@ label>*{
 				-webkit-filter: grayscale(.5);
 			}
 		}
-		&.moving{
-			background: lightgreen;
-			border: 1px outset gray;
-			cursor: move;
-		}
 	}
 	.name{
 		font-weight: bold;
-		font-size: 1.2em;
+		font-size: 14px;
+	}
+	.author {
+		max-width: 30%;
+		.ellipsis;
+	}
+	.right {
+		margin-left: 10px;
 	}
 	.support{
-		font-size: 1.2em;
+		font-size: 14px;
 		color: green;
 		text-decoration: none;
 		&.hide{
@@ -261,40 +301,34 @@ label>*{
 		}
 	}
 	.icon{
-		top: 1em;
+		top: 10px;
 		width: 40px;
 		height: 40px;
-		margin: 2px;
 		position: absolute;
 	}
-	.descrip{
-		margin-left: 60px;
-		min-height: 1em;
-		max-height: 4.5em;
-		overflow-y: auto;
-	}
-	.panelH{
-		margin-left: 60px;
-		margin-right: 20px;
-		&>*{
-			display: inline-block;
+	.info {
+		margin-left: 50px;
+		line-height: 20px;
+		&>* {
 			margin-right: 10px;
-			vertical-align: middle;
 		}
 	}
-	.panelT{
-		position: absolute;
-		top: 10px;
-		right: 10px;
+	.descrip{
+		margin: 5px 0 5px 50px;
+		line-height: 20px;
+		overflow-y: auto;
 	}
 }
 // Editor
 @editor-header-height: 5em;
 @editor-footer-height: 3em;
-#eCode,#eCode .CodeMirror{
+#wndEditor {
+	z-index: 10;
+}
+.code, .code .CodeMirror{
 	height: 100%;
 }
-#eMeta{
+.meta {
 	max-width: 450px;
 	max-height: 100%;
 	height: auto;
@@ -309,12 +343,12 @@ label>*{
 	position: absolute;
 	table{
 		width: 100%;
-		td{
-			width: 1px;
-			white-space: nowrap;
-			&.expand{
-				width: auto;
-			}
+	}
+	td{
+		width: 1px;
+		white-space: nowrap;
+		&.expand{
+			width: auto;
 		}
 	}
 }
@@ -323,7 +357,7 @@ label>*{
 	display: block;
 	width: 100%;
 	white-space: normal;
-	min-height: 100px;
+	height: 200px;
 	border: 1px solid gray;
 	&>div{
 		cursor: pointer;
@@ -344,17 +378,31 @@ label>*{
 // confirm page
 @confirm-header-height: 7em;
 #confirm{
-	.frame{
-		.header{
-			height: @confirm-header-height;
-			.buttons{
-				bottom: 3em;
-			}
+	.header{
+		height: @confirm-header-height;
+	}
+	.buttons{
+		bottom: 3em;
+		.options {
+			display: none;
+			position: absolute;
+			top: 110%;
+			box-shadow: 0 0 3px black;
+			border-radius: 3px;
+			padding: 10px;
+			background: #ddd;
+			z-index: 1000;
+			width: 200px;
 		}
-		.body{
-			top: @confirm-header-height;
-			bottom: 5px;
+		label {
+			display: block;
+			padding-left: 16px;
+			text-indent: -16px;
 		}
+	}
+	.body{
+		top: @confirm-header-height;
+		bottom: 5px;
 	}
 }
 #url{
@@ -363,4 +411,7 @@ label>*{
 }
 #msg{
 	text-align: right;
+}
+input[disabled]~span {
+	color: gray;
 }

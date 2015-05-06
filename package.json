@@ -15,5 +15,13 @@
     "through2": "^0.6.5"
   },
   "author": "Gerald <gera2ld@163.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gera2ld/Violentmonkey-mx.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gera2ld/Violentmonkey-mx/issues"
+  },
+  "homepage": "https://github.com/gera2ld/Violentmonkey-mx",
   "license": "ISC"
 }
