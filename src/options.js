@@ -488,7 +488,7 @@ var Transporter = function() {
 		var files = [];
 		var names = {};
 		var writer;
-		var vm = {scripts: {}, settings: getAllOptions()};
+		var vm = {scripts: {}, settings: data.settings};
 		if(cbValues.checked) vm.values={};
 		data.scripts.forEach(function(script) {
 			var name = script.custom.name || script.meta.name || 'Noname';
