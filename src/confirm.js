@@ -173,12 +173,16 @@
 		post({
 			cmd:'GetOption',
 			data:'closeAfterInstall',
-		}, function(o){cbClose.checked=!!o;});
+		}, function(o){
+			cbClose.checked=!!o;
+			updateClose();
+		});
 		post({
 			cmd:'GetOption',
 			data:'trackLocalFile',
-		}, function(o){cbTrack.checked=!!o;});
-		updateClose();
+		}, function(o){
+			cbTrack.checked=!!o;
+		});
 		cbClose.addEventListener('change', updateClose, false);
 		cbTrack.addEventListener('change', updateLocal, false);
 		$('#bClose').addEventListener('click', close, false);
