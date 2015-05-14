@@ -17,18 +17,21 @@ window.addEventListener('error',function(e){
 	}
 });*/
 
-function _() {
-	var args = arguments, data = '';
-	if(args[0]) {
-		data = rt.locale.t(args[0]);
+function _(key, args) {
+	var data = '';
+	if(key) {
+		data = rt.locale.t(key);
+		args = args || [];
+		args.unshift(key);
 		if(/^".*"$/.test(data)) try {
 			data = JSON.parse(data);
 		} catch(e) {
-			data = data.slice(1,-1);
+			data = data.slice(1, -1);
 		}
 		data = data.replace(/\$(?:\{(\d+)\}|(\d+))/g, function(value, group1, group2) {
 			var index = typeof group1 != 'undefined' ? group1 : group2;
-			return index >= args.length ? value : (args[index] || '');
+			var arg = args[index];
+			return typeof arg == 'undefined' ? value : arg;
 		});
 	}
 	//return data || args[0] || '';
@@ -44,55 +47,59 @@ function safeHTML(html) {
 	});
 }
 
-function initI18n(callback){
+function initI18n(callback) {
 	window.addEventListener('DOMContentLoaded', function() {
 		Array.prototype.forEach.call($$('[data-i18n]'), function(node) {
-			node.innerHTML = _(node.getAttribute('data-i18n'));
+			node.innerHTML = _(node.dataset.i18n);
 		});
 		if(callback) callback();
 	}, false);
 }
 
 // Get locale attributes such as @name:zh-CN
-function getLocaleString(dict,key){
-	var lang=[navigator.language],i,lkey;
-	i=lang[0].indexOf('-');
-	if(i>0) lang.push(lang[0].substr(0,i));
-	for(i=0;i<lang.length;i++) {
-		lkey=key+':'+lang[i];
+function getLocaleString(dict, key) {
+	var lang = [navigator.language];
+	var i = lang[0].indexOf('-');
+	if(i>0) lang.push(lang[0].slice(0, i));
+	for(i = 0; i < lang.length; i ++) {
+		var lkey = key + ':' + lang[i];
 		if(lkey in dict) {
-			key=lkey;break;
+			key = lkey;
+			break;
 		}
 	}
-	return dict[key]||'';
+	return dict[key] || '';
 }
 
 function getUniqId() {
-	return Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+	return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
-function initMessage(map){
-	var id=getUniqId(),callbacks={};
-	if(!map) map={};
-	map.Callback=function(o){
-		var f=callbacks[o.id];
-		if(f) {
-			f(o.data);
-			delete callbacks[o.id];
+function initMessage(map) {
+	var id = getUniqId();
+	var callbacks = {};
+	map = map || {};
+	map.Callback = function (ret) {
+		var func = callbacks[ret.id];
+		if (func) {
+			func(ret.data);
+			delete callbacks[ret.id];
 		}
 	};
-	rt.listen(id,function(o){
-		var f=map[o.cmd];
-		if(f) f(o.data);
+	rt.listen(id, function(ret) {
+		var func = map[ret.cmd];
+		if (func) func(ret.data);
 	});
-	return function(o,callback){
-		o.src={id:id};
-		if(callback) {
-			o.callback=getUniqId();
-			callbacks[o.callback]=callback;
+	return function (data, callback) {
+		data.src = {id: id};
+		if (callback) {
+			data.callback = getUniqId();
+			callbacks[data.callback] = callback;
 		}
-		rt.post('Background',o);
+		rt.post('Background', data);
 	};
 }
 
-function injectContent(s){br.executeScript('if(window.mx)try{'+s+'}catch(e){}');}
+function injectContent(s) {
+	br.executeScript('if(window.mx)try{' + s + '}catch(e){}');
+}
