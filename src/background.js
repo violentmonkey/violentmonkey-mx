@@ -1,27 +1,19 @@
 (function(){
-function older(o,n){
-	o=(o||'').split('.');n=(n||'').split('.');
-	var r=/(\d*)([a-z]*)(\d*)([a-z]*)/i;
-	while(o.length&&n.length) {
-		var vo=o.shift().match(r),vn=n.shift().match(r);
-		vo.shift();vn.shift();	// origin string
-		vo[0]=parseInt(vo[0]||0,10);
-		vo[2]=parseInt(vo[2]||0,10);
-		vn[0]=parseInt(vn[0]||0,10);
-		vn[2]=parseInt(vn[2]||0,10);
-		while(vo.length&&vn.length) {
-			var eo=vo.shift(),en=vn.shift();
-			if(eo!=en) return eo<en;
-		}
+function compareVersion(version1, version2) {
+	version1 = (version1 || '').split('.');
+	version2 = (version2 || '').split('.');
+	for ( var i = 0; i < version1.length || i < version2.length; i ++ ) {
+		var delta = (parseInt(version1[i], 10) || 0) - (parseInt(version2[i], 10) || 0);
+		if(delta) return delta < 0 ? -1 : 1;
 	}
-	return n.length>0;
+	return 0;
 }
 
 // Check Maxthon version
 (function(l,v){
-	if(older(l,v)) {	// first use or new update
+	if(compareVersion(l,v)<0) {	// first use or new update
 		localStorage.lastVersion=v;
-		if(older(v,'4.1.1.1600'))	// early versions may have bugs
+		if(compareVersion(v,'4.1.1.1600')<0)	// early versions may have bugs
 			br.tabs.newTab({url:'https://github.com/gera2ld/Violentmonkey-mx/wiki/ObsoleteMaxthon',activate:true});
 	}
 })(localStorage.lastVersion||'',window.external.mxVersion);
@@ -60,7 +52,8 @@ function notify(title,options) {
 	}
 	if(Notification.permission=='granted') show();
 	else Notification.requestPermission(function(e){
-		if(e=='granted') show(); else console.log('Notification: '+options.body);
+		if(e=='granted') show();
+		else console.log('Notification: '+options.body);
 	});
 }
 function dbError(t,e){
@@ -86,7 +79,7 @@ function initDatabase(callback){
 function upgradeData(callback){
 	function finish(){if(callback) callback();}
 	var dataVer='0.5.1';
-	if(older(localStorage.version_storage||'',dataVer)){
+	if(compareVersion(localStorage.version_storage,dataVer)<0){
 		db.transaction(function(t){
 			function update(){
 				var o=data.shift();
@@ -551,7 +544,7 @@ function checkUpdateO(o){
 			r.message=_('msgErrorFetchingUpdateInfo');
 			if(this.status==200) try{
 				var m=parseMeta(this.responseText);
-				if(older(o.meta.version,m.version)) return update();
+				if(compareVersion(o.meta.version,m.version)<0) return update();
 				r.message=_('msgNoUpdate');
 			}catch(e){}
 			delete r.updating;
