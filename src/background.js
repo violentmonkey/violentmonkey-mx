@@ -624,18 +624,17 @@ function autoUpdate(o,src,callback){
 	if(callback) callback(o);
 }
 
-var badge=0,hideBadge;
+var badge,hideBadge;
 function getBadge(o,src,callback){
 	if(settings.showBadge) {
-		badge++;	// avoid frequent asking for badge
-		setTimeout(function(){
-			if(!--badge) {
-				hideBadge=true;
-				injectContent('setBadge();');	// avoid error in compatible mode
-				setTimeout(function(){
-					if(hideBadge) rt.icon.hideBadge();
-				},200);
-			}
+		if(badge) clearTimeout(badge);
+		badge=setTimeout(function(){
+			hideBadge=true;
+			injectContent('setBadge();');	// avoid error in compatible mode
+			setTimeout(function(){
+				if(hideBadge) rt.icon.hideBadge();
+				badge=null;
+			},200);
 		},100);
 	}
 }
