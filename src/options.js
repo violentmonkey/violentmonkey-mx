@@ -1,6 +1,6 @@
 !function(){
 'use strict';
-zip.workerScriptsPath='lib/zip.js/';
+zip.workerScriptsPath = 'lib/zip.js/';
 var post = initMessage({});
 
 function setTitle(node, title, def) {
@@ -9,7 +9,7 @@ function setTitle(node, title, def) {
 		(def || '<em>' + _('labelNoName') + '</em>');
 }
 
-function debounce(cb, delay) {
+/*function debounce(cb, delay) {
 	function callback() {
 		cb.apply(null, args);
 	}
@@ -19,7 +19,7 @@ function debounce(cb, delay) {
 		args = arguments;
 		timer = setTimeout(callback, delay);
 	}
-}
+}*/
 
 var scriptList = function() {
 	var parent = $('.scripts-list');
@@ -174,68 +174,66 @@ var scriptList = function() {
 		if(!data) return;
 		var node = data.node;
 		var script = data.script;
+		var elements = data.elements;
 		if(res.message)
-			node.querySelector('.message').innerHTML = res.message;
+			elements.message.innerHTML = res.message;
 		node.classList[script.enabled ? 'remove' : 'add']('disabled');
-		var update = node.querySelector('.update');
-		if(update) update.disabled = res.code == 3;
-		var name = node.querySelector('.name');
-		setTitle(name, script.custom.name || getLocaleString(script.meta, 'name'));
+		if(elements.update) elements.update.disabled = res.code == 3;
+		setTitle(elements.name, script.custom.name || getLocaleString(script.meta, 'name'));
 		var home = script.custom.homepageURL ||
 			script.meta.homepageURL ||
 			script.meta.homepage;
-		if(home) name.href = home;
+		if(home) elements.name.href = home;
 		var supportURL = script.meta.supportURL;
 		if(supportURL) {
-			var support = node.querySelector('.support');
+			var support = elements.support;
 			support.classList.remove('hide');
 			support.href = supportURL;
 			support.title = _('hintSupportPage');
 		}
-		setAuthor(node.querySelector('.author'), script.meta.author || '');
-		setTitle(node.querySelector('.descrip'), getLocaleString(script.meta, 'description'));
-		var image = node.querySelector('.icon');
+		setAuthor(elements.author, script.meta.author || '');
+		setTitle(elements.desc, getLocaleString(script.meta, 'description'));
 		var src;
 		if(script.meta.icon) {
 			src = cache[script.meta.icon];
-			if(!src) loadImage(image, script.meta.icon);
+			if(!src) loadImage(elements.icon, script.meta.icon);
 		}
-		image.src = src || 'icons/icon_48.png';
-		var enable = node.querySelector('.enable');
-		enable.innerHTML = script.enabled ? _('buttonDisable') : _('buttonEnable');
+		elements.icon.src = src || 'images/icon48.png';
+		elements.enable.innerHTML = script.enabled ? _('buttonDisable') : _('buttonEnable');
 	}
 
 	function initNode(data, res) {
 		var node = data.node;
 		var script = data.script;
 		node.innerHTML =
-			'<img class=icon>' +
-			'<div class="right version">' +
+			'<img data-id=icon class=script-icon>' +
+			'<div data-id=version class=right>' +
 				(script.meta.version ? 'v' + script.meta.version : '') +
 			'</div> ' +
-			'<div class="right author"></div>' +
-			'<div class=info>' +
-				'<a class="name ellipsis" target=_blank></a>' +
-				'<a class="support hide" target=_blank><i class="fa fa-question-circle"></i></a>' +
+			'<div data-id=author class="right script-author ellipsis"></div>' +
+			'<div class=script-info>' +
+				'<a data-id=name class="script-name ellipsis" target=_blank></a>' +
+				'<a data-id=support class="script-support hide" target=_blank><i class="fa fa-question-circle"></i></a>' +
 			'</div>' +
-			'<p class="descrip ellipsis"></p>' +
+			'<p data-id=desc class="script-desc ellipsis"></p>' +
 			'<div class=buttons>' +
-				'<button data=edit>' + _('buttonEdit') + '</button> ' +
-				'<button data=enable class=enable></button> ' +
-				'<button data=remove>' + _('buttonRemove') + '</button> ' +
-				(allowUpdate(script) ? '<button data=update class=update>' + _('buttonUpdate') + '</button> ' : '') +
-				'<span class=message></span>' +
+				'<button data-id=edit>' + _('buttonEdit') + '</button> ' +
+				'<button data-id=enable></button> ' +
+				'<button data-id=remove>' + _('buttonRemove') + '</button> ' +
+				(allowUpdate(script) ? '<button data-id=update>' + _('buttonUpdate') + '</button> ' : '') +
+				'<span data-id=message></span>' +
 			'</div>'
 		;
+		data.elements = {};
+		Array.prototype.forEach.call(node.querySelectorAll('[data-id]'), function(node) {
+			data.elements[node.dataset.id] = node;
+		});
 		locate(list.indexOf(data));
 		updateNode(res || {id: script.id});
 	}
 
 	var height = 90;
 	var gap = 10;
-	var setHeight = debounce(function(height) {
-		parent.style.height = height;
-	}, 500);
 	function getIndexByTop(top) {
 		var i = Math.floor((top - gap) / (height + gap));
 		var lower = (height + gap) * i + gap;
@@ -247,18 +245,10 @@ var scriptList = function() {
 		if(!data) return;
 		var node = data.node;
 		var top = (height + gap) * i + gap;
-		var delta = 60 * (i + 1);
-		if(node.style.top == '' && top < wrap.clientHeight) {
-			top += delta;
-			node.style.opacity = 0;
-			setTimeout(function(){
-				top -= delta;
-				node.style.top = top + 'px';
-				node.style.opacity = '';
-			}, 0);
-		}
+		setTimeout(function(){
+			node.classList.remove('entering');
+		}, ~~ (Math.random() * 500));
 		node.style.top = top + 'px';
-		setHeight((height + gap) * list.length + gap + 'px');
 	}
 
 	var emptyDom = document.createElement('div');
@@ -350,7 +340,7 @@ var scriptList = function() {
 		};
 		dict[script.id] = data;
 		list.push(data);
-		node.className = 'item';
+		node.className = 'script entering';
 		node.draggable = true;
 		node.addEventListener('dragstart', dragstart, false);
 		initNode(data);
@@ -376,7 +366,7 @@ var scriptList = function() {
 	}
 
 	parent.addEventListener('click', function(e) {
-		var data = e.target.getAttribute('data');
+		var data = e.target.dataset && e.target.dataset.id;
 		if(data) {
 			var obj = findItem(e.target);
 			if(obj) {

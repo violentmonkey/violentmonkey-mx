@@ -118,7 +118,7 @@ label>*{
 		position: relative;
 	}
 	.sidebar{
-		transition: top 1s;
+		transition: -webkit-transform 1s;
 		position: absolute;
 		background: #fafafa;
 		top: 50px;
@@ -138,7 +138,7 @@ label>*{
 			border-top: 1px solid darkgray;
 		}
 		&.init {
-			top: -100%;
+			-webkit-transform: translate(0,-200%);
 		}
 	}
 	.sidemenu>a{
@@ -247,86 +247,83 @@ label>*{
 	top: @menu-height;
 	bottom: 0;
 	width: 100%;
+	overflow-x: hidden;
 	overflow-y: auto;
 }
 .scripts-list {
 	position: absolute;
 	top: 0;
 	width: 100%;
-	.item {
-		border: 1px solid #ccc;
-		border-radius: 5px;
-		transition: top .5s;
-		padding: 10px;
-		left: 10px;
-		right: 10px;
-		position: absolute;
-		opacity: 1;
-		background: white;
-		&.dragging {
-			position: fixed;
-			background: lightgreen;
-			z-index: 1;
-		}
-		&:hover {
-			border-color: darkgray;
-		}
-		.move{
-			cursor: pointer;
-			color: gray;
-			&:hover{
-				color: black;
-			}
-		}
-		&.disabled{
-			background: lightgray;
-			color: gray;
-			.name{
-				color: blueviolet;
-			}
-			.icon{
-				//opacity: 0.5;
-				-webkit-filter: grayscale(.5);
-			}
-		}
+}
+.script {
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	transition: top .5s,-webkit-transform .5s,opacity .5s;
+	padding: 10px;
+	left: 10px;
+	right: 10px;
+	position: absolute;
+	margin-bottom: 10px;
+	background: white;
+	&.entering {
+		-webkit-transform: translate(50%,0);
+		opacity: 0;
 	}
-	.name{
-		font-weight: bold;
-		font-size: 14px;
+	&.dragging {
+		position: fixed;
+		background: lightgreen;
+		z-index: 1;
 	}
-	.author {
-		max-width: 30%;
-		.ellipsis;
+	&:hover {
+		border-color: darkgray;
+	}
+	&.disabled {
+		background: lightgray;
+		color: gray;
 	}
 	.right {
 		margin-left: 10px;
 	}
-	.support{
-		font-size: 14px;
-		color: green;
-		text-decoration: none;
-		&.hide{
-			.hide;
-		}
+}
+.script-name {
+	font-weight: bold;
+	font-size: 14px;
+	.disabled & {
+		color: blueviolet;
 	}
-	.icon{
-		top: 10px;
-		width: 40px;
-		height: 40px;
-		position: absolute;
+}
+.script-author {
+	max-width: 30%;
+}
+.script-support {
+	font-size: 14px;
+	color: green;
+	text-decoration: none;
+	&.hide {
+		.hide;
 	}
-	.info {
-		margin-left: 50px;
-		line-height: 20px;
-		&>* {
-			margin-right: 10px;
-		}
+}
+.script-icon {
+	top: 10px;
+	width: 40px;
+	height: 40px;
+	position: absolute;
+	.disabled & {
+		//opacity: 0.5;
+		-webkit-filter: grayscale(.5);
 	}
-	.descrip{
-		margin: 5px 0 5px 50px;
-		line-height: 20px;
-		overflow-y: auto;
+}
+.script-info {
+	margin-left: 50px;
+	line-height: 20px;
+	&>* {
+		margin-right: 10px;
 	}
+}
+.script-desc {
+	margin: 5px 0 5px 50px;
+	line-height: 20px;
+	overflow-y: auto;
 }
 // Editor
 @editor-header-height: 5em;
