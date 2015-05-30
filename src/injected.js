@@ -697,7 +697,7 @@ if (/\.user\.js$/.test(location.pathname)) {
 	if (document.readyState == 'complete')
 		checkJS();
 	else
-		document.addEventListener('load', checkJS, false);
+		window.addEventListener('load', checkJS, false);
 }
 
 }();
