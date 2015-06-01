@@ -198,7 +198,7 @@ var scriptList = function() {
 			src = cache[script.meta.icon];
 			if(!src) loadImage(elements.icon, script.meta.icon);
 		}
-		elements.icon.src = src || 'images/icon48.png';
+		elements.icon.src = src || 'icons/icon_48.png';
 		elements.enable.innerHTML = script.enabled ? _('buttonDisable') : _('buttonEnable');
 	}
 
