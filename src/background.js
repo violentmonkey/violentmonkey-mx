@@ -1,4 +1,10 @@
 (function(){
+var vm_ver;
+fetchURL(rt.getPrivateUrl() + 'def.json', function() {
+	var data = JSON.parse(this.responseText)[0];
+	vm_ver = data.version;
+});
+
 function compareVersion(version1, version2) {
 	version1 = (version1 || '').split('.');
 	version2 = (version2 || '').split('.');
@@ -281,7 +287,8 @@ function getCache(args,callback,t){
 	if(t) query(t); else db.readTransaction(query);
 }
 function getInjected(o,src,callback){
-	var data={isApplied:settings.isApplied},cache={},require={},values={};
+	var data={isApplied:settings.isApplied,version:vm_ver};
+	var cache={},require={},values={};
 	function finish(){callback(data);}
 	if(settings.isApplied&&src.url.slice(0,5)!='data:') {
 		getScripts(

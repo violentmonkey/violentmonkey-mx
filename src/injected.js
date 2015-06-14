@@ -317,18 +317,27 @@ var comm = {
 						name: script.meta.name || '',
 						namespace: script.meta.namespace || '',
 						resources: {},
-						'run-at': script.meta['run-at'] || 'document-end',
+						'run-at': script.meta['run-at'] || '',
 						unwrap: false,
 						version: script.meta.version || '',
 					};
 					var obj = {};
-					addProperty('script', {value:{}}, obj);
 					addProperty('scriptMetaStr', {value: m ? m[1] : ''}, obj);
+
+					// whether update is allowed
 					addProperty('scriptWillUpdate', {value: script.update}, obj);
-					addProperty('version', {value: undefined}, obj);
-					for(m in script) addProperty(m, {value: data[m]}, obj.script);
-					for(m in script.meta.resources)
-						addProperty(m, {value: script.meta.resources[m]}, obj.script.resources);
+
+					// Violentmonkey specific data
+					addProperty('version', {value: comm.version}, obj);
+					addProperty('scriptHandler', {value: 'Violentmonkey'}, obj);
+
+					// script object
+					addProperty('script', {value:{}}, obj);
+					for(var i in data)
+						addProperty(i, {value: data[i]}, obj.script);
+					for(var i in script.meta.resources)
+						addProperty(i, {value: script.meta.resources[i]}, obj.script.resources);
+
 					return obj;
 				},
 			},
@@ -499,6 +508,7 @@ var comm = {
 		var end = [];
 		comm.command = {};
 		comm.ainject = {};
+		comm.version = data.version;
 		// reset load and checkLoad
 		comm.load = function() {
 			run(end);

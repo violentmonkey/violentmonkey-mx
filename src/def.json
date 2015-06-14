@@ -2,11 +2,11 @@
 	{
 		"type": "extension",
 		"frameworkVersion":"1.0.6",
-		"version":"2.3.28",
+		"version":"2.3.29",
 		"guid": "{7732dc50-47c1-9be5-6ea9-f85c38172974}",
 		"author":{
 			"name":"Gerald",
-			"email":"gera2ld@163.com"
+			"email":"i@gerald.top"
 		},
 		"name": "Violentmonkey",
 		"title": {
