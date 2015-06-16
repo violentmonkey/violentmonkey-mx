@@ -63,6 +63,7 @@ var scriptList = function() {
 			list.splice(obj.index, 1);
 			delete dict[script.id];
 			parent.removeChild(obj.data.node);
+			updateHeight();
 			for ( var i = obj.index; i < list.length; i ++ )
 				locate(i);
 			if(!list.length) showEmptyHint();
@@ -247,8 +248,11 @@ var scriptList = function() {
 		var top = (height + gap) * i + gap;
 		setTimeout(function(){
 			node.classList.remove('entering');
-		}, ~~ (Math.random() * 500));
+		}, ~~ (Math.random() * 300));
 		node.style.top = top + 'px';
+	}
+	function updateHeight() {
+		parent.style.height = (height + gap) * list.length + gap + 'px';
 	}
 
 	var emptyDom = document.createElement('div');
@@ -286,6 +290,16 @@ var scriptList = function() {
 			}
 			dragging.index = index;
 		}
+		dragging.scroll = 0;
+		var scrollThreshold = 10;
+		var offset = wrap.getBoundingClientRect();
+		var delta = (e.clientY - (offset.bottom - scrollThreshold)) / scrollThreshold;
+		if ( delta > 0 ) dragging.scroll = 1 + Math.min(~~ (delta * 5), 10);
+		else {
+			delta = (offset.top + scrollThreshold - e.clientY) / scrollThreshold;
+			if(delta > 0) dragging.scroll = -1 - Math.min(~~ (delta * 5), 10);
+		}
+		if(dragging.scroll) scroll();
 	}
 	function mouseup(e) {
 		var data = dragging.data;
@@ -304,6 +318,18 @@ var scriptList = function() {
 		orderScript(data.index, dragging.index);
 		document.removeEventListener('mousemove', mousemove, false);
 		document.removeEventListener('mouseup', mouseup, false);
+	}
+	function scroll() {
+		function scrollOnce() {
+			if(dragging.scroll) {
+				wrap.scrollTop += dragging.scroll;
+				setTimeout(scrollOnce, 20);
+			} else dragging.scrolling = false;
+		}
+		if(!dragging.scrolling) {
+			dragging.scrolling = true;
+			scrollOnce();
+		}
 	}
 	function orderScript(idxFrom, idxTo) {
 		if(idxFrom != idxTo) {
@@ -345,6 +371,7 @@ var scriptList = function() {
 		node.addEventListener('dragstart', dragstart, false);
 		initNode(data);
 		parent.appendChild(data.node);
+		updateHeight();
 		hideMask();
 	}
 
