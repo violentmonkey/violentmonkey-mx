@@ -233,7 +233,7 @@ function initScripts(callback){
 	});
 }
 function getData(d,src,callback) {
-	var data={scripts:[],settings:settings},cache={};
+	var data={scripts:[],settings:getAllOptions()},cache={};
 	ids.forEach(function(i){
 		var o=metas[i];
 		data.scripts.push(o);
@@ -287,10 +287,11 @@ function getCache(args,callback,t){
 	if(t) query(t); else db.readTransaction(query);
 }
 function getInjected(o,src,callback){
-	var data={isApplied:settings.isApplied,version:vm_ver};
+	var isApplied=getOption('isApplied');
+	var data={isApplied:isApplied,version:vm_ver};
 	var cache={},require={},values={};
 	function finish(){callback(data);}
-	if(settings.isApplied&&src.url.slice(0,5)!='data:') {
+	if(isApplied&&src.url.slice(0,5)!='data:') {
 		getScripts(
 			ids.filter(function(i){
 				var j,s=metas[i];
@@ -564,7 +565,7 @@ function checkUpdate(id,src,callback) {
 	if(callback) callback();
 }
 function checkUpdateAll(e,src,callback) {
-	setOption({key:'lastUpdate',value:Date.now()});
+	setOption('lastUpdate',Date.now());
 	ids.forEach(function(i){
 		var o=metas[i];
 		if(o.update) checkUpdateO(o);
@@ -573,7 +574,7 @@ function checkUpdateAll(e,src,callback) {
 }
 
 function exportZip(o,src,callback){
-	var data={scripts:[],settings:settings},values=[];
+	var data={scripts:[],settings:getAllOptions()},values=[];
 	function finish(){callback(data);}
 	getScripts(o.data,false,function(s){
 		s.forEach(function(c){
@@ -585,73 +586,30 @@ function exportZip(o,src,callback){
 	});
 }
 function updateItem(r){rt.post('UpdateItem',r);}
-function getOption(k,src,callback){
-	var v=localStorage.getItem(k)||'';
-	try{
-		v=JSON.parse(v);
-	}catch(e){
-		return false;
-	}
-	settings[k]=v;
-	if(callback) callback(v);
-	return true;
-}
-function setOption(o,src,callback){
-	if(!o.check||(o.key in settings)) {
-		localStorage.setItem(o.key,JSON.stringify(o.value));
-		settings[o.key]=o.value;
-	}
-	if(callback) callback(o.value);
-}
-function initSettings(){
-	function init(k,v){
-		if(!getOption(k)) setOption({key:k,value:v});
-	}
-	init('isApplied',true);
-	init('startReload',true);
-	init('reloadHTTPS',false);
-	init('autoUpdate',true);
-	init('lastUpdate',0);
-	init('showBadge',true);
-	init('exportValues',true);
-	init('closeAfterInstall',true);
-	init('dataVer',0);
-}
 function autoCheck(o){	// check for updates automatically in 20 seconds
 	function check(){
-		if(settings.autoUpdate) {
-			if(Date.now()-settings.lastUpdate>=864e5) checkUpdateAll();
+		if(getOption('autoUpdate')) {
+			if(Date.now()-getOption('lastUpdate')>=864e5) checkUpdateAll();
 			setTimeout(check,36e5);
 		} else checking=false;
 	}
 	if(!checking) {checking=true;setTimeout(check,o||0);}
 }
-function autoUpdate(o,src,callback){
-	setOption({key:'autoUpdate',value:o=!!o},src,autoCheck);
-	if(callback) callback(o);
-}
 
-var badge,hideBadge;
-function getBadge(o,src,callback){
-	if(settings.showBadge) {
-		if(badge) clearTimeout(badge);
-		badge=setTimeout(function(){
-			hideBadge=true;
-			injectContent('setBadge();');	// avoid error in compatible mode
-			setTimeout(function(){
-				if(hideBadge) rt.icon.hideBadge();
-				badge=null;
-			},200);
-		},100);
-	}
+var hideBadge;
+var doGetBadge = debounce(function () {
+	hideBadge = true;
+	injectContent('setBadge();');	// avoid error in compatible mode
+	setTimeout(function () {
+		if (hideBadge) rt.icon.hideBadge();
+	}, 200);
+}, 100);
+function getBadge(data, src, callback) {
+	if(getOption('showBadge')) doGetBadge();
 }
-function setBadge(o,src,callback){
-	hideBadge=false;
-	if(settings.showBadge) rt.icon.showBadge(o);
-}
-function showBadge(o,src,callback){
-	setOption({key:'showBadge',value:o=!!o},src,o&&getBadge);
-	if(callback) callback(o);
+function setBadge(data, src, callback) {
+	hideBadge = false;
+	if (getOption('showBadge')) rt.icon.showBadge(data);
 }
 function reinit(){
 	var f=function(f){
@@ -666,14 +624,14 @@ function reinit(){
 	};
 	f='('+f.toString()+')(window.delayedReload)';
 	f='(function(s){var o=document.createElement("script");o.innerHTML=s;document.body.appendChild(o);document.body.removeChild(o);})('+JSON.stringify(f)+')';
-	if(!settings.reloadHTTPS) f='if(location.protocol!="https:")'+f;
+	if(!getOption('reloadHTTPS')) f='if(location.protocol!="https:")'+f;
 	for(var i=0;i<br.tabs.length;i++) {
 		var t=br.tabs.getTab(i);
 		br.executeScript(f,t.id);
 	}
 }
 
-var db,checking=false,settings={},ids=null,metas,pos;
+var db,checking=false,ids=null,metas,pos;
 initSettings();
 initDatabase(function(){
 	upgradeData(function(){
@@ -703,8 +661,12 @@ initDatabase(function(){
 					SaveScript: saveScript,
 					UpdateMeta: updateMeta,
 					SetValue: setValue,
-					GetOption: getOption,
-					SetOption: setOption,
+					GetOption: function (key, src, callback) {
+						callback(getOption(key));
+					},
+					SetOption: function (data, src, callback) {
+						setOption(data.key, data.value);
+					},
 					ExportZip: exportZip,
 					ParseScript: parseScript,
 					GetScript: function(id,src,callback){	// for user edit
@@ -720,12 +682,13 @@ initDatabase(function(){
 						ids.forEach(function(i){d.push(metas[i]);});
 						callback(d);
 					},
-					AutoUpdate: autoUpdate,
+					AutoUpdate: function (data, src, callback) {
+						autoCheck();
+					},
 					Vacuum: vacuum,
 					Move: move,
 					GetBadge: getBadge,
 					SetBadge: setBadge,
-					ShowBadge: showBadge,
 					InstallScript:function(url,src,callback) {
 						callback();
 						br.tabs.newTab({
@@ -738,9 +701,9 @@ initDatabase(function(){
 				if(f) f(o.data,o.src,callback);
 				return true;
 			});
-			if(settings.autoUpdate) autoCheck(2e4);
-			rt.icon.setIconImage('icon'+(settings.isApplied?'':'w'));
-			if(settings.startReload) reinit();
+			if(getOption('autoUpdate')) autoCheck(2e4);
+			rt.icon.setIconImage('icon'+(getOption('isApplied')?'':'w'));
+			if(getOption('startReload')) reinit();
 		});
 	});
 });

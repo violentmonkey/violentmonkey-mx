@@ -5,6 +5,42 @@ var br = rt.create('mx.browser');
 var $ = document.querySelector.bind(document);
 var $$ = document.querySelectorAll.bind(document);
 var stopPropagation = function(e) {e.stopPropagation();};
+var defaults = {
+	isApplied: true,
+	startReload: true,
+	reloadHTTPS: false,
+	autoUpdate: true,
+	//ignoreGrant: false,
+	lastUpdate: 0,
+	showBadge: true,
+	exportValues: true,
+	closeAfterInstall: false,
+	trackLocalFile: false,
+	//injectMode: 0,
+};
+
+function getOption(key, def) {
+	var value = localStorage.getItem(key), obj;
+	if(value) try {
+		obj = JSON.parse(value);
+	} catch(e) {
+		obj = def;
+	} else obj = def;
+	if(typeof obj === 'undefined')
+		obj = defaults[key];
+	return obj;
+}
+
+function setOption(key, value) {
+	if(key in defaults)
+		localStorage.setItem(key, JSON.stringify(value));
+}
+
+function getAllOptions() {
+	var options = {};
+	for(var i in defaults) options[i] = getOption(i);
+	return options;
+}
 
 // Debug
 /*var bugs={};
@@ -102,4 +138,16 @@ function initMessage(map) {
 
 function injectContent(s) {
 	br.executeScript('if(window.mx)try{' + s + '}catch(e){}');
+}
+
+function debounce(cb, delay) {
+	var timer = null;
+	function call() {
+		cb();
+		timer = null;
+	}
+	return function () {
+		if (timer) clearTimeout(timer);
+		timer = setTimeout(call, delay);
+	};
 }

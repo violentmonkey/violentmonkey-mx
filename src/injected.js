@@ -685,7 +685,13 @@ function updateBadge() {
 	post('Background', {cmd: 'GetBadge'});
 }
 window.setPopup = function () {
-	post('Popup', {cmd: 'SetPopup', data: [menus, ids]});
+	post('Popup', {
+		cmd: 'SetPopup',
+		data: {
+			ids: ids,
+			menus: menus,
+		},
+	});
 };
 window.setBadge = function () {
 	post('Background', {cmd: 'SetBadge', data: badge.number});

@@ -246,9 +246,6 @@ var scriptList = function() {
 		if(!data) return;
 		var node = data.node;
 		var top = (height + gap) * i + gap;
-		setTimeout(function(){
-			node.classList.remove('entering');
-		}, ~~ (Math.random() * 300));
 		node.style.top = top + 'px';
 	}
 	function updateHeight() {
@@ -373,6 +370,9 @@ var scriptList = function() {
 		parent.appendChild(data.node);
 		updateHeight();
 		hideMask();
+		setTimeout(function(){
+			node.classList.remove('entering');
+		}, ~~ (Math.random() * 300));
 	}
 
 	function updateItem(res) {
@@ -568,15 +568,6 @@ var Transporter = function() {
 		}, false);
 	}
 
-	cbValues.addEventListener('change', function(e) {
-		post({
-			cmd: 'SetOption',
-			data: {
-				key: 'exportValues',
-				value: this.checked,
-			},
-		});
-	}, false);
 	bindEvents();
 
 	return {
@@ -600,24 +591,34 @@ var Transporter = function() {
 
 // Script Editor
 var Editor = function() {
-	var parent = $('#wndEditor');
-	var meta = parent.querySelector('.meta');
-	var btSave = parent.querySelector('.save');
-	var btSaveClose = parent.querySelector('.savenclose');
-	var btClose = parent.querySelector('.close');
-	var cbUpdate = parent.querySelector('.update');
+	var parent = $('.editor-frame');
+	var findNode = function() {
+		var nodes = parent.querySelectorAll('[data-id]');
+		var dict = {};
+		Array.prototype.forEach.call(nodes, function(node) {
+			dict[node.dataset.id] = node;
+		});
+		return function(id) {
+			return dict[id];
+		};
+	}();
+	var meta = parent.querySelector('.editor-meta');
+	var btSave = findNode('save');
+	var btSaveClose = findNode('savenclose');
+	var btClose = findNode('close');
+	var cbUpdate = findNode('update');
 	var pCustom = {
-		name: meta.querySelector('.name'),
-		runAt: meta.querySelector('.run-at'),
-		homepage: meta.querySelector('.homepage'),
-		updateURL: meta.querySelector('.updateurl'),
-		downloadURL: meta.querySelector('.downloadurl'),
-		keepInclude: meta.querySelector('.keep-include'),
-		include: meta.querySelector('.include'),
-		keepMatch: meta.querySelector('.keep-match'),
-		match: meta.querySelector('.match'),
-		keepExclude: meta.querySelector('.keep-exclude'),
-		exclude: meta.querySelector('.exclude'),
+		name: findNode('name'),
+		runAt: findNode('run-at'),
+		homepage: findNode('homepage'),
+		updateURL: findNode('updateurl'),
+		downloadURL: findNode('downloadurl'),
+		keepInclude: findNode('keep-include'),
+		include: findNode('include'),
+		keepMatch: findNode('keep-match'),
+		match: findNode('match'),
+		keepExclude: findNode('keep-exclude'),
+		exclude: findNode('exclude'),
 	};
 	var modified = false;
 	var metaModified = false;
@@ -642,7 +643,7 @@ var Editor = function() {
 			document.removeEventListener('mousedown', hideMeta, false);
 		};
 		meta.addEventListener('mousedown', stopPropagation, false);
-		parent.querySelector('.btCustom').addEventListener('click', function(e) {
+		findNode('btCustom').addEventListener('click', function(e) {
 			meta.classList.remove('hide');
 			document.addEventListener('mousedown', hideMeta, false);
 		}, false);
@@ -746,7 +747,7 @@ var Editor = function() {
 		callback: function(_editor) {
 			editor = _editor;
 		},
-		container: parent.querySelector('.code'),
+		container: parent.querySelector('.editor-code'),
 		onsave: save,
 		onexit: close,
 		onchange: function(e) {
@@ -760,13 +761,9 @@ var Editor = function() {
 	};
 }();
 
-// Load at last
-var switchTab = function() {
-	var menus = $$('.sidemenu>a');
-	var submenus = $$('.sidemenu>div');
-	var tabs = $$('.content>div');
-	var forEach = Array.prototype.forEach;
-	return function(e) {
+// Switch tab
+!function() {
+	function switchTab(e) {
 		var current;
 		forEach.call(menus, function(menu) {
 			var href = menu.getAttribute('href');
@@ -780,31 +777,47 @@ var switchTab = function() {
 			current = menus[0].getAttribute('href');
 			menus[0].classList.add('selected');
 		}
-		current = 'tab' + current.substr(1);
-		forEach.call(tabs, function(tab) {
-			if(tab.id == current)
-				tab.classList.remove('hide');
-			else
-				tab.classList.add('hide');
-		});
-		if(current == 'tabSettings') Transporter.initList();
-	};
+		current = current.substr(1);
+		if(currentTab) currentTab.classList.add('hide');
+		currentTab = dict[current];
+		currentTab.classList.remove('hide');
+		if(current == 'settings') Transporter.initList();
+	}
+	var menus = $$('.sidemenu>a');
+	var tabs = $$('.content>[data-tab]');
+	var forEach = Array.prototype.forEach;
+	var dict = {};
+	forEach.call(tabs, function(tab) {
+		dict[tab.dataset.tab] = tab;
+	});
+	var currentTab = null;
+	window.addEventListener('hashchange', switchTab, false);
+	switchTab();
 }();
 
+// Load at last
 !function() {
+	Array.prototype.forEach.call($$('[type=checkbox][data-check]'), function(node) {
+		var key = node.dataset.check;
+		node.checked = getOption(key);
+		node.addEventListener('change', function(e) {
+			post({
+				cmd: 'SetOption',
+				data: {
+					key: key,
+					value: this.checked,
+				},
+			});
+		}, false);
+	});
+
 	$('.sidebar').classList.remove('init');
 	$('#currentLang').innerHTML = navigator.language;
 	$('#cUpdate').addEventListener('change', function(e) {
-		post({
-			cmd: 'AutoUpdate',
-			data: this.checked,
-		});
+		if (this.checked) post({cmd: 'AutoUpdate'});
 	}, false);
 	$('#cBadge').addEventListener('change', function(e) {
-		post({
-				 cmd: 'ShowBadge',
-				 data: this.checked,
-		});
+		if (this.checked) post({cmd: 'GetBadge'});
 	}, false);
 	var vacuum = $('#bVacuum');
 	vacuum.onclick=function(){
@@ -822,7 +835,6 @@ var switchTab = function() {
 	$('#bUpdate').addEventListener('click', function(e) {
 		post({cmd:'CheckUpdateAll'});
 	}, false);
-	$('.sidemenu').addEventListener('click', switchTab, false);
 	var reload = $('#cReload');
 	var updateSuboptions = function(e) {
 		Array.prototype.forEach.call(
@@ -831,38 +843,19 @@ var switchTab = function() {
 		);
 	};
 	reload.addEventListener('change', function(e) {
-		post({
-			cmd: 'SetOption',
-			data: {
-				key: 'startReload',
-				value:this.checked,
-			},
-		});
 		updateSuboptions(this);
 	}, false);
-	var reloadHTTPS = $('#cReloadHTTPS');
-	reloadHTTPS.addEventListener('change', function(e) {
-		post({
-			cmd: 'SetOption',
-			data: {
-				key: 'reloadHTTPS',
-				value:this.checked,
-			},
-		});
-	}, false);
-	window.addEventListener('popstate', switchTab, false);
 	post({cmd:'GetData'}, function(data) {
 		var settings = data.settings;
 		$('#cUpdate').checked = settings.autoUpdate;
 		$('#cBadge').checked = settings.showBadge;
 		reload.checked = settings.startReload;
-		reloadHTTPS.checked = settings.reloadHTTPS;
+		$('#cReloadHTTPS').checked = settings.reloadHTTPS;
 		updateSuboptions(reload);
 		Transporter.initSettings(settings);
 		scriptList.setData(data);
 		rt.listen('UpdateItem', scriptList.updateItem);
 	});
 	initI18n();
-	switchTab();
 }();
 }();
