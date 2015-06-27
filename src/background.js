@@ -632,7 +632,6 @@ function reinit(){
 }
 
 var db,checking=false,ids=null,metas,pos;
-initSettings();
 initDatabase(function(){
 	upgradeData(function(){
 		initScripts(function(){
