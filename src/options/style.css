@@ -1,0 +1,317 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  height: 100%;
+  background: #eee;
+  font: menu;
+  font-size: 12px;
+}
+h1 {
+  font-size: 1.5rem;
+  text-shadow: #999 3px 3px 5px;
+}
+h1, h2 {
+  margin-top: 1rem;
+  margin-bottom: .5rem;
+}
+button {
+  padding: 0 .5rem;
+}
+a {
+  color: dodgerblue;
+}
+textarea, input[type=text] {
+  width: 100%;
+}
+hr {
+  border: none;
+  border-top: 1px solid darkgray;
+}
+.pull-left {
+  float: left;
+}
+.pull-right {
+  float: right;
+}
+.ellipsis {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+#app {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+.main {
+  position: relative;
+  max-width: 900px;
+  height: 100%;
+  margin: 0 auto;
+}
+aside {
+  position: absolute;
+  background: #fafafa;
+  top: 50px;
+  left: 0;
+  width: 200px;
+  padding: 10px 10px 0;
+  border: 1px solid darkgray;
+  border-radius: 10px 0 0 10px;
+  border-right: none;
+  text-align: right;
+}
+aside img {
+  width: 64px;
+}
+.sidemenu > a {
+  display: block;
+  line-height: 2.5em;
+  font-size: 1.17em;
+  font-weight: bold;
+  text-decoration: none;
+  color: gray;
+}
+.sidemenu > a.active,
+.sidemenu > a:hover {
+  color: black;
+}
+#tab {
+  position: relative;
+  height: 100%;
+  margin-left: 200px;
+  background: white;
+  border-left: 1px solid darkgray;
+  border-right: 1px solid darkgray;
+  overflow-y: hidden;
+}
+#tab > header {
+  height: 30px;
+  line-height: 30px;
+  padding: 0 .5rem;
+  border-bottom: 1px solid darkgray;
+}
+.backdrop, .scripts {
+  position: absolute;
+  top: 30px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+.scripts {
+  overflow-y: auto;
+}
+.backdrop {
+  display: none;
+  text-align: center;
+  color: gray;
+  z-index: 9;
+}
+.backdrop > *, .backdrop::after {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 2rem;
+}
+.backdrop::after {
+  content: ' ';
+  width: 0;
+  height: 100%;
+}
+.mask {
+  background: rgba(0,0,0,.08);
+  /*transition: opacity 1s;*/
+}
+#currentLang {
+  color: green;
+  font-weight: bold;
+}
+.line {
+  display: block;
+  margin: 1em 0;
+}
+.content {
+  height: 100%;
+  padding: 20px;
+  overflow-y: auto;
+}
+fieldset.title {
+  margin-top: 20px;
+  padding: 10px;
+  border: none;
+  border-top: 1px solid silver;
+}
+.export-list {
+  display: block;
+  width: 100%;
+  height: 200px;
+  white-space: normal;
+}
+.export-list > option {
+  display: inline-block;
+  width: 180px;
+  margin: 2px;
+  padding: 0 5px;
+  box-shadow: 0 0 1px black;
+}
+.frame {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #eee;
+  z-index: 1;
+}
+.frame-header {
+  position: absolute;
+  top: 0;
+  left: 5px;
+  right: 5px;
+  height: 5rem;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+.frame-body {
+  position: absolute;
+  top: 0;
+  left: 5px;
+  right: 5px;
+  bottom: 0;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+.frame-footer {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  bottom: 0;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+.frame-header ~ .frame-body {
+  top: 5rem;
+}
+.frame-footer ~ .frame-body {
+  bottom: 2rem;
+}
+.frame-header > .buttons {
+  float: right;
+  margin-top: 1rem;
+}
+.buttons > * {
+  display: inline-block;
+  position: relative;
+}
+.button-panel {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 180px;
+  margin-top: 5px;
+  padding: 1em;
+  background: #f8f8f8;
+  border-radius: 4px;
+  box-shadow: 1px 2px 2px gray;
+  z-index: 10;
+}
+.options-panel label {
+  display: block;
+}
+.button-toggle.active ~ .button-panel {
+  display: block;
+}
+.editor-code, .editor-code .CodeMirror {
+  height: 100%;
+}
+#url {
+  float: left;
+  max-width: 50%;
+}
+#msg {
+  text-align: right;
+}
+.script {
+  position: relative;
+  margin: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  transition: transform .5s;
+}
+.script .hide {
+  display: none;
+}
+.script:hover {
+  border-color: darkgray;
+}
+.script.disabled {
+  background: lightgray;
+  color: gray;
+}
+.script .pull-right {
+  margin-left: 1em;
+}
+.script-info {
+  margin-left: 50px;
+  line-height: 1.5;
+}
+.script-info > * {
+  margin-right: 10px;
+}
+.script-icon {
+  position: absolute;
+  top: 10px;
+  width: 40px;
+  height: 40px;
+}
+.script-name {
+  font-weight: bold;
+  font-size: 1.17;
+}
+.script-author {
+  max-width: 30%;
+}
+.script-desc {
+  margin: 5px 0 5px 50px;
+  height: 1.2rem;
+  overflow-y: auto;
+}
+.disabled .script-icon {
+  -webkit-filter: grayscale(.5);
+  filter: grayscale(.5);
+}
+.disabled .script-name {
+  color: blueviolet;
+}
+.dragging-placeholder {
+  visibility: hidden;
+}
+.dragging {
+  position: fixed;
+  margin: 0;
+  background: lightgreen;
+  z-index: 9;
+}
+.edit .frame-header {
+  height: 4rem;
+}
+.edit .frame-header ~ .frame-body {
+  top: 4rem;
+}
+.edit .button-panel {
+  width: 450px;
+}
+.edit .button-panel > table {
+  width: 100%;
+}
+.edit .button-panel td:not(.expand) {
+  width: 1px;
+  white-space: nowrap;
+}

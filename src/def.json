@@ -21,10 +21,10 @@
 			],
 			"notifications": true
 		},
-		"config": "options.html",
+		"config": "options/index.html",
 		"service": {
-			"main": "background.html",
-			"debug": false
+			"main": "background/index.html",
+			"debug": true
 		},
 		"actions": [
 			{
