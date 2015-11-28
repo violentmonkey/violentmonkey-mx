@@ -54,7 +54,8 @@ rt.listen(id, function (obj) {
 		},
 		Callback: function (obj) {
 			var func = callbacks[obj.id];
-			if (func) func(obj.data);
+			if (func && (!obj.data || !obj.data.error))
+				func(obj.data && obj.data.data);
 			delete callbacks[obj.id];
 		},
 	};

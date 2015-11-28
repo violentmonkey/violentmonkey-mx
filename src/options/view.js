@@ -391,7 +391,7 @@ var SettingsTab = BaseView.extend({
       return vm;
     }
     function getVMFile(entry, vm) {
-      if (!entry.filename.endsWith('.user.js')) return;
+      if (entry.filename.slice(-8) !== '.user.js') return;
       vm = vm || {};
       return new Promise(function (resolve, reject) {
         var writer = new zip.TextWriter;
@@ -411,7 +411,7 @@ var SettingsTab = BaseView.extend({
       });
     }
     function getVMFiles(entries) {
-      var i = entries.findIndex(function (entry) {
+      var i = _.findIndex(entries, function (entry) {
         return entry.filename === 'ViolentMonkey';
       });
       if (~i) return new Promise(function (resolve, reject) {

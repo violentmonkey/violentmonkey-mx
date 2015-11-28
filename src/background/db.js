@@ -32,22 +32,22 @@ function VMDB() {
 
 VMDB.prototype.openDB = function () {
   var _this = this;
-  return new Promise(function (resolve, reject) {
-    _this.db = openDatabase('Violentmonkey', '0.5', 'Violentmonkey data', 10 * 1024 * 1024);
-    _this.getTransaction().then(function (tx) {
-      resolve([
-  			'CREATE TABLE IF NOT EXISTS scripts(id INTEGER PRIMARY KEY,uri VARCHAR,meta TEXT,custom TEXT,enabled INTEGER,"update" INTEGER,position INTEGER,code TEXT)',
-  			'CREATE TABLE IF NOT EXISTS cache(uri VARCHAR UNIQUE,data TEXT)',
-  			'CREATE TABLE IF NOT EXISTS require(uri VARCHAR UNIQUE,data TEXT)',
-  			'CREATE TABLE IF NOT EXISTS "values"(uri VARCHAR UNIQUE,data TEXT)',
-  		].reduce(function (result, sql) {
-        return result.then(function () {
-          return new Promise(function (resolve, reject) {
-            tx.executeSql(sql, [], resolve, reject);
+  _this.db = openDatabase('Violentmonkey', '0.5', 'Violentmonkey data', 10 * 1024 * 1024);
+  return _this.getTransaction(true).then(function (tx) {
+    return [
+      'CREATE TABLE IF NOT EXISTS scripts(id INTEGER PRIMARY KEY,uri VARCHAR,meta TEXT,custom TEXT,enabled INTEGER,"update" INTEGER,position INTEGER,code TEXT)',
+      'CREATE TABLE IF NOT EXISTS cache(uri VARCHAR UNIQUE,data TEXT)',
+      'CREATE TABLE IF NOT EXISTS require(uri VARCHAR UNIQUE,data TEXT)',
+      'CREATE TABLE IF NOT EXISTS "values"(uri VARCHAR UNIQUE,data TEXT)',
+    ].reduce(function (result, sql) {
+      return result.then(function () {
+        return new Promise(function (resolve, reject) {
+          tx.executeSql(sql, [], function (tx, res) {
+            resolve(res);
           });
         });
-      }, Promise.resolve()));
-    });
+      });
+    }, Promise.resolve());
   });
 };
 
@@ -101,7 +101,7 @@ VMDB.prototype.readScripts = function (res) {
 
 VMDB.prototype.getScript = function (id, tx) {
   var _this = this;
-  _this.getTransaction(false, tx).then(function (tx) {
+  return _this.getTransaction(false, tx).then(function (tx) {
     return new Promise(function (resolve, reject) {
       tx.executeSql('SELECT * FROM scripts WHERE id=? LIMIT 1', [id], function (tx, res) {
         resolve(_this.readScripts(res)[0]);
@@ -129,8 +129,8 @@ VMDB.prototype.queryScript = function (id, meta, tx) {
   });
 };
 
-VMDB.prototype.getScriptData = function (id) {
-  return this.getScript(id).then(function (script) {
+VMDB.prototype.getScriptData = function (id, tx) {
+  return this.getScript(id, tx).then(function (script) {
     if (!script) return Promise.reject();
     var data = scriptUtils.getScriptInfo(script);
     data.code = script.code;
@@ -152,9 +152,28 @@ VMDB.prototype.getScriptInfos = function (ids) {
   });
 };
 
+VMDB.prototype.getValues = function (uris, tx) {
+  var _this = this;
+  return _this.getTransaction(false, tx).then(function (tx) {
+    return uris.reduce(function (result, uri) {
+      return result.then(function (data) {
+        return new Promise(function (resolve, reject) {
+          tx.executeSql('SELECT data FROM "values" WHERE uri=? LIMIT 1', [uri], function (tx, res) {
+            var item = _this.readSQLResult(res)[0];
+            try {
+              if (item) data[uri] = JSON.parse(item.data);
+            } catch (e) {}
+            resolve(data);
+          });
+        });
+      });
+    }, Promise.resolve({}));
+  });
+};
+
 VMDB.prototype.getScriptsByURL = function (url) {
   function getScripts(tx) {
-    return _this.getScriptsByIndex('position', tx).then(function (scripts) {
+    return _this.getScriptsByIndex('position', null, tx).then(function (scripts) {
       var data = {
         uris: [],
       };
@@ -189,27 +208,14 @@ VMDB.prototype.getScriptsByURL = function (url) {
       });
     }, Promise.resolve({}));
   }
-  function getValues(uris, tx) {
-    return uris.reduce(function (result, uri) {
-      return result.then(function (data) {
-        return new Promise(function (resolve, reject) {
-          tx.executeSql('SELECT data FROM cache WHERE uri=? LIMIT 1', [uri], function (tx, res) {
-            var item = _this.readSQLResult(res)[0];
-            if (item) data[url] = item.data;
-            resolve(data);
-          });
-        });
-      });
-    }, Promise.resolve({}));
-  }
   var _this = this;
-  _this.getTransaction().then(function (tx) {
+  return _this.getTransaction().then(function (tx) {
     var res = {};
     return getScripts(tx).then(function (data) {
       res.scripts = data.scripts;
       return getRequire(data.require, tx).then(function (require) {
         res.require = require;
-        return getValues(data.uris, tx);
+        return _this.getValues(data.uris, tx);
       }).then(function (values) {
         res.values = values;
         return _this.getCacheB64(data.cache, tx);
@@ -223,7 +229,7 @@ VMDB.prototype.getScriptsByURL = function (url) {
 
 VMDB.prototype.getData = function () {
   function getScripts(tx) {
-    return _this.getScriptsByIndex('position', tx).then(function (scripts) {
+    return _this.getScriptsByIndex('position', null, tx).then(function (scripts) {
       var data = {};
       var cache = {};
       data.scripts = scripts.map(function (script) {
@@ -266,37 +272,33 @@ VMDB.prototype.removeScript = function (id) {
 };
 
 VMDB.prototype.moveScript = function (id, offset) {
-  var tx = this.db.transaction('scripts', 'readwrite');
-  var o = tx.objectStore('scripts');
-  return this.getScript(id, tx).then(function (script) {
-    var pos = script.position;
-    var range, order;
-    if (offset < 0) {
-      range = IDBKeyRange.upperBound(pos, true);
-      order = 'prev';
-      offset = -offset;
-    } else {
-      range = IDBKeyRange.lowerBound(pos, true);
-      order = 'next';
-    }
-    return new Promise(function (resolve, reject) {
-      o.index('position').openCursor(range, order).onsuccess = function (e) {
-        var result = e.target.result;
-        if (result) {
-          offset --;
-          var value = result.value;
-          value.position = pos;
-          pos = result.key;
-          result.update(value);
-          if (offset) result.continue();
-          else {
-            script.position = pos;
-            o.put(script).onsuccess = function () {
+  var _this = this;
+  return _this.getTransaction(true).then(function (tx) {
+    return (new Promise(function (resolve, reject) {
+      tx.executeSql('SELECT position FROM scripts WHERE id=?', [id], function (tx, res) {
+        resolve(_this.readSQLResult(res)[0].position);
+      });
+    })).then(function (pos) {
+      return new Promise(function (resolve, reject) {
+        var sql = 'SELECT id,position FROM scripts WHERE position' + (offset < 0 ? '<' : '>') + '? ORDER BY position ' + (offset < 0 ? 'DESC' : '') + ' LIMIT ?';
+        if (offset < 0) offset = -offset;
+        tx.executeSql(sql, [pos, offset], function (tx, res) {
+          var items = _this.readSQLResult(res);
+          resolve([[items[items.length - 1].position, id]].concat(items.map(function (item, i) {
+            return [i ? items[i - 1].position : pos, item.id];
+          })));
+        });
+      });
+    }).then(function (updates) {
+      return updates.reduce(function (result, item) {
+        return result.then(function () {
+          return new Promise(function (resolve, reject) {
+            tx.executeSql('UPDATE scripts SET position=? WHERE id=?', item, function (tx, res) {
               resolve();
-            };
-          }
-        }
-      };
+            });
+          });
+        });
+      }, Promise.resolve());
     });
   });
 };
@@ -319,22 +321,22 @@ VMDB.prototype.getCacheB64 = function (uris, tx) {
 };
 
 VMDB.prototype.saveCache = function (url, data, tx) {
-  tx = tx || this.db.transaction('cache', 'readwrite');
-  var o = tx.objectStore('cache');
-  return new Promise(function (resolve, reject) {
-    o.put({uri: url, data: data}).onsuccess = function () {
-      resolve();
-    };
+  return this.getTransaction(true, tx).then(function (tx) {
+    return new Promise(function (resolve, reject) {
+      tx.executeSql('REPLACE INTO cache(uri,data) VALUES(?,?)', [url, data], function (tx, res) {
+        resolve();
+      });
+    });
   });
 };
 
 VMDB.prototype.saveRequire = function (url, data, tx) {
-  tx = tx || this.db.transaction('require', 'readwrite');
-  var o = tx.objectStore('require');
-  return new Promise(function (resolve, reject) {
-    o.put({uri: url, code: data}).onsuccess = function () {
-      resolve();
-    };
+  return this.getTransaction(true, tx).then(function (tx) {
+    return new Promise(function (resolve, reject) {
+      tx.executeSql('REPLACE INTO require(uri,data) VALUES(?,?)', [url, data], function (tx, res) {
+        resolve();
+      });
+    });
   });
 };
 
@@ -342,13 +344,23 @@ VMDB.prototype.saveScript = function (script, tx) {
   script.enabled = script.enabled ? 1 : 0;
   script.update = script.update ? 1 : 0;
   if (!script.position) script.position = ++ this.position;
-  tx = tx || this.db.transaction('scripts', 'readwrite');
-  var o = tx.objectStore('scripts');
-  return new Promise(function (resolve, reject) {
-    o.put(script).onsuccess = function (e) {
-      script.id = e.target.result;
-      resolve(script);
-    };
+  return this.getTransaction(true, tx).then(function (tx) {
+    return new Promise(function (resolve, reject) {
+      var data = [
+        parseInt(script.id) || null,
+        script.uri,
+        JSON.stringify(script.meta),
+        JSON.stringify(script.custom),
+        script.enabled,
+        script.update,
+        script.position,
+        script.code,
+      ];
+      tx.executeSql('REPLACE INTO scripts(id,uri,meta,custom,enabled,"update",position,code) VALUES(?,?,?,?,?,?,?,?)', data, function (tx, res) {
+        script.id = script.id || res.insertId;
+        resolve(script);
+      });
+    });
   });
 };
 
@@ -393,72 +405,69 @@ VMDB.prototype.fetchRequire = function () {
 }();
 
 VMDB.prototype.setValue = function (uri, values) {
-  var o = this.db.transaction('values', 'readwrite').objectStore('values');
-  return new Promise(function (resolve, reject) {
-    o.put({uri: uri, values: values}).onsuccess = function () {
-      resolve();
-    };
+  return this.getTransaction(true).then(function (tx) {
+    return new Promise(function (resolve, reject) {
+      tx.executeSql('REPLACE INTO "values"(uri,data) VALUES(?,?)', [uri, JSON.stringify(values)], function (tx, res) {
+        resolve();
+      });
+    });
   });
 };
 
 VMDB.prototype.updateScriptInfo = function (id, data) {
-  var o = this.db.transaction('scripts', 'readwrite').objectStore('scripts');
-  return new Promise(function (resolve, reject) {
-    o.get(id).onsuccess = function (e) {
-      var script = e.target.result;
-      if (!script) return reject();
-      for (var k in data)
-        if (k in script) script[k] = data[k];
-      o.put(script).onsuccess = function (e) {
-        resolve(scriptUtils.getScriptInfo(script));
-      };
-    };
+  var _this = this;
+  return _this.getTransaction(true).then(function (tx) {
+    return _this.getScript(id, tx).then(function (script) {
+      var updates = [];
+      var args = [];
+      for (var k in data) {
+        var v = data[k];
+        if (~['enabled', 'update'].indexOf(k)) {
+          v = v ? 1 : 0;
+        } else continue;
+        updates.push('"' + k + '"=?');
+        args.push(v);
+      }
+      args.push(id);
+      return new Promise(function (resolve, reject) {
+        tx.executeSql('UPDATE scripts SET ' + updates.join(',') + ' WHERE id=?', args, function (tx, res) {
+          resolve(scriptUtils.getScriptInfo(script));
+        });
+      });
+    });
   });
 };
 
 VMDB.prototype.getExportData = function (ids, withValues) {
-  function getScripts(ids) {
-    var o = tx.objectStore('scripts');
-    return Promise.all(ids.map(function (id) {
-      return new Promise(function (resolve, reject) {
-        o.get(id).onsuccess = function (e) {
-          resolve(e.target.result);
-        };
+  function getScripts(ids, tx) {
+    return ids.reduce(function (result, id) {
+      return result.then(function (list) {
+        return _this.getScriptData(id, tx).then(function (script) {
+          script && list.push(script);
+          return list;
+        });
       });
-    })).then(function (data) {
-      return data.filter(function (x) {return x;});
-    });
+    }, Promise.resolve([]));
   }
-  function getValues(uris) {
-    var o = tx.objectStore('values');
-    return Promise.all(uris.map(function (uri) {
-      return new Promise(function (resolve, reject) {
-        o.get(uri).onsuccess = function (e) {
-          resolve(e.target.result);
-        };
-      });
-    })).then(function (data) {
-      return data.reduce(function (result, value, i) {
-        if (value) result[uris[i]] = value.values;
-        return result;
-      }, {});
+  var _this = this;
+  return _this.getTransaction().then(function (tx) {
+    return getScripts(ids, tx).then(function (scripts) {
+      var res = {
+        scripts: scripts,
+      };
+      return withValues
+      ? _this.getValues(scripts.map(function (script) {
+        return script.uri;
+      }), tx).then(function (values) {
+        res.values = values;
+        return res;
+      }) : res;
     });
-  }
-  var tx = this.db.transaction(['scripts', 'values']);
-  return getScripts(ids).then(function (scripts) {
-    var res = {
-      scripts: scripts,
-    };
-    return withValues
-    ? getValues(scripts.map(function (script) {return script.uri;})).then(function (values) {
-      res.values = values;
-      return res;
-    }) : res;
   });
 };
 
 VMDB.prototype.vacuum = function () {
-  function getScripts() {
+  function getScripts(tx) {
     return _this.getScriptsByIndex('position', null, tx).then(function (scripts) {
       var data = {
         require: {},
@@ -477,76 +486,65 @@ VMDB.prototype.vacuum = function () {
       return data;
     });
   }
-  function vacuumPosition(ids) {
-    var o = tx.objectStore('scripts');
-    return ids.reduce(function (res, id, i) {
-      return res.then(function () {
+  function vacuumPosition(ids, tx) {
+    return ids.reduce(function (result, id, i) {
+      return result.then(function () {
         return new Promise(function (resolve, reject) {
-          o.get(id).onsuccess = function (e) {
-            var result = e.target.result;
-            result.position = i + 1;
-            o.put(result).onsuccess = function () {
-              resolve();
-            };
-          };
+          tx.executeSql('UPDATE scripts SET position=? WHERE id=?', [i + 1, id], function (tx, res) {
+            resolve();
+          });
         });
       });
     }, Promise.resolve());
   }
-  function vacuumCache(dbName, dict) {
+  function vacuumCache(dbName, dict, tx) {
     return new Promise(function (resolve, reject) {
-      var o = tx.objectStore(dbName);
-      o.openCursor().onsuccess = function (e) {
-        var result = e.target.result;
-        if (result) {
-          var value = result.value;
-          (new Promise(function (resolve, reject) {
-            if (!dict[value.uri])
-              o.delete(value.uri).onsuccess = function () {
+      tx.executeSql('SELECT uri FROM "' + dbName + '"', [], function (tx, res) {
+        resolve(_this.readSQLResult(res).reduce(function (result, item) {
+          return result.then(function () {
+            return new Promise(function (resolve, reject) {
+              if (dict[item.uri]) resolve(dict[item.uri] ++);
+              else tx.executeSql('DELETE FROM "' + dbName + '" WHERE uri=?', [item.uri], function (tx, res) {
                 resolve();
-              };
-            else {
-              dict[value.uri] ++;
-              resolve();
-            }
-          })).then(function () {
-            result.continue();
+              });
+            });
           });
-        } else resolve();
-      };
+        }, Promise.resolve()));
+      });
     });
   }
   var _this = this;
-  var tx = _this.db.transaction(['scripts', 'require', 'cache', 'values'], 'readwrite');
-  return getScripts().then(function (data) {
-    return Promise.all([
-      vacuumPosition(data.ids),
-      vacuumCache('require', data.require),
-      vacuumCache('cache', data.cache),
-      vacuumCache('values', data.values),
-    ]).then(function () {
-      return {
-        require: data.require,
-        cache: data.cache,
-      };
+  return _this.getTransaction(true).then(function (tx) {
+    return getScripts(tx).then(function (data) {
+      return Promise.all([
+        vacuumPosition(data.ids, tx),
+        vacuumCache('require', data.require, tx),
+        vacuumCache('cache', data.cache, tx),
+        vacuumCache('values', data.values, tx),
+      ]).then(function () {
+        return {
+          require: data.require,
+          cache: data.cache,
+        };
+      });
+    }).then(function (data) {
+      return Promise.all([
+        Object.keys(data.require).map(function (k) {
+          return data.require[k] === 1 && _this.fetchRequire(k);
+        }),
+        Object.keys(data.cache).map(function (k) {
+          return data.cache[k] === 1 && _this.fetchCache(k);
+        }),
+      ]);
     });
-  }).then(function (data) {
-    return Promise.all([
-      Object.keys(data.require).map(function (k) {
-        return data.require[k] === 1 && _this.fetchRequire(k);
-      }),
-      Object.keys(data.cache).map(function (k) {
-        return data.cache[k] === 1 && _this.fetchCache(k);
-      }),
-    ]);
   });
 };
 
-VMDB.prototype.getScriptsByIndex = function (index, tx) {
+VMDB.prototype.getScriptsByIndex = function (index, cond, tx) {
   var _this = this;
   return _this.getTransaction(false, tx).then(function (tx) {
     return new Promise(function (resolve, reject) {
-      tx.executeSql('SELECT * FROM scripts ORDER BY ?', [index], function (tx, res) {
+      tx.executeSql('SELECT * FROM scripts' + (cond ? ' WHERE ' + cond : '') + ' ORDER BY "' + index + '"', [], function (tx, res) {
         resolve(_this.readScripts(res));
       });
     });
@@ -562,56 +560,59 @@ VMDB.prototype.parseScript = function (data) {
   };
   var meta = scriptUtils.parseMeta(data.code);
   var _this = this;
-  var tx = _this.db.transaction(['scripts', 'require'], 'readwrite');
-  // @require
-  meta.require.forEach(function (url) {
-    var cache = data.require && data.require[url];
-    cache ? _this.saveRequire(url, cache, tx) : _this.fetchRequire(url);
-  });
-  // @resource
-  Object.keys(meta.resources).forEach(function (k) {
-    var url = meta.resources[k];
-    var cache = data.resources && data.resources[url];
-    cache ? _this.saveCache(url, cache, tx) : _this.fetchCache(url);
-  });
-  // @icon
-  if (scriptUtils.isRemote(meta.icon))
-    _this.fetchCache(meta.icon, function (blob) {
-      return new Promise(function (resolve, reject) {
-        var url = URL.createObjectURL(blob);
-        var image = new Image;
-        var free = function () {
-          URL.revokeObjectURL(url);
-        };
-        image.onload = function () {
-          free();
-          resolve(blob);
-        };
-        image.onerror = function () {
-          free();
-          reject();
-        };
-        image.src = url;
-      });
+  return _this.getTransaction(true).then(function (tx) {
+    // @require
+    meta.require.forEach(function (url) {
+      var cache = data.require && data.require[url];
+      cache ? _this.saveRequire(url, cache, tx) : _this.fetchRequire(url);
     });
-  return _this.queryScript(data.id, meta, tx).then(function (script) {
-    if (!script.id) {
-      res.cmd = 'add';
-      res.data.message = _.i18n('msgInstalled');
-    }
-    if (data.more) for (var k in data.more)
-      if (k in script) script[k] = data.more[k];
-    script.meta = meta;
-    script.code = data.code;
-    script.uri = scriptUtils.getNameURI(script);
-    // use referer page as default homepage
-    if (!meta.homepageURL && !script.custom.homepageURL && scriptUtils.isRemote(data.from))
-      script.custom.homepageURL = data.from;
-    if (scriptUtils.isRemote(data.url))
-      script.custom.lastInstallURL = data.url;
-    return _this.saveScript(script, tx);
+    // @resource
+    Object.keys(meta.resources).forEach(function (k) {
+      var url = meta.resources[k];
+      var cache = data.resources && data.resources[url];
+      cache ? _this.saveCache(url, cache, tx) : _this.fetchCache(url);
+    });
+    // @icon
+    if (scriptUtils.isRemote(meta.icon))
+      _this.fetchCache(meta.icon, function (blob) {
+        return new Promise(function (resolve, reject) {
+          var url = URL.createObjectURL(blob);
+          var image = new Image;
+          var free = function () {
+            URL.revokeObjectURL(url);
+          };
+          image.onload = function () {
+            free();
+            resolve(blob);
+          };
+          image.onerror = function () {
+            free();
+            reject();
+          };
+          image.src = url;
+        });
+      });
+    return _this.queryScript(data.id, meta, tx).then(function (script) {
+      if (!script.id) {
+        res.cmd = 'add';
+        res.data.message = _.i18n('msgInstalled');
+      }
+      if (data.more) for (var k in data.more)
+        if (k in script) script[k] = data.more[k];
+      script.meta = meta;
+      script.code = data.code;
+      script.uri = scriptUtils.getNameURI(script);
+      // use referer page as default homepage
+      if (!meta.homepageURL && !script.custom.homepageURL && scriptUtils.isRemote(data.from))
+        script.custom.homepageURL = data.from;
+      if (scriptUtils.isRemote(data.url))
+        script.custom.lastInstallURL = data.url;
+      return _this.saveScript(script, tx);
+    });
   }).then(function (script) {
-    Object.assign(res.data, scriptUtils.getScriptInfo(script));
+    var scriptInfo = scriptUtils.getScriptInfo(script);
+    for (var k in scriptInfo)
+      res.data[k] = scriptInfo[k];
     return res;
   });
 };

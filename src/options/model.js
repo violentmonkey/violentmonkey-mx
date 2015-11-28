@@ -33,6 +33,7 @@ var ScriptList = Backbone.Collection.extend({
   reload: function () {
     var _this = this;
     _this.loading = true;
+    console.log('send');
     _.sendMessage({cmd: 'GetData'}).then(function (data) {
       _this.loading = false;
       _.assign(_this.cache, data.cache);

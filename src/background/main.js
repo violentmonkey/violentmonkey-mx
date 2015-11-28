@@ -1,8 +1,7 @@
 var vmdb = new VMDB;
-var VM_VER;
+var app = {};
 scriptUtils.fetch(_.mx.rt.getPrivateUrl() + 'def.json').then(function (xhr) {
-  var data = JSON.parse(xhr.responseText)[0];
-  VM_VER = data.version;
+  app = JSON.parse(xhr.responseText)[0];
 });
 var commands = {
   NewScript: function (data, src) {
@@ -14,17 +13,18 @@ var commands = {
   GetData: function (data, src) {
     return vmdb.getData();
   },
-  GetInjected: function (url, src) {
+  GetInjected: function (data, src) {
     var data = {
       isApplied: _.options.get('isApplied'),
       injectMode: _.options.get('injectMode'),
-      version: VM_VER,
+      version: app.version,
     };
-    if(src.url == src.tab.url)
-      chrome.tabs.sendMessage(src.tab.id, {cmd: 'GetBadge'});
+    // if(src.url == src.tab.url)
+      // chrome.tabs.sendMessage(src.tab.id, {cmd: 'GetBadge'});
     return data.isApplied
-    ? vmdb.getScriptsByURL(url).then(function (res) {
-      return Object.assign(data, res);
+    ? vmdb.getScriptsByURL(src.url).then(function (res) {
+      for (var k in res) data[k] = res[k];
+      return res;
     }) : Promise.resolve(data);
   },
   UpdateScriptInfo: function (data, src) {
@@ -79,7 +79,7 @@ var commands = {
   },
   CheckUpdateAll: function (data, src) {
     _.options.set('lastUpdate', Date.now());
-    vmdb.getScriptsByIndex('update', 1).then(function (scripts) {
+    vmdb.getScriptsByIndex('update', '"update"=1').then(function (scripts) {
       return Promise.all(scripts.map(vmdb.checkUpdate));
     });
     return false;
@@ -148,6 +148,7 @@ vmdb.initialized.then(function () {
     finish();
   });
   setTimeout(autoUpdate, 2e4);
+  _.options.get('startReload') && reinit();
 });
 
 // Common functions
@@ -198,6 +199,32 @@ var autoUpdate = function () {
     checking || check();
   };
 }();
+
+function reinit() {
+  var func = function (f) {
+    var c = 0;
+    if (!f) f = window.delayedReload = function () {
+      c ++;
+      setTimeout(function () {
+        if (!-- c) location.reload();
+      }, 1000);
+    };
+    f();
+  };
+  var injectScript = function (script) {
+    var el = document.createElement('script');
+    el.innerHTML = script;
+    document.body.appendChild(el);
+    document.body.removeChild(el);
+  };
+  var str = '!' + func.toString() + '(window.delayedReload)';
+  var wrapped = '!' + injectScript.toString() + '(' + JSON.stringify(str) + ')';
+  if (_.options.get('reloadHTTPS')) wrapped = 'location.protocol!="https:"&&' + wrapped;
+  for (var length = _.mx.br.tabs.length; length --;) {
+    var tab = _.mx.br.tabs.getTab(length);
+    _.mx.br.executeScript(wrapped, tab.id);
+  }
+}
 
 _.messenger = function () {
   return {
