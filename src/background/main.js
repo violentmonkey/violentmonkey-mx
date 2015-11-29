@@ -219,10 +219,12 @@ function reinit() {
   };
   var str = '!' + func.toString() + '(window.delayedReload)';
   var wrapped = '!' + injectScript.toString() + '(' + JSON.stringify(str) + ')';
-  if (_.options.get('reloadHTTPS')) wrapped = 'location.protocol!="https:"&&' + wrapped;
+  var reloadHTTPS = _.options.get('reloadHTTPS');
   for (var length = _.mx.br.tabs.length; length --;) {
     var tab = _.mx.br.tabs.getTab(length);
-    _.mx.br.executeScript(wrapped, tab.id);
+    var protocol = tab.url.match(/^http(s?):/);
+    if (protocol && (!protocol[1] || reloadHTTPS))
+      _.mx.br.executeScript(wrapped, tab.id);
   }
 }
 

@@ -355,9 +355,23 @@ var SettingsTab = BaseView.extend({
     this.$el.html(this.templateFn(options));
     this.$('#sInjectMode').val(options.injectMode);
     this.exportList = new ExportList;
+    this.updateSuboptions();
     return this;
   },
-  updateCheckbox: _.updateCheckbox,
+  updateSuboptions: function (item) {
+    (item ? this.$(item).parents('.option-group') : this.$('.option-group'))
+    .each(function (i, el) {
+      var $el = $(el);
+      var checked = $el.children('label').children('input[type=checkbox]').prop('checked');
+      var suboption = $el.find('.suboption');
+      checked ? suboption.removeClass('disabled') : suboption.addClass('disabled');
+      suboption.find('input[type=checkbox]').prop('disabled', !checked);
+    });
+  },
+  updateCheckbox: function (e) {
+    _.updateCheckbox(e);
+    this.updateSuboptions(e.target);
+  },
   updateAutoUpdate: function (e) {
     _.sendMessage({cmd: 'AutoUpdate'});
   },

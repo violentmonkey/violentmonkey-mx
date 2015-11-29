@@ -14,7 +14,7 @@
     "merge2": "^0.3.4",
     "through2": "^0.6.5"
   },
-  "author": "Gerald <gera2ld@163.com>",
+  "author": "Gerald <i@gerald.top>",
   "repository": {
     "type": "git",
     "url": "https://github.com/gera2ld/Violentmonkey-mx.git"
@@ -23,5 +23,5 @@
     "url": "https://github.com/gera2ld/Violentmonkey-mx/issues"
   },
   "homepage": "https://github.com/gera2ld/Violentmonkey-mx",
-  "license": "ISC"
+  "license": "MIT"
 }

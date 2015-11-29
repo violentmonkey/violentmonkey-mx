@@ -135,6 +135,12 @@ aside img {
   display: block;
   margin: 1em 0;
 }
+.suboption {
+  padding-left: 1.5em;
+}
+.suboption.disabled {
+  color: gray;
+}
 .content {
   height: 100%;
   padding: 20px;

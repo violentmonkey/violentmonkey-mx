@@ -16,6 +16,18 @@
     <input type=checkbox data-check=autoReload <%= it.autoReload ? 'checked' : '' %>>
     <span data-i18n=labelAutoReloadCurrentTab></span>
   </label>
+  <div class="option-group">
+    <label class="line">
+      <input type="checkbox" data-check=startReload <%= it.startReload ? 'checked' : '' %>>
+      <span data-i18n=labelStartReload></span>
+    </label>
+    <div class="suboption">
+      <label class="line">
+        <input type="checkbox" data-check=reloadHTTPS <%= it.reloadHTTPS ? 'checked' : '' %>>
+        <span data-i18n=labelReloadHTTPS></span>
+      </label>
+    </div>
+  </div>
   <label class="line">
     <span data-i18n=labelInjectMode></span>
     <select id=sInjectMode>
