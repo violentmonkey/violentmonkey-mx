@@ -43,7 +43,7 @@
 				"entryPoints": [
 					"sidebar"
 				],
-				"main": "popup.html"
+				"main": "popup/index.html"
 			}
 		]
 	}
