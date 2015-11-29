@@ -243,7 +243,7 @@ fieldset.title {
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  transition: transform .5s;
+  transition: -webkit-transform .5s;
 }
 .script .hide {
   display: none;

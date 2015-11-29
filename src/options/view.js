@@ -216,14 +216,14 @@ DND.prototype.animate = function ($elements, delta) {
     var $el = $(el);
     $el.addClass('dragging-moving').css({
       transition: 'none',
-      transform: 'translateY(' + delta + 'px)',
+      '-webkit-transform': 'translateY(' + delta + 'px)',
     }).one('transitionend', function (e) {
       $(e.target).removeClass('dragging-moving');
     });
     setTimeout(function () {
       $el.css({
         transition: '',
-        transform: '',
+        '-webkit-transform': '',
       });
     }, 20);
   });
