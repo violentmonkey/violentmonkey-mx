@@ -83,7 +83,7 @@ VMDB.prototype.initPosition = function () {
   return new Promise(function (resolve, reject) {
     _this.getTransaction().then(function (tx) {
       tx.executeSql('SELECT position FROM scripts ORDER BY position DESC LIMIT 1', [], function (tx, res) {
-        _this.position = _this.readSQLResult(res)[0] || 0;
+        if (res.rows.length) _this.position = res.rows.item(0).position;
         resolve();
       })
     });

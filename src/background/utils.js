@@ -109,7 +109,7 @@ var tester = function () {
     if (mat.length) {
       // @match
       var urlParts = url.match(match_reg);
-      ok = mat.some(function (str) {
+      ok = urlParts && mat.some(function (str) {
         return matchTest(str, urlParts);
       });
     } else {

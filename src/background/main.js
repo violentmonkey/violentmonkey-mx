@@ -88,23 +88,15 @@ var commands = {
     return Promise.resolve(scriptUtils.parseMeta(code));
   },
   AutoUpdate: autoUpdate,
-  /*GetRequestId: function (data, src) {
-    return Promise.resolve(requests.getRequestId());
-  },
-  HttpRequest: function (details, src) {
-    requests.httpRequest(details, function (res) {
-      _.messenger.send(src.tab.id, {
-        cmd: 'HttpRequested',
-        data: res,
-      });
-    });
-    return false;
-  },
-  AbortRequest: function (id, src) {
-    return Promise.resolve(requests.abortRequest(id));
-  },*/
   SetBadge: function (num, src) {
     setBadge(num, src);
+    return false;
+  },
+  InstallScript: function (url, src) {
+    _.mx.br.tabs.newTab({
+      activate: true,
+      url: _.mx.rt.getPrivateUrl() + app.config + '#confirm/' + encodeURIComponent(url),
+    });
     return false;
   },
 };
@@ -139,7 +131,8 @@ vmdb.initialized.then(function () {
           data: data,
           error: null,
         });
-      }, function (data) {
+      }, function (err) {
+        if (err) console.log(err.message, err.stack);
         finish({
           error: data,
         });
