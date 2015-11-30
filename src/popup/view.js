@@ -51,23 +51,33 @@ var MenuView = MenuBaseView.extend({
       name: _.i18n('menuManageScripts'),
       symbol: 'fa-hand-o-right',
       onClick: function (e) {
-        var url = chrome.extension.getURL(chrome.app.getDetails().options_page);
-        chrome.tabs.query({
-          currentWindow: true,
+        function startsWith(str1, str2) {
+          return str1.slice(0, str2.length) === str2;
+        }
+        var url = _.mx.rt.getPrivateUrl() + 'options/index.html';
+        var confirm = url + '#confirm';
+        for (var i = _.mx.br.tabs.length - 1; i --;) {
+          var tab = _.mx.br.tabs.getTab(i);
+          if (tab && startsWith(tab.url, url) && !startsWith(tab.url, confirm)) {
+            tab.activate();
+            return;
+          }
+        }
+        _.mx.br.tabs.newTab({
+          activate: true,
           url: url,
-        }, function (tabs) {
-          if (tabs[0]) chrome.tabs.update(tabs[0].id, {active: true});
-          else chrome.tabs.create({url: url});
         });
       },
     }, top);
-    if (app.currentTab && /^https?:\/\//i.test(app.currentTab.url))
+    var currentTab = _.mx.br.tabs.getCurrentTab();
+    if (currentTab && /^https?:\/\//i.test(currentTab.url))
       _this.addMenuItem({
         name: _.i18n('menuFindScripts'),
         symbol: 'fa-hand-o-right',
         onClick: function (e) {
-          var matches = app.currentTab.url.match(/:\/\/(?:www\.)?([^\/]*)/);
-          chrome.tabs.create({
+          var matches = currentTab.url.match(/:\/\/(?:www\.)?([^\/]*)/);
+          _.mx.br.tabs.newTab({
+            activate: true,
             url: 'https://greasyfork.org/scripts/search?q=' + matches[1],
           });
         },
@@ -89,9 +99,7 @@ var MenuView = MenuBaseView.extend({
         var isApplied = !model.get('data');
         _.options.set('isApplied', isApplied);
         model.set({data: isApplied});
-        chrome.browserAction.setIcon({
-          path: '/images/icon19' + (isApplied ? '' : 'w') + '.png',
-        });
+        _.mx.rt.icon.setIconImage('icon' + (isApplied ? '' : 'w'));
       },
     }, top);
     scriptsMenu.each(function (item) {

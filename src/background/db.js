@@ -140,7 +140,7 @@ VMDB.prototype.getScriptData = function (id, tx) {
 
 VMDB.prototype.getScriptInfos = function (ids) {
   var _this = this;
-  _this.getTransaction().then(function (tx) {
+  return _this.getTransaction().then(function (tx) {
     return ids.reduce(function (result, id) {
       return result.then(function (list) {
         return _this.getScript(id, tx).then(function (script) {

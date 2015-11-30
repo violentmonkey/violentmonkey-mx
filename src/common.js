@@ -125,5 +125,5 @@ _.getMessenger = function (commands) {
 };
 
 _.injectContent = function (s) {
-	br.executeScript('if(window.mx)try{' + s + '}catch(e){}');
+	_.mx.br.executeScript('if(window.mx)try{' + s + '}catch(e){}');
 };

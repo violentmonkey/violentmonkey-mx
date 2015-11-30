@@ -36,16 +36,34 @@ BaseView.prototype.initI18n.call(window);
       },
     }).then(function () {
       model.set({data: data});
-      _.options.get('autoReload') && chrome.tabs.reload(app.currentTab.id);
+      _.options.get('autoReload') && _.mx.br.tabs.getCurrentTab().refresh();
     });
   }
   function init() {
-    chrome.tabs.sendMessage(app.currentTab.id, {cmd: 'GetPopup'});
+    getPopup();
   }
+  function clear() {
+    commandsMenu.reset([]);
+    scriptsMenu.reset([]);
+    delayedClear = null;
+  }
+  function cancelClear() {
+    delayedClear && clearTimeout(delayedClear);
+  }
+  function delayClear() {
+    cancelClear();
+    delayedClear = setTimeout(clear, 200);
+  }
+  var getPopup = _.debounce(function () {
+    _.injectContent('setPopup()');
+    delayClear();
+  }, 100);
+  var delayedClear;
 
   var commands = {
+    GetPopup: getPopup,
     SetPopup: function (data, src) {
-      if (app.currentTab.id !== src.tab.id) return;
+      cancelClear();
       commandsMenu.reset(data.menus.map(function (menu) {
         return new MenuItem({
           name: menu[0],
@@ -61,7 +79,7 @@ BaseView.prototype.initI18n.call(window);
           return new MenuItem({
             id: script.id,
             name: script.custom.name || _.getLocaleString(script.meta, 'name'),
-            data: script.enabled,
+            data: !!script.enabled,
             symbol: scriptSymbol,
             title: true,
             onClick: scriptClick,
