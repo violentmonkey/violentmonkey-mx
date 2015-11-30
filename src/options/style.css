@@ -138,7 +138,8 @@ aside img {
 .suboption {
   padding-left: 1.5em;
 }
-.suboption.disabled {
+.suboption.disabled,
+input[disabled] ~ * {
   color: gray;
 }
 .content {

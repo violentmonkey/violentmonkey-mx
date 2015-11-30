@@ -619,6 +619,7 @@ var ConfirmView = BaseView.extend({
     _this.loadData().then(function () {
       _this.parseMeta();
     });
+    _this.updateClose();
     return _this;
   },
   updateCheckbox: _.updateCheckbox,
@@ -691,7 +692,7 @@ var ConfirmView = BaseView.extend({
     window.close();
   },
   updateClose: function (e) {
-    this.$('#cbTrack').prop('disabled', e.target.checked);
+    this.$('#cbTrack').prop('disabled', this.$('#cbClose').prop('checked'));
   },
   showMessage: function (msg) {
     this.$('#msg').html(msg);
