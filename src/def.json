@@ -2,7 +2,7 @@
 	{
 		"type": "extension",
 		"frameworkVersion": "1.0.6",
-		"version": "2.3.32",
+		"version": "2.4.0",
 		"guid": "{7732dc50-47c1-9be5-6ea9-f85c38172974}",
 		"author": {
 			"name": "Gerald",
@@ -24,7 +24,7 @@
 		"config": "options/index.html",
 		"service": {
 			"main": "background/index.html",
-			"debug": true
+			"debug": false
 		},
 		"actions": [
 			{
