@@ -18,7 +18,7 @@ BaseView.prototype.initI18n.call(window);
 
 !function () {
   function commandClick(e, model) {
-    chrome.tabs.sendMessage(app.currentTab.id, {
+    _.mx.rt.post(app.currentTab.id, {
       cmd: 'Command',
       data: model.get('name'),
     });
@@ -63,6 +63,7 @@ BaseView.prototype.initI18n.call(window);
   var commands = {
     GetPopup: getPopup,
     SetPopup: function (data, src) {
+      app.currentTab = src;
       cancelClear();
       commandsMenu.reset(data.menus.map(function (menu) {
         return new MenuItem({

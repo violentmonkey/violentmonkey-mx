@@ -10,7 +10,17 @@ window.VM = 1;
 function getUniqId() {
 	return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
-
+function includes(arr, item) {
+	var length = arr.length;
+	for (var i = 0; i < length; i ++)
+		if (arr[i] === item) return true;
+	return false;
+}
+function forEach(arr, func, context) {
+	var length = arr.length;
+	for (var i = 0; i < length; i ++)
+		if (func.call(context, arr[i], i, arr) === false) break;
+}
 /**
 * http://www.webtoolkit.info/javascript-utf8.html
 */
@@ -64,6 +74,75 @@ rt.listen(id, function (obj) {
 });
 
 // Communicator
+function getWrapper() {
+  // http://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects
+  // http://developer.mozilla.org/docs/Web/API/Window
+  var comm = this;
+  var wrapper = {};
+  // Wrap methods
+  comm.forEach([
+    'eval',
+    // 'uneval',
+    'isFinite',
+    'isNaN',
+    'parseFloat',
+    'parseInt',
+    'decodeURI',
+    'decodeURIComponent',
+    'encodeURI',
+    'encodeURIComponent',
+
+    'addEventListener',
+    'alert',
+    'atob',
+    'blur',
+    'btoa',
+    'clearInterval',
+    'clearTimeout',
+    'close',
+    'confirm',
+    'dispatchEvent',
+    'find',
+    'focus',
+    'getComputedStyle',
+    'getSelection',
+    'matchMedia',
+    'moveBy',
+    'moveTo',
+    'open',
+    'openDialog',
+    'postMessage',
+    'print',
+    'prompt',
+    'removeEventListener',
+    'resizeBy',
+    'resizeTo',
+    'scroll',
+    'scrollBy',
+    'scrollByLines',
+    'scrollByPages',
+    'scrollTo',
+    'setInterval',
+    'setTimeout',
+    'stop',
+  ], function (name) {
+    var method = window[name];
+    wrapper[name] = function () {
+      return method.apply(window, arguments);
+    };
+  });
+  // Wrap properties
+  comm.forEach(comm.props, function (name) {
+    if (typeof window[name] === 'function') return;
+    Object.defineProperty(wrapper, name, {
+      get: function () {
+        var value = window[name];
+        return value === window ? wrapper : value;
+      },
+    });
+  });
+  return wrapper;
+}
 var comm = {
 	vmid: 'VM_' + getUniqId(),
 	state: 0,
@@ -73,27 +152,10 @@ var comm = {
 	// Array functions
 	// to avoid using prototype functions
 	// since they may be changed by page scripts
-	inArray: function(arr, item) {
-		for (var i = 0; i < arr.length; i ++)
-			if (arr[i] == item) return true;
-		return false;
-	},
-	extendArray: function(arr, arr2) {
-		for(var i = 0; i < arr2.length; i ++) arr.push(arr2[i]);
-	},
-	forEach: function(arr, func, args) {
-		for(var i = 0; i < arr.length; i ++) {
-			var _args = [arr[i]];
-			if(args) this.extendArray(_args, args);
-			func.apply(arr, _args);
-		}
-	},
+	includes: includes,
+	forEach: forEach,
+	props: Object.getOwnPropertyNames(window),
 
-	prop1: Object.getOwnPropertyNames(window),
-	prop2: (function(n,p){
-		while(n=Object.getPrototypeOf(n)) p=p.concat(Object.getOwnPropertyNames(n));
-		return p;
-	})(window,[]),
 	init: function(srcId, destId) {
 		var comm = this;
 		comm.sid = comm.vmid + srcId;
@@ -191,7 +253,7 @@ var comm = {
 			};
 			t.id = id;
 			comm.requests[id] = t;
-			if(comm.inArray(['arraybuffer', 'blob'], t.details.responseType))
+			if(comm.includes(['arraybuffer', 'blob'], t.details.responseType))
 				data.responseType = 'blob';
 			comm.post({cmd: 'HttpRequest', data: data});
 		}
@@ -220,55 +282,7 @@ var comm = {
 			return t.req;
 		};
 	},
-	initWrapper: function() {
-		// wrapper: wrap functions as needed, return and set properties
-		function wrapItem(key, thisObj, wrap) {
-			var type;
-			var value;
-			var apply = Function.apply;
-			function initProperty() {
-				if(!comm.inArray(['function', 'custom'], type)) {
-					value = window[key];
-					type = typeof value;
-					if(wrap && type == 'function') {
-						var func = value;
-						value = function () {
-							var r;
-							try {
-								r = apply.apply(func, [window, arguments]);
-							} catch(e) {
-								console.log('[Violentmonkey] Error calling ' + key + ':\n' + e.stack);
-							}
-							return r === window ? thisObj : r;
-						};
-						value.__proto__ = func;
-						value.prototype = func.prototype;
-					}
-				}
-			}
-			try {
-				Object.defineProperty(thisObj, key, {
-					get: function () {
-						initProperty();
-						return value === window ? thisObj : value;
-					},
-					set: function (_value) {
-						initProperty();
-						value = _value;
-						if(type != 'function') window[key] = _value;
-						type = 'custom';
-					},
-				});
-			} catch(e) {
-				// ignore protected data
-			}
-		}
-		var comm = this;
-		comm.Wrapper = function () {
-			comm.forEach(comm.prop1, wrapItem, [this]);
-			comm.forEach(comm.prop2, wrapItem, [this, true]);
-		};
-	},
+	getWrapper: getWrapper,
 	wrapGM: function(script, value, cache) {
 		// Add GM functions
 		// Reference: http://wiki.greasespot.net/Greasemonkey_Manual:API
@@ -280,11 +294,10 @@ var comm = {
 			// @grant none
 			grant.pop();
 		else {
-			if (!comm.Wrapper) comm.initWrapper();
-			gm['window'] = new comm.Wrapper();
+			gm['window'] = comm.getWrapper();
 		}
 		value = value || {};
-		if(!comm.inArray(grant, 'unsafeWindow')) grant.push('unsafeWindow');
+		if(!comm.includes(grant, 'unsafeWindow')) grant.push('unsafeWindow');
 		function propertyToString() {
 			return '[Violentmonkey property]';
 		}
@@ -518,7 +531,7 @@ var comm = {
 			}, 0);
 		};
 		comm.checkLoad = function() {
-			if (!comm.state && comm.inArray(['interactive', 'complete'], document.readyState))
+			if (!comm.state && comm.includes(['interactive', 'complete'], document.readyState))
 				comm.state = 1;
 			if (comm.state) comm.load();
 		};
