@@ -427,6 +427,7 @@ VMDB.prototype.updateScriptInfo = function (id, data) {
         } else continue;
         updates.push('"' + k + '"=?');
         args.push(v);
+        script[k] = v;
       }
       args.push(id);
       return new Promise(function (resolve, reject) {
