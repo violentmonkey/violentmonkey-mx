@@ -127,7 +127,10 @@ var commands = {
     return vmdb.removeScript(id);
   },
   GetData: function (data, src) {
-    return vmdb.getData();
+    return vmdb.getData().then(function (data) {
+      data.options = _.options.getAll();
+      return data;
+    });
   },
   GetInjected: function (data, src) {
     var data = {
@@ -153,6 +156,9 @@ var commands = {
   },
   SetValue: function (data, src) {
     return vmdb.setValue(data.uri, data.values);
+  },
+  SetOption: function (data, src) {
+    _.options.set(data.key, data.value);
   },
   ExportZip: function (data, src) {
     return vmdb.getExportData(data.ids, data.values);

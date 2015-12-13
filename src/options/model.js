@@ -37,6 +37,24 @@ var ScriptList = Backbone.Collection.extend({
       _this.loading = false;
       _.assign(_this.cache, data.cache);
       _this.reset(data.scripts);
+      _.options.setAll(data.options);
     });
   },
 });
+
+!function () {
+  var set = _.options.set;
+  _.options.set = function (key, value) {
+    set(key, value);
+    _.sendMessage({
+      cmd: 'SetOption',
+      data: {
+        key: key,
+        value: value,
+      },
+    });
+  };
+  _.options.setAll = function (options) {
+    for (var k in options) set(k, options[k]);
+  };
+}();
