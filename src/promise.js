@@ -6,40 +6,60 @@
   else
     root.Promise = factory();
 }(typeof window !== 'undefined' ? window : this, function () {
-  function Promise(callback) {
-    function resolve(data) {
-      if (data instanceof Promise) {
-        data.then(resolve, reject);
-      } else {
-        _this.$$status = 'resolved';
-        _this.$$value = data;
-        then();
-      }
-    }
-    function reject(error) {
-      _this.$$status = 'rejected';
-      _this.$$value = error;
-      then();
-    }
-    function then() {
-      var callbacks = _this.$$callbacks;
-      _this.$$callbacks = [];
-      callbacks.forEach(function (callback) {
-        callback();
-      });
-    }
-    var _this = this;
-    _this.$$status = 'pending';
-    _this.$$value = null;
-    _this.$$callbacks = [];
-    callback(resolve, reject);
+
+  var PENDING = 'pending';
+  var FULFILLED = 'fulfilled';
+  var REJECTED = 'rejected';
+  var slice = Array.prototype.slice;
+
+  function syncCall(func, args) {
+    func(args);
   }
+
+  function partial() {
+    var func = arguments[0];
+    var args = slice.call(arguments, 1);
+    return function () {
+      var _args = args.concat(slice.call(arguments));
+      return func.apply(this, _args);
+    };
+  }
+
+  function resolvePromise(promise, data) {
+    if (data instanceof Promise) {
+      data.then(partial(resolvePromise, promise), partial(rejectPromise, promise));
+    } else {
+      promise.$$status = FULFILLED;
+      promise.$$value = data;
+      then(promise);
+    }
+  }
+  function rejectPromise(promise, reason) {
+    promise.$$status = REJECTED;
+    promise.$$value = reason;
+    then(promise);
+  }
+  function then(promise) {
+    promise.$$then.forEach(function (func) {
+      syncCall(func);
+    });
+    promise.$$then = [];
+  }
+
+  function Promise(resolver) {
+    var _this = this;
+    _this.$$status = PENDING;
+    _this.$$value = null;
+    _this.$$then = [];
+    resolver(partial(resolvePromise, this), partial(rejectPromise, this));
+  }
+
   Promise.prototype.then = function (okHandler, errHandler) {
     var _this = this;
     return new Promise(function (resolve, reject) {
       function callback() {
         var result;
-        var resolved = _this.$$status === 'resolved';
+        var resolved = _this.$$status === FULFILLED;
         var handler = resolved ? okHandler : errHandler;
         if (handler)
           try {
@@ -53,29 +73,33 @@
         }
         resolve(result);
       }
-      if (_this.$$status === 'pending') _this.$$callbacks.push(callback);
-      else callback();
+      if (_this.$$status === PENDING) _this.$$then.push(callback);
+      else syncCall(callback);
     });
   };
+
   Promise.prototype.catch = function (errHandler) {
     return this.then(null, errHandler);
   };
+
   Promise.resolve = function (data) {
     return new Promise(function (resolve) {
       resolve(data);
     });
   };
+
   Promise.reject = function (data) {
     return new Promise(function (resolve, reject) {
       reject(data);
     });
   };
+
   Promise.all = function (promises) {
     return new Promise(function (resolve, reject) {
-      function rejectAll(data) {
+      function rejectAll(reason) {
         if (results) {
           results = null;
-          reject(data);
+          reject(reason);
         }
       }
       function resolveOne(data, i) {
@@ -94,9 +118,7 @@
         if (promise instanceof Promise) {
           promise.then(function (data) {
             resolveOne(data, i);
-          }, function (data) {
-            rejectAll(data);
-          });
+          }, rejectAll);
         } else {
           resolveOne(promise, i);
         }
@@ -104,5 +126,32 @@
       check();
     });
   };
+
+  Promise.race = function (promises) {
+    return new Promise(function (resolve, reject) {
+      function resolveAll(data) {
+        if (pending) {
+          pending = false;
+          resolve(data);
+        }
+      }
+      function rejectAll(reason) {
+        if (pending) {
+          pending = false;
+          reject(reason);
+        }
+      }
+      var pending = true;
+      promises.forEach(function (promise) {
+        if (promise instanceof Promise) {
+          promise.then(resolveAll, rejectAll);
+        } else {
+          resolveAll(promise);
+        }
+      });
+    });
+  };
+
   return Promise;
+
 });
