@@ -611,9 +611,7 @@ VMDB.prototype.parseScript = function (data) {
       return _this.saveScript(script, tx);
     });
   }).then(function (script) {
-    var scriptInfo = scriptUtils.getScriptInfo(script);
-    for (var k in scriptInfo)
-      res.data[k] = scriptInfo[k];
+    _.assign(res.data, scriptUtils.getScriptInfo(script));
     return res;
   });
 };

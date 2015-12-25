@@ -142,8 +142,7 @@ var commands = {
       // chrome.tabs.sendMessage(src.tab.id, {cmd: 'GetBadge'});
     return data.isApplied
     ? vmdb.getScriptsByURL(src.url).then(function (res) {
-      for (var k in res) data[k] = res[k];
-      return res;
+      return _.assign(data, res);
     }) : Promise.resolve(data);
   },
   UpdateScriptInfo: function (data, src) {

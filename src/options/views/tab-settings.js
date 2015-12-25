@@ -93,7 +93,7 @@ var SettingsTab = BaseView.extend({
         _.sendMessage({
           cmd: 'SetValue',
           data: {
-            url: key,
+            uri: key,
             values: value,
           }
         });
