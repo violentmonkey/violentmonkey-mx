@@ -1,6 +1,6 @@
 {
   "name": "Violentmonkey-mx",
-  "version": "2.4.2",
+  "version": "2.4.6",
   "description": "Violentmonkey for Maxthon",
   "devDependencies": {
     "del": "^2.2.0",

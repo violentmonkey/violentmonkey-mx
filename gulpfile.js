@@ -10,6 +10,7 @@ const order = require('gulp-order');
 const bom = require('./scripts/bom');
 const i18n = require('./scripts/i18n');
 const templateCache = require('./scripts/templateCache');
+const pkg = require('./package.json');
 
 const paths = {
   cache: 'src/cache.js',
@@ -109,7 +110,7 @@ gulp.task('copy-def', function () {
 	return gulp.src(paths.def)
 	.pipe(bom.strip())
 	.pipe(through.obj(function (file, enc, cb) {
-		content = String(file.contents);
+		content = String(file.contents).replace('__VERSION__', pkg.version);
 		content = JSON.stringify(JSON.parse(content));
 		file.contents = new Buffer(content);
 		cb(null, file);

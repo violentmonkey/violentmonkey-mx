@@ -7,20 +7,24 @@ if(document.documentElement.tagName.toLowerCase()!='html') return;
 if (window.VM) return;
 window.VM = 1;
 
-function getUniqId() {
-	return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-}
-function includes(arr, item) {
-	var length = arr.length;
-	for (var i = 0; i < length; i ++)
-		if (arr[i] === item) return true;
-	return false;
-}
-function forEach(arr, func, context) {
-	var length = arr.length;
-	for (var i = 0; i < length; i ++)
-		if (func.call(context, arr[i], i, arr) === false) break;
-}
+var _ = {
+	getUniqId: function () {
+		return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+	},
+
+	includes: function (arr, item) {
+		var length = arr.length;
+		for (var i = 0; i < length; i ++)
+			if (arr[i] === item) return true;
+		return false;
+	},
+	forEach: function (arr, func, context) {
+		var length = arr.length;
+		for (var i = 0; i < length; i ++)
+			if (func.call(context, arr[i], i, arr) === false) break;
+	},
+};
+
 /**
 * http://www.webtoolkit.info/javascript-utf8.html
 */
@@ -47,12 +51,12 @@ function utf8decode (utftext) {
 
 // Messages
 var rt = window.external.mxGetRuntime();
-var id = getUniqId();
+var id = _.getUniqId();
 var callbacks = {};
 function post(target, data, callback) {
 	data.src = {id: id, url: window.location.href};
 	if (callback) {
-		data.callback = getUniqId();
+		data.callback = _.getUniqId();
 		callbacks[data.callback] = callback;
 	}
 	rt.post(target, data);
@@ -73,15 +77,18 @@ rt.listen(id, function (obj) {
 	if (func) func(obj.data);
 });
 
-// Communicator
+/**
+ * @desc Wrap methods to prevent unexpected modifications.
+ */
 function getWrapper() {
   // http://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects
   // http://developer.mozilla.org/docs/Web/API/Window
   var comm = this;
   var wrapper = {};
+	// `eval` should be called directly so that it is run in current scope
+  wrapper.eval = eval;
   // Wrap methods
   comm.forEach([
-    'eval',
     // 'uneval',
     'isFinite',
     'isNaN',
@@ -149,17 +156,18 @@ function getWrapper() {
   });
   return wrapper;
 }
+// Communicator
 var comm = {
-	vmid: 'VM_' + getUniqId(),
+	vmid: 'VM_' + _.getUniqId(),
 	state: 0,
 	utf8decode: utf8decode,
-	getUniqId: getUniqId,
+	getUniqId: _.getUniqId,
 
 	// Array functions
 	// to avoid using prototype functions
 	// since they may be changed by page scripts
-	includes: includes,
-	forEach: forEach,
+	includes: _.includes,
+	forEach: _.forEach,
 	props: Object.getOwnPropertyNames(window),
 
 	init: function(srcId, destId) {
@@ -585,7 +593,7 @@ function handleC(e){
 // Requests
 var requests = {};
 function getRequestId() {
-  var id = getUniqId();
+  var id = _.getUniqId();
   requests[id] = new XMLHttpRequest();
 	comm.post({cmd: 'GotRequestId', data: id});
 }
