@@ -129,6 +129,7 @@ var commands = {
   GetData: function (data, src) {
     return vmdb.getData().then(function (data) {
       data.options = _.options.getAll();
+      data.version = app.version;
       return data;
     });
   },

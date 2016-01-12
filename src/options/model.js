@@ -35,6 +35,7 @@ var ScriptList = Backbone.Collection.extend({
     _this.loading = true;
     _.sendMessage({cmd: 'GetData'}).then(function (data) {
       _this.loading = false;
+      _this.version = data.version;
       _.assign(_this.cache, data.cache);
       _this.reset(data.scripts);
       _.options.setAll(data.options);
