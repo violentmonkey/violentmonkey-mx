@@ -507,12 +507,12 @@ var comm = {
       code.push('}.call(this);');
       code = code.join('\n');
       var name = script.custom.name || script.meta.name || script.id;
-      if (data.injectMode == 1) {
+      // XXX advanced injection is not supported
+      if (data.injectMode == 1 && false) {
         // advanced injection
         var id = comm.getUniqId();
         comm.ainject[id] = [name, wrapper];
         comm.post({cmd: 'Inject', data: [id, code]});
-        // TODO
       } else {
         // normal injection
         try {
