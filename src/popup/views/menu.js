@@ -41,6 +41,7 @@ var MenuView = MenuBaseView.extend({
         _.options.set('isApplied', isApplied);
         model.set({data: isApplied});
         _.mx.rt.icon.setIconImage('icon' + (isApplied ? '' : 'w'));
+        _.options.get('autoReload') && _.mx.br.tabs.getCurrentTab().refresh();
       },
     }, top);
     scriptsMenu.each(_this.onMenuAdd.bind(_this));
