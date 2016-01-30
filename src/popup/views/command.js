@@ -1,18 +1,14 @@
 var CommandsView = MenuBaseView.extend({
   initialize: function () {
     MenuBaseView.prototype.initialize.call(this);
-    this.listenTo(commandsMenu, 'reset', this.render);
+    this.listenTo(commandsMenu, 'add', this.onCommandAdd);
   },
   _render: function () {
     if (!commandsMenu.length)
       return app.navigate('', {trigger: true, replace: true});
     var _this = this;
-    _this.$el.html(_this.templateFn({
-      hasSep: true
-    }));
-    var children = _this.$el.children();
-    var top = children.first();
-    var bot = children.last();
+    _this.$el.html(_this.templateFn());
+    var top = _this.$el.children().first();
     _this.addMenuItem({
       name: _.i18n('menuBack'),
       symbol: 'fa-arrow-left',
@@ -20,8 +16,11 @@ var CommandsView = MenuBaseView.extend({
         app.navigate('', {trigger: true});
       },
     }, top);
-    commandsMenu.each(function (item) {
-      _this.addMenuItem(item, bot);
-    });
+    commandsMenu.each(_this.onCommandAdd.bind(_this));
+  },
+  onCommandAdd: function (model) {
+    var _this = this;
+    var bot = _this.$el.children().last();
+    _this.addMenuItem(model, bot);
   },
 });

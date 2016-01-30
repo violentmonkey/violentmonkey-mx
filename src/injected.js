@@ -702,13 +702,8 @@ var badge = {
   ready: false,
   willSet: false,
 };
-var timer;
 function updatePopup() {
-  if (timer) clearTimeout(timer);
-  timer = setTimeout(function () {
-    post('Popup', {cmd: 'GetPopup'});
-    timer = null;
-  }, 100);
+  post('Popup', {cmd: 'GetPopup'});
 }
 function updateBadge() {
   post('Background', {cmd: 'GetBadge'});

@@ -1,12 +1,18 @@
+var menuOptions = new Backbone.Model({
+  canSearch: false,
+  hasCommands: false,
+});
 var App = Backbone.Router.extend({
   routes: {
     '': 'renderMenu',
-    'commands': 'renderCommands',
+    commands: 'renderCommands',
   },
   renderMenu: function () {
+    this.view && this.view.stopListening();
     this.view = new MenuView;
   },
   renderCommands: function () {
+    this.view && this.view.stopListening();
     this.view = new CommandsView;
   },
 });
@@ -43,8 +49,12 @@ BaseView.prototype.initI18n.call(window);
     getPopup();
   }
   function clear() {
-    commandsMenu.reset([]);
-    scriptsMenu.reset([]);
+    commandsMenu.set([]);
+    scriptsMenu.set([]);
+    menuOptions.set({
+      canSearch: false,
+      hasCommands: false,
+    });
     delayedClear = null;
   }
   function cancelClear() {
@@ -63,11 +73,17 @@ BaseView.prototype.initI18n.call(window);
   var commands = {
     GetPopup: getPopup,
     SetPopup: function (data, src) {
-      app.currentTab = src;
       cancelClear();
-      commandsMenu.reset(data.menus.map(function (menu) {
-        return new MenuItem({
-          name: menu[0],
+      app.currentTab = src;
+      menuOptions.set({
+        canSearch: /^https?:\/\//i.test(app.currentTab.url),
+        hasCommands: !!data.menus.length,
+      });
+      commandsMenu.set(data.menus.map(function (menu) {
+        var name = menu[0];
+        return commandsMenu.get(name) || new MenuItem({
+          id: name,
+          name: name,
           symbol: 'fa-hand-o-right',
           onClick: commandClick,
         });
@@ -76,8 +92,8 @@ BaseView.prototype.initI18n.call(window);
         cmd: 'GetMetas',
         data: data.ids,
       }).then(function (scripts) {
-        scriptsMenu.reset(scripts.map(function (script) {
-          return new MenuItem({
+        scriptsMenu.set(scripts.map(function (script) {
+          return scriptsMenu.get(script.id) || new MenuItem({
             id: script.id,
             name: script.custom.name || _.getLocaleString(script.meta, 'name'),
             data: !!script.enabled,

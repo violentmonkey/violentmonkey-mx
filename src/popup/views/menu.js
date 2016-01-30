@@ -1,17 +1,13 @@
 var MenuView = MenuBaseView.extend({
   initialize: function () {
     MenuBaseView.prototype.initialize.call(this);
-    this.listenTo(scriptsMenu, 'reset', this.render);
-    this.listenTo(commandsMenu, 'reset', this.render);
+    this.listenTo(scriptsMenu, 'add', this.onMenuAdd);
+    this.listenTo(menuOptions, 'change', this.checkMenu);
   },
   _render: function () {
     var _this = this;
-    _this.$el.html(_this.templateFn({
-      hasSep: !!scriptsMenu.length
-    }));
-    var children = _this.$el.children();
-    var top = children.first();
-    var bot = children.last();
+    _this.$el.html(_this.templateFn());
+    var top = _this.$el.children().first();
     _this.addMenuItem({
       name: _.i18n('menuManageScripts'),
       symbol: 'fa-hand-o-right',
@@ -34,27 +30,7 @@ var MenuView = MenuBaseView.extend({
         });
       },
     }, top);
-    var currentTab = _.mx.br.tabs.getCurrentTab();
-    if (currentTab && /^https?:\/\//i.test(currentTab.url))
-      _this.addMenuItem({
-        name: _.i18n('menuFindScripts'),
-        symbol: 'fa-hand-o-right',
-        onClick: function (e) {
-          var matches = currentTab.url.match(/:\/\/(?:www\.)?([^\/]*)/);
-          _.mx.br.tabs.newTab({
-            activate: true,
-            url: 'https://greasyfork.org/scripts/search?q=' + matches[1],
-          });
-        },
-      }, top);
-    if (commandsMenu.length) _this.addMenuItem({
-      name: _.i18n('menuCommands'),
-      symbol: 'fa-arrow-right',
-      onClick: function (e) {
-        app.navigate('commands', {trigger: true});
-      },
-    }, top);
-    _this.addMenuItem({
+    _this.menuEnable = _this.addMenuItem({
       name: _.i18n('menuScriptEnabled'),
       data: _.options.get('isApplied'),
       symbol: function (data) {
@@ -67,8 +43,48 @@ var MenuView = MenuBaseView.extend({
         _.mx.rt.icon.setIconImage('icon' + (isApplied ? '' : 'w'));
       },
     }, top);
-    scriptsMenu.each(function (item) {
-      _this.addMenuItem(item, bot);
-    });
+    scriptsMenu.each(_this.onMenuAdd.bind(_this));
+    _this.checkMenu();
+  },
+  onMenuAdd: function (model) {
+    var _this = this;
+    var bot = _this.$el.children().last();
+    _this.addMenuItem(model, bot);
+  },
+  checkMenu: function () {
+    var _this = this;
+    var top = _this.$el.children().first();
+    if (menuOptions.get('hasCommands')) {
+      if (!_this.menuCommands) {
+        _this.menuCommands = _this.addMenuItem({
+          name: _.i18n('menuCommands'),
+          symbol: 'fa-arrow-right',
+          onClick: function (e) {
+            app.navigate('commands', {trigger: true});
+          },
+        }, top, _this.menuEnable.$el);
+      }
+    } else if (_this.menuCommands) {
+      _this.menuCommands.remove();
+      _this.menuCommands = null;
+    }
+    if (menuOptions.get('canSearch')) {
+      if (!_this.menuSearch) {
+        _this.menuSearch = _this.addMenuItem({
+          name: _.i18n('menuFindScripts'),
+          symbol: 'fa-hand-o-right',
+          onClick: function (e) {
+            var matches = currentTab.url.match(/:\/\/(?:www\.)?([^\/]*)/);
+            _.mx.br.tabs.newTab({
+              activate: true,
+              url: 'https://greasyfork.org/scripts/search?q=' + matches[1],
+            });
+          },
+        }, top, _this.menuCommands ? _this.menuCommands.$el : _this.menuEnable.$el);
+      }
+    } else if (_this.menuSearch) {
+      _this.menuSearch.remove();
+      _this.menuSearch = null;
+    }
   },
 });
