@@ -36,7 +36,7 @@ const paths = {
   def: 'src/def.json',
 };
 
-gulp.task('watch', function () {
+gulp.task('watch', () => {
   gulp.watch([].concat(paths.cache, paths.templates), ['templates']);
   gulp.watch(paths.jsOptions, ['js-options']);
   gulp.watch(paths.jsPopup, ['js-popup']);
@@ -45,11 +45,9 @@ gulp.task('watch', function () {
   gulp.watch(paths.def, ['copy-def']);
 });
 
-gulp.task('clean', function () {
-  return del(['dist']);
-});
+gulp.task('clean', () => del(['dist']));
 
-gulp.task('templates', function () {
+gulp.task('templates', () => {
   var stream = merge2([
     gulp.src(paths.cache),
     gulp.src(paths.templates).pipe(templateCache()),
@@ -58,7 +56,7 @@ gulp.task('templates', function () {
 	return stream.pipe(gulp.dest('dist'));
 });
 
-gulp.task('js-options', function () {
+gulp.task('js-options', () => {
   var stream = gulp.src(paths.jsOptions)
   .pipe(order([
     '**/tab-*.js',
@@ -69,7 +67,7 @@ gulp.task('js-options', function () {
 	return stream.pipe(gulp.dest('dist'));
 });
 
-gulp.task('js-popup', function () {
+gulp.task('js-popup', () => {
   var stream = gulp.src(paths.jsPopup)
   .pipe(order([
     '**/base.js',
@@ -80,7 +78,7 @@ gulp.task('js-popup', function () {
 	return stream.pipe(gulp.dest('dist'));
 })
 
-gulp.task('copy-files',function(){
+gulp.task('copy-files', () => {
 	const cssFilter = gulpFilter(['**/*.css'], {restore: true});
 	const jsFilter = gulpFilter(['**/*.js'], {restore: true});
 	var stream = gulp.src(paths.copy)
@@ -94,8 +92,8 @@ gulp.task('copy-files',function(){
 	.pipe(gulp.dest('dist/'));
 });
 
-gulp.task('copy-i18n', function () {
-  return gulp.src(paths.locales)
+gulp.task('copy-i18n', () => (
+  gulp.src(paths.locales)
 	.pipe(bom.strip())
 	.pipe(i18n.extract({
     base: 'src',
@@ -105,11 +103,11 @@ gulp.task('copy-i18n', function () {
     markUntouched: false,
   }))
 	.pipe(bom.add())
-  .pipe(gulp.dest('dist'));
-});
+  .pipe(gulp.dest('dist'))
+));
 
-gulp.task('copy-def', function () {
-	return gulp.src(paths.def)
+gulp.task('copy-def', () => (
+	gulp.src(paths.def)
 	.pipe(bom.strip())
 	.pipe(through.obj(function (file, enc, cb) {
 		content = String(file.contents).replace('__VERSION__', pkg.version);
@@ -118,13 +116,13 @@ gulp.task('copy-def', function () {
 		cb(null, file);
 	}))
 	.pipe(bom.add())
-	.pipe(gulp.dest('dist'));
-});
+	.pipe(gulp.dest('dist'))
+));
 
 gulp.task('default', ['templates', 'js-options', 'js-popup', 'copy-files', 'copy-i18n', 'copy-def']);
 
-gulp.task('i18n', function () {
-  return gulp.src(paths.locales)
+gulp.task('i18n', () => (
+  gulp.src(paths.locales)
 	.pipe(bom.strip())
 	.pipe(i18n.extract({
     base: 'src',
@@ -134,5 +132,5 @@ gulp.task('i18n', function () {
     markUntouched: true,
   }))
 	.pipe(bom.add())
-  .pipe(gulp.dest('src'));
-});
+  .pipe(gulp.dest('src'))
+));
