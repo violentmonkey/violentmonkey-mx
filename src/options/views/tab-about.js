@@ -9,7 +9,7 @@ var AboutTab = BaseView.extend({
   },
   _render: function () {
     this.$el.html(this.templateFn({
-      version: scriptList.version || '...',
+      version: scriptList.app.version || '...',
     }));
   },
 });
