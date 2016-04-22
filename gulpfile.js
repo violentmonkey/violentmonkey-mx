@@ -2,7 +2,7 @@ const del = require('del');
 const gulp = require('gulp');
 const concat = require('gulp-concat');
 const uglify = require('gulp-uglify');
-const minifyCss = require('gulp-minify-css');
+const cssnano = require('gulp-cssnano');
 const merge2 = require('merge2');
 const through = require('through2');
 const gulpFilter = require('gulp-filter');
@@ -16,6 +16,7 @@ const isProd = process.env.NODE_ENV === 'production';
 const paths = {
   cache: 'src/cache.js',
   templates: 'src/**/templates/*.html',
+  jsBg: 'src/background/**/*.js',
   jsOptions: 'src/options/**/*.js',
   jsPopup: 'src/popup/**/*.js',
   locales: [
@@ -23,21 +24,18 @@ const paths = {
     'src/**/*.html',
   ],
   copy: [
-    'src/**',
+    'src/*.js',
     '!src/cache.js',
-    '!src/**/templates/**',
-    '!src/**/templates',
-    '!src/**/views',
-    '!src/options/**/*.js',
-    '!src/popup/**/*.js',
-    '!src/locale/**',
-    '!src/def.json',
+    'src/public/**',
+    'src/*/*.html',
+    'src/*/*.css',
   ],
   def: 'src/def.json',
 };
 
 gulp.task('watch', () => {
   gulp.watch([].concat(paths.cache, paths.templates), ['templates']);
+  gulp.watch(paths.jsBg, ['js-bg']);
   gulp.watch(paths.jsOptions, ['js-options']);
   gulp.watch(paths.jsPopup, ['js-popup']);
   gulp.watch(paths.copy, ['copy-files']);
@@ -54,6 +52,13 @@ gulp.task('templates', () => {
   ]).pipe(concat('cache.js'));
   if (isProd) stream = stream.pipe(uglify());
 	return stream.pipe(gulp.dest('dist'));
+});
+
+gulp.task('js-bg', () => {
+  var stream = gulp.src(paths.jsBg)
+  .pipe(concat('background/app.js'));
+  if (isProd) stream = stream.pipe(uglify());
+  return stream.pipe(gulp.dest('dist'));
 });
 
 gulp.task('js-options', () => {
@@ -83,7 +88,9 @@ gulp.task('copy-files', () => {
 	const jsFilter = gulpFilter(['**/*.js'], {restore: true});
 	var stream = gulp.src(paths.copy)
 	.pipe(cssFilter)
-	.pipe(minifyCss())
+	.pipe(cssnano({
+    zindex: false,
+  }))
 	.pipe(cssFilter.restore)
 	.pipe(jsFilter);
   if (isProd) stream = stream.pipe(uglify());
@@ -119,7 +126,15 @@ gulp.task('copy-def', () => (
 	.pipe(gulp.dest('dist'))
 ));
 
-gulp.task('default', ['templates', 'js-options', 'js-popup', 'copy-files', 'copy-i18n', 'copy-def']);
+gulp.task('build', [
+  'templates',
+  'js-bg',
+  'js-options',
+  'js-popup',
+  'copy-files',
+  'copy-i18n',
+  'copy-def',
+]);
 
 gulp.task('i18n', () => (
   gulp.src(paths.locales)

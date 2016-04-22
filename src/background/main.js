@@ -1,7 +1,10 @@
 var vmdb = new VMDB;
 var app = {};
-scriptUtils.fetch(_.mx.rt.getPrivateUrl() + 'def.json').then(function (xhr) {
-  app = JSON.parse(xhr.responseText)[0];
+setTimeout(function () {
+  scriptUtils.fetch(_.mx.rt.getPrivateUrl() + 'def.json')
+  .then(function (xhr) {
+    app = JSON.parse(xhr.responseText)[0];
+  });
 });
 
 function notify(options) {
