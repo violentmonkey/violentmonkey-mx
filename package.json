@@ -4,6 +4,7 @@
   "description": "Violentmonkey for Maxthon",
   "scripts": {
     "build": "gulp build",
+    "i18n": "gulp i18n",
     "dev": "gulp build && gulp watch"
   },
   "devDependencies": {

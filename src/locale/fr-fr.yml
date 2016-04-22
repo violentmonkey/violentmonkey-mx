@@ -1,0 +1,332 @@
+﻿extName:
+  description: Name of this extension.
+  message: Violentmonkey
+extDescription:
+  description: Description for this extension.
+  message: Support des Userscript pour Maxthon.
+extTranslator:
+  description: Information of the translator.
+  message: 10ours
+  touched: false
+msgUpdated:
+  description: Message shown when a script is updated/reinstalled.
+  message: 'Script mis &agrave; jour.'
+msgErrorFetchingScript:
+  description: Message shown when Violentmonkey fails fetching a new version of the script.
+  message: 'Erreur de lecture du script !'
+msgInstalled:
+  description: Message shown when a script is installed.
+  message: 'Script install&eacute;.'
+Warning:
+  description: Show warnings with a notification.
+  message: Avertisement
+msgWarnGrant:
+  description: Message shown when `@grant` is not found in a script.
+  message: "Script [$1] sans ligne `@grant`, ce qui n'est pas recommandé et peut causer des erreurs. Cliquez pour les détails."
+labelNoName:
+  description: Text as the name of a script when no @name is assigned.
+  message: Null name
+msgUpdating:
+  description: Message shown when a new version of script is being fetched.
+  message: 'Mise &agrave; jour...'
+msgNewVersion:
+  description: 'Message shown when a new version of script is found by @updateURL, but no @downloadURL is provided.'
+  message: Nouvelle version disponible.
+msgCheckingForUpdate:
+  description: Message shown when a script is being checked for updates by version numbers.
+  message: 'V&eacute;rification des mises &agrave; jour...'
+msgErrorFetchingUpdateInfo:
+  description: Message shown when Violentmonkey fails fetching version data of the script.
+  message: 'Impossible de trouver des mises &agrave; jour.'
+msgNoUpdate:
+  description: Message shown when there is no new version of a script.
+  message: 'Aucune mise &agrave; jour trouv&eacute;e .'
+labelInstall:
+  description: Shown in the title of the confirm page while trying to install a script.
+  message: Installation du script
+buttonInstallOptions:
+  description: Button to show options of installation confirm page.
+  message: Options
+installOptionClose:
+  description: Option to close confirm window after installation.
+  message: "Fermer après l'installation"
+installOptionTrack:
+  description: Option to track the loading local file before window is closed.
+  message: Vérifier le fichier local avant fermeture de la fenêtre
+buttonConfirmInstallation:
+  description: Button to confirm installation of a script.
+  message: "Confirmer l'installation"
+buttonClose:
+  description: Button to close window.
+  message: Fermer
+msgErrorLoadingData:
+  description: Message shown on confirm page when the script to be installed cannot be loaded.
+  message: Erreur de chargement du script.
+msgLoadedData:
+  description: Message shown in the confirm page when a javascript file to be installed is loaded.
+  message: 'Javascript chargé : $1'
+msgErrorLoadingDependency:
+  description: Message shown when not all requirements are loaded successfully.
+  message: Erreur de chargement des fichiers requis.
+msgLoadingDependency:
+  description: Message shown on confirm page when the requirements are being downloaded.
+  message: Chargements des fichiers requis... ($1/$2)
+msgScriptURL:
+  description: URL of the script to be installed on confirm page.
+  message: 'Script URL: $1'
+  touched: false
+msgLoadingData:
+  description: Message shown on confirm page when the script to be installed is loading.
+  message: Chargement du script...
+sideMenuInstalled:
+  description: 'Side menu: Installed scripts'
+  message: 'Scripts install&eacute;s'
+sideMenuSettings:
+  description: 'Side menu: Settings'
+  message: Paramètres
+sideMenuAbout:
+  description: 'Side menu: About'
+  message: A propos
+buttonNew:
+  description: Button to create a new script.
+  message: Nouveau
+buttonUpdateAll:
+  description: Check all scripts for updates.
+  message: 'V&eacute;rifier les mises &agrave; jour pour tous'
+anchorGetMoreScripts:
+  description: Link to get more scripts.
+  message: 'Plus de scripts &agrave; partir'
+msgLoading:
+  description: Message shown in the options page before script list is loaded.
+  message: Chargement...
+labelSettings:
+  description: Label shown on the top of settings page
+  message: Paramètres
+labelAutoUpdate:
+  description: Option to allow automatically checking scripts for updates every 24 hours.
+  message: Rechercher des mises à jour automatiquement tous les jours
+labelShowBadge:
+  description: Option to show number of running scripts on the badge
+  message: Afficher le nombre de scripts actifs dans le badge
+labelStartReload:
+  description: Option to reload pages on extension start
+  message: "Actualiser les pages au lancement de l'extension"
+labelReloadHTTPS:
+  description: Option to reload HTTPS pages on extension start
+  message: Actualiser les pages HTTPS
+labelDataImport:
+  description: Section title of data import.
+  message: Importation des données
+buttonImportData:
+  description: Button to choose a file for data import.
+  message: "Importer à partir d'une archive zip"
+buttonVacuum:
+  description: Button to vacuum extension data.
+  message: 'Traitement des donn&eacute;es'
+labelDataExport:
+  description: Section title of data export.
+  message: Exporter les données
+labelScriptsToExport:
+  description: Label shown on top of the script list for export.
+  message: Scripts à exporter
+labelExportScriptData:
+  description: Option to export script data along with scripts.
+  message: Exporter les données du script
+buttonAllNone:
+  description: Button to select all scripts or none.
+  message: Tout/Aucun
+buttonExportData:
+  description: Button to open the data export dialog.
+  message: Exporter en fichier zip
+labelAbout:
+  description: Label shown on top of the about page.
+  message: A propos de Violentmonkey
+labelRelated:
+  description: Label of related links.
+  message: 'Liens en rapport : '
+anchorSupportPage:
+  description: Link to the support page of Violentmonkey.
+  message: '<a href=https://github.com/gera2ld/Violentmonkey-mx/wiki target=_blank>Violentmonkey</a>'
+labelDonate:
+  description: Label of link to donate page.
+  message: Faire un don
+labelFeedback:
+  description: Label of link to feedback page.
+  message: Commenter
+labelAuthor:
+  description: Label of author shown in the details of a script.
+  message: 'Auteur : '
+anchorAuthor:
+  description: Author shown on about tab.
+  message: '<a href=mailto:gera2ld@163.com>Gerald</a>'
+labelTranslator:
+  description: Label of translator.
+  message: 'Traducteur : '
+anchorTranslator:
+  description: Translator shown on about tab.
+  message: 10ours
+labelCurrentLang:
+  description: Label of current language.
+  message: 'Langue actuelle : '
+labelScriptEditor:
+  description: Shown in the title of the script editing page.
+  message: Editeur de Script Editor
+buttonCustomMeta:
+  description: Button to edit the custom meta data of a script.
+  message: Personnaliser les meta data
+labelName:
+  description: Label of script name.
+  message: 'Nom : '
+labelRunAt:
+  description: Label of script @run-at properties in custom meta data.
+  message: 'Démarrer : '
+labelRunAtDefault:
+  description: Shown when custom @run-at is not assigned.
+  message: (défaut)
+labelHomepageURL:
+  description: Label of script @homepageURL in custom meta data.
+  message: 'Page : '
+labelUpdateURL:
+  description: Label of script @updateURL in custom meta data.
+  message: 'URL de mise à jour :'
+labelDownloadURL:
+  description: Label of script @downloadURL in custom meta data.
+  message: 'URL de téléchargement :'
+labelInclude:
+  description: Label of @include rules.
+  message: Inclure
+labelKeepInclude:
+  description: Option to keep the original @include rules.
+  message: 'Conserver les r&egrave;gles d&acute;inclusion originales'
+labelCustomInclude:
+  description: Label of custom @include rules.
+  message: 'Personnaliser les r&egrave;gles d&acute;inclusion : <em>(Une par ligne)</em>'
+labelMatch:
+  description: Label of @match rules.
+  message: Correspondances
+labelKeepMatch:
+  description: Option to keep the original @match rules.
+  message: 'Conserver les r&egrave;gles de correspondance originales'
+labelCustomMatch:
+  description: Label of custom @match rules.
+  message: 'Personnaliser les r&egrave;gles de correspondance : <em>(Une par ligne)</em>'
+labelExclude:
+  description: Label of @exclude rules.
+  message: Exclure
+labelKeepExclude:
+  description: Option to keep the original @exclude rules.
+  message: 'Conserver les r&egrave;gles d&acute;exclusion originales'
+labelCustomExclude:
+  description: Label of custom @exclude rules.
+  message: 'Personnaliser les r&egrave;gles d&acute;exclusion : <em>(Une par ligne)</em>'
+labelAllowUpdate:
+  description: Option to allow checking updates for a script.
+  message: 'Autoriser les mises &agrave; jour'
+buttonSave:
+  description: Button to save modifications of a script.
+  message: Enregistrer
+buttonSaveClose:
+  description: Button to save modifications of a script and then close the editing page.
+  message: Enregistrer et Fermer
+labelNoScripts:
+  description: Message shown when no script is installed.
+  message: "Oups, vous n'avez pas encore de script."
+hintSupportPage:
+  description: Hint for support page.
+  message: Support page
+  touched: false
+buttonDisable:
+  description: Button to disable a script.
+  message: 'D&eacute;sactiver'
+buttonEnable:
+  description: Button to enable a script.
+  message: Activer
+buttonEdit:
+  description: Button to edit a script.
+  message: Editer
+buttonRemove:
+  description: Button to remove a script.
+  message: Supprimer
+buttonUpdate:
+  description: Check a script for updates.
+  message: 'V&eacute;rifier les mises &agrave; jour'
+msgImported:
+  description: Message shown after import. There is an argument referring to the count of scripts imported.
+  message: $1 élément(s) importé(s).
+hintUseDownloadURL:
+  description: Shown as a place holder for @updateURL when it is not assigned
+  message: Utiliser @downloadURL
+confirmNotSaved:
+  description: Confirm message shown when there are unsaved script modifications.
+  message: |-
+    Les modifications ne sont pas enregistr&eacute;es !
+     OK pour continuer ou annuler pour revenir.
+buttonVacuuming:
+  description: Message shown when data vacuum is in progress.
+  message: Nettoyage des données...
+buttonVacuumed:
+  description: Message shown when data is vacuumed.
+  message: 'Donn&eacute;es trait&eacute;es'
+hintVacuum:
+  description: Hint for vacuuming data.
+  message: Recharger les ressources en cache.
+menuManageScripts:
+  description: 'Menu item to manage scripts, or to open the options page of the extension.'
+  message: Gérer les scripts
+menuFindScripts:
+  description: Menu item to find scripts for a site.
+  message: Trouver des scripts pour ce site
+menuBack:
+  description: Menu item to go back to main menu from script commands.
+  message: Retour
+menuCommands:
+  description: Menu item to list script commands.
+  message: Commandes de script...
+menuScriptEnabled:
+  description: 'Menu item showing the status of Violentmonkey, when enabled.'
+  message: Scripts activés
+labelSearch:
+  description: Label for search input in search box.
+  message: 'Search for: '
+labelSearchFor:
+  description: Text shown as a place holder in the search box.
+  message: Search for...
+labelReplace:
+  description: Label for replace input in search box.
+  message: 'Replace with: '
+labelReplaceWith:
+  description: Text shown as a place holder in the replace box.
+  message: Replace with...
+buttonReplace:
+  description: Button to replace the current match.
+  message: Replace
+buttonReplaceAll:
+  description: Button to replace all matches.
+  message: All
+labelIgnoreGrant:
+  description: Option to suppress no @grant warnings.
+  message: Supprimer les avertissements no @grant
+labelAutoReloadCurrentTab:
+  description: Option to reload current tab after a script is switched on or off from menu.
+  message: "Recharger l'onglet actuel après l'activation/désactivation d'un script"
+labelInjectMode:
+  description: Label for a combo box to choose script injection modes.
+  message: "Mode d'injection du script :"
+injectModeNormal:
+  description: 'Script injection mode: Normal'
+  message: Normal
+injectModeAdvanced:
+  description: 'Script injection mode: Advanced'
+  message: Avancé
+hintInjectModeNormal:
+  description: Hint to explain the normal injection mode.
+  message: 'Efficace mais échoue sur certaines pages sécurisées, comme https://github.com'
+hintInjectModeAdvanced:
+  description: Hint to explain the advanced injection mode.
+  message: "Fonctionne sur la plupart des pages, il s'agit d'un hack pour tout dire"
+hintInputURL:
+  description: Hint for a prompt box to input URL of a user script.
+  message: ''
+buttonInstallFromURL:
+  description: Button to ask for URL of a user script.
+  message: ''

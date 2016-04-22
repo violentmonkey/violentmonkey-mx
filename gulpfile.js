@@ -108,6 +108,7 @@ gulp.task('copy-i18n', () => (
     touchedOnly: true,
     useDefaultLang: true,
     markUntouched: false,
+    extension: '.ini',
   }))
 	.pipe(bom.add())
   .pipe(gulp.dest('dist'))
@@ -145,6 +146,7 @@ gulp.task('i18n', () => (
     touchedOnly: false,
     useDefaultLang: false,
     markUntouched: true,
+    extension: '.yml',
   }))
 	.pipe(bom.add())
   .pipe(gulp.dest('src'))
