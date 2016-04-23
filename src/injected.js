@@ -203,20 +203,20 @@ var comm = {
     if (func) func(obj.data);
   },
   runCode: function(name, func, wrapper) {
-    try{
+    try {
       func.call(wrapper.window, wrapper);
-    }catch(e){
-      console.log('Error running script: ' + name + '\n' + e.message);
+    } catch (e) {
+      console.error('Error running script: ' + name + '\n' + e.message);
     }
   },
   initRequest: function() {
     // request functions
-    function reqAbort(){
+    function reqAbort() {
       comm.post({cmd: 'AbortRequest', data: this.id});
     }
 
     // request object functions
-    function callback(req){
+    function callback(req) {
       var t = this;
       var cb = t.details['on' + req.type];
       if (cb) {
@@ -245,7 +245,7 @@ var comm = {
         // finalUrl not supported
         Object.defineProperty(req.data, 'finalUrl', {
           get: function () {
-            console.log('[Violentmonkey] Warning: finalUrl is not supported!');
+            console.warn('[Violentmonkey] Warning: finalUrl is not supported!');
           },
         });
         cb(req.data);
@@ -363,7 +363,7 @@ var comm = {
           addProperty('script', {value:{}}, obj);
           for(var i in data)
             addProperty(i, {value: data[i]}, obj.script);
-          for(var i in script.meta.resources)
+          for(i in script.meta.resources)
             addProperty(i, {value: script.meta.resources[i]}, obj.script.resources);
 
           return obj;
@@ -392,7 +392,7 @@ var comm = {
                 try {
                   val = JSON.parse(v);
                 } catch(e) {
-                  console.log(e);
+                  console.warn(e);
                 }
                 break;
               default:
@@ -461,7 +461,11 @@ var comm = {
         },
       },
       GM_log: {
-        value: function (data) {console.log(data);},
+        value: function (data) {
+          /* eslint-disable no-console */
+          console.log(data);
+          /* eslint-enable no-console */
+        },
       },
       GM_openInTab: {
         value: function (url) {
@@ -501,28 +505,20 @@ var comm = {
       else
         code = [];
       for(var i = 0; i < require.length; i ++)
-        if(part = data.require[require[i]]) code.push(part);
+        if((part = data.require[require[i]])) code.push(part);
       // wrap code to make 'use strict' work
       code.push('!function(){' + script.code + '\n}.call(this)');
       code.push('}.call(this);');
       code = code.join('\n');
       var name = script.custom.name || script.meta.name || script.id;
-      // XXX advanced injection is not supported
-      if (data.injectMode == 1 && false) {
-        // advanced injection
-        var id = comm.getUniqId();
-        comm.ainject[id] = [name, wrapper];
-        comm.post({cmd: 'Inject', data: [id, code]});
-      } else {
-        // normal injection
-        try {
-          var func = new Function('g', code);
-        } catch(e) {
-          console.log('Syntax error in script: ' + name + '\n' + e.message);
-          return;
-        }
-        comm.runCode(name, func, wrapper);
+      // normal injection
+      try {
+        var func = new Function('g', code);
+      } catch(e) {
+        console.error('Syntax error in script: ' + name + '\n' + e.message);
+        return;
       }
+      comm.runCode(name, func, wrapper);
     }
     function run(list) {
       while (list.length) buildCode(list.shift());
@@ -532,7 +528,6 @@ var comm = {
     var idle = [];
     var end = [];
     comm.command = {};
-    comm.ainject = {};
     comm.version = data.version;
     // reset load and checkLoad
     comm.load = function() {
@@ -631,6 +626,7 @@ function httpRequest(details) {
       data.response = req.response;
       finish();
     }
+    if (evt.type == 'loadend') delete requests[details.id];
   }
   var req;
   if (details.id) req = requests[details.id];
@@ -643,12 +639,20 @@ function httpRequest(details) {
         req.setRequestHeader(i, details.headers[i]);
     if (details.responseType) req.responseType = 'blob';
     if (details.overrideMimeType) req.overrideMimeType(details.overrideMimeType);
-    ['abort', 'error', 'load', 'loadend', 'progress', 'readystatechange', 'timeout'].forEach(function(evt) {
+    [
+      'abort',
+      'error',
+      'load',
+      'loadend',
+      'progress',
+      'readystatechange',
+      'timeout'
+    ].forEach(function(evt) {
       req['on' + evt] = callback;
     });
     req.send(details.data);
   } catch (e) {
-    console.log(e);
+    console.warn(e);
   }
 }
 function abortRequest(id) {

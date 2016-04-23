@@ -39,7 +39,7 @@ var scriptUtils = {
       if (flag == 1 && group1[0] == '@') {
         var key = group1.slice(1);
         var val = group2.replace(/^\s+|\s+$/g, '');
-        var value = meta[key];
+        value = meta[key];
         // multiple values allowed
         if (value && value.push) value.push(val);
         // only first value will be stored

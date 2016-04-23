@@ -330,3 +330,6 @@ hintInputURL:
 buttonInstallFromURL:
   description: Button to ask for URL of a user script.
   message: ''
+msgNamespaceConflict:
+  description: Message shown when namespace of the new script conflicts with an existent one.
+  message: ''

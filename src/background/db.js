@@ -112,21 +112,16 @@ VMDB.prototype.getScript = function (id, tx) {
 
 VMDB.prototype.queryScript = function (id, meta, tx) {
   var _this = this;
-  return (
-    id ? _this.getScript(id, tx)
+  return id
+    ? _this.getScript(id, tx)
     : new Promise(function (resolve, reject) {
       var uri = scriptUtils.getNameURI({meta: meta});
-      if (uri !== '::')
-        _this.getTransaction(false, tx).then(function (tx) {
-          tx.executeSql('SELECT * FROM scripts WHERE uri=? LIMIT 1', [uri], function (tx, res) {
-            resolve(_this.readScripts(res)[0]);
-          });
+      _this.getTransaction(false, tx).then(function (tx) {
+        tx.executeSql('SELECT * FROM scripts WHERE uri=? LIMIT 1', [uri], function (tx, res) {
+          resolve(_this.readScripts(res)[0]);
         });
-      else resolve();
-    })
-  ).then(function (script) {
-    return script || scriptUtils.newScript();
-  });
+      });
+    });
 };
 
 VMDB.prototype.getScriptData = function (id, tx) {
@@ -594,7 +589,10 @@ VMDB.prototype.parseScript = function (data) {
         });
       });
     return _this.queryScript(data.id, meta, tx).then(function (script) {
-      if (!script.id) {
+      if (script) {
+        if (data.isNew) throw _.i18n('msgNamespaceConflict');
+      } else {
+        script = scriptUtils.newScript();
         res.cmd = 'add';
         res.data.message = _.i18n('msgInstalled');
       }

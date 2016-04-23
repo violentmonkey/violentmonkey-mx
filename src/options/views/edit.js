@@ -10,6 +10,7 @@ var EditView = BaseView.extend({
   },
   initialize: function () {
     var _this = this;
+    _.bindAll(_this, 'save', 'close');
     BaseView.prototype.initialize.call(_this);
     _this.metaModel = new Meta(_this.model.toJSON(), {parse: true});
     _this.listenTo(_this.metaModel, 'change', function (model) {
@@ -29,7 +30,7 @@ var EditView = BaseView.extend({
     }) : Promise.resolve(it);
     _this.loadedEditor = _.initEditor({
       container: _this.$('.editor-code')[0],
-      onsave: _this.save.bind(_this),
+      onsave: _this.save,
       onexit: _this.close,
       onchange: function (e) {
         _this.model.set('code', _this.editor.getValue());
@@ -59,6 +60,9 @@ var EditView = BaseView.extend({
       data: {
         id: data.id,
         code: data.code,
+        // User created scripts MUST be marked `isNew` so that
+        // the backend is able to check namespace conflicts
+        isNew: !data.id,
         message: '',
         more: {
           custom: data.custom,
@@ -67,6 +71,10 @@ var EditView = BaseView.extend({
       }
     }).then(function () {
       _this.updateStatus(false);
+    }, function (err) {
+      _.showMessage({
+        data: err,
+      });
     });
   },
   close: function () {
@@ -74,7 +82,7 @@ var EditView = BaseView.extend({
       scriptList.trigger('edit:close');
   },
   saveClose: function () {
-    this.save().then(this.close.bind(this));
+    this.save().then(this.close);
   },
   toggleButton: function (e) {
     if (this.metaView) {

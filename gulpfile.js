@@ -1,4 +1,3 @@
-const del = require('del');
 const gulp = require('gulp');
 const concat = require('gulp-concat');
 const uglify = require('gulp-uglify');
@@ -7,6 +6,7 @@ const merge2 = require('merge2');
 const through = require('through2');
 const gulpFilter = require('gulp-filter');
 const order = require('gulp-order');
+const eslint = require('gulp-eslint');
 const bom = require('./scripts/bom');
 const i18n = require('./scripts/i18n');
 const templateCache = require('./scripts/templateCache');
@@ -43,7 +43,14 @@ gulp.task('watch', () => {
   gulp.watch(paths.def, ['copy-def']);
 });
 
-gulp.task('clean', () => del(['dist']));
+gulp.task('eslint', () => (
+  gulp.src([
+    'src/**/*.js',
+    '!src/public/**',
+  ])
+  .pipe(eslint())
+  .pipe(eslint.format())
+));
 
 gulp.task('templates', () => {
   var stream = merge2([

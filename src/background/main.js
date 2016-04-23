@@ -17,7 +17,7 @@ function notify(options) {
 	if (Notification.permission == 'granted') show();
 	else Notification.requestPermission(function (e) {
 		if (e == 'granted') show();
-		else console.log('Notification: ' + options.body);
+		else console.warn('Notification: ' + options.body);
 	});
 }
 
@@ -137,7 +137,7 @@ var commands = {
     });
   },
   GetInjected: function (data, src) {
-    var data = {
+    data = {
       isApplied: _.options.get('isApplied'),
       injectMode: _.options.get('injectMode'),
       version: app.version,
@@ -252,9 +252,9 @@ vmdb.initialized.then(function () {
           error: null,
         });
       }, function (err) {
-        if (err) console.log(err.message, err.stack);
+        if (err && err.stack) console.error(err.message, err.stack);
         finish({
-          error: data,
+          error: err || 'Unknown error!',
         });
       });
     }

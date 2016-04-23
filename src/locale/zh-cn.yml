@@ -330,3 +330,6 @@ hintInputURL:
 buttonInstallFromURL:
   description: Button to ask for URL of a user script.
   message: 通过地址安装
+msgNamespaceConflict:
+  description: Message shown when namespace of the new script conflicts with an existent one.
+  message: 脚本命名空间冲突，请修改@name和@namespace！

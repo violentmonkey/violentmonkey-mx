@@ -86,7 +86,7 @@ var SettingsTab = BaseView.extend({
       try {
         vm = JSON.parse(text);
       } catch (e) {
-        console.log('Error parsing ViolentMonkey configuration.');
+        console.error('Error parsing ViolentMonkey configuration.');
       }
       vm = vm || {};
       _.forEach(vm.values, function (value, key) {
