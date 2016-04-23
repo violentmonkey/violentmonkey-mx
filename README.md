@@ -4,9 +4,4 @@ Violentmonkey for Maxthon provides a solution for Maxthon users to install and m
 
 Note: Some of the `GM_*` functions may not work due to the API limitations of Maxthon.
 
-Multiple language
----
-There are two ways to help with the translations:
-
-1. *(Recommended)* Go to <http://cotrans.geraldl.net>, and translate the desired language.
-1. You may also download `src/locale/en.ini` and translate it into your own language, and then make a pull request.
+For more information, click [here](https://violentmonkey.github.io/).

@@ -1,41 +1,102 @@
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
 const gutil = require('gulp-util');
 const through = require('through2');
-const fs = require('fs');
+const yaml = require('js-yaml');
 
-function Locale(lang, path, base) {
+function readFile(file) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(file, 'utf8', (err, data) => err ? reject(err) : resolve(data));
+  });
+}
+
+function parseIni(ini) {
+  const data = {};
+  ini.split('\n').forEach(line => {
+    line = line.trim();
+    const i = line.indexOf('=');
+    if (i < 0) return;
+    const key = line.slice(0, i);
+    let value = line.slice(i + 1);
+    if (/^".*?"$/.test(value)) try {
+      value = JSON.parse(value);
+    } catch (e) {
+      value = value.slice(1, -1);
+    }
+    data[key] = {
+      message: value,
+    };
+  });
+  return data;
+}
+
+function dumpIni(data) {
+  const out = Object.keys(data).map(function (key) {
+    let value = data[key].message;
+    const json = JSON.stringify(value);
+    if (json.slice(1, -1).trim() != value) value = json;
+    return key + '=' + value;
+  });
+  out.unshift('[lang]');
+  return out.join('\n');
+}
+
+function Locale(lang, _path, base) {
   this.lang = lang;
-  this.path = path;
+  const ext = this.ext = path.extname(_path);
+  if (ext) _path = _path.slice(0, -ext.length);
+  this.path = _path;
   this.base = base || '.';
   this.data = {};
-  this.loaded = this.read();
+  this.loaded = this.load();
 }
-Locale.prototype.read = function () {
-  return new Promise((resolve, reject) => {
-    const file = this.base + '/' + this.path;
-    fs.readFile(file, 'utf8', (err, data) => err ? reject(err) : resolve(data));
-  }).then((data) => {
-    const keys = new Set();
-    data.split(/\n/g).forEach((line) => {
-      line = line.trim();
-      const i = line.indexOf('=');
-      if (i < 0) return;
-      const key = line.slice(0, i);
-      let value = line.slice(i + 1);
-      if (/^".*?"$/.test(value)) try {
-        value = JSON.parse(value);
-      } catch (e) {
-        value = value.slice(1, -1);
-      }
-      this.data[key] = value;
-      keys.add(key);
-    });
-    return keys;
+Locale.prototype.extensions = ['.yml', '.ini'];
+Locale.prototype.load = function () {
+  const file = this.base + '/' + this.path;
+  return (
+    this.ext
+      ? readFile(file + this.ext)
+      : this.extensions.reduce((promise, ext) => promise.catch(() => (
+        readFile(file + ext)
+        .then(data => {
+          this.ext = ext;
+          return data;
+        })
+      )), Promise.reject())
+  ).then(data => {
+    const desc = {};
+    if (this.ext === '.ini') {
+      data = parseIni(data);
+    } else if (this.ext === '.yml') {
+      data = yaml.safeLoad(data);
+    } else {
+      throw 'Unknown extension name!';
+    }
+    for (let key in data) {
+      this.data[key] = data[key].message;
+      desc[key] = data[key].description;
+    }
+    return desc;
   });
 };
 Locale.prototype.get = function (key, def) {
   return this.data[key] || def;
+};
+Locale.prototype.dump = function (data, ext) {
+  ext = ext || this.ext;
+  if (ext === '.ini') {
+    data = dumpIni(data);
+  } else if (ext === '.yml') {
+    data = yaml.safeDump(data);
+  } else {
+    throw 'Unknown extension name!';
+  }
+  return {
+    path: this.path + ext,
+    data,
+  };
 };
 
 function Locales(prefix, base) {
@@ -43,64 +104,70 @@ function Locales(prefix, base) {
   this.base = base || '.';
   this.langs = [];
   this.data = {};
-  this.keys = {};
+  this.desc = {};
   this.loaded = this.load();
 }
 Locales.prototype.defaultLang = 'en';
+Locales.prototype.newLocaleItem = 'NEW_LOCALE_ITEM';
 Locales.prototype.getLanguages = function () {
   const localeDir = this.base + '/' + this.prefix;
   return new Promise((resolve, reject) => {
     fs.readdir(localeDir, (err, files) =>
-      err ? reject(err) : resolve(files.map((file) => file.replace(/\.ini$/, '')))
+      err ? reject(err) : resolve(files.map(file => file.replace(/\.(ini|yml)$/, '')))
     );
   });
 };
 Locales.prototype.load = function () {
-  return this.getLanguages().then((langs) => {
+  return this.getLanguages().then(langs => {
     this.langs = langs;
-    return Promise.all(langs.map((lang) => {
-      const locale = this.data[lang] = new Locale(lang, `${this.prefix}/${lang}.ini`, this.base);
+    return Promise.all(langs.map(lang => {
+      const locale = this.data[lang] = new Locale(lang, `${this.prefix}/${lang}`, this.base);
       return locale.loaded;
     }));
-  }).then((data) => {
-    const keys = data[this.langs.indexOf(this.defaultLang)];
-    keys.forEach((key) => {
-      this.keys[key] = false;
-    });
+  }).then(data => {
+    const desc = data[this.langs.indexOf(this.defaultLang)];
+    for (let key in desc) {
+      this.desc[key] = {
+        touched: false,
+        value: desc[key],
+      };
+    }
   });
 };
-Locales.prototype.extraneousMark = '[EXTRANEOUS] ';
 Locales.prototype.getData = function (lang, options) {
   options = options || {};
   const data = {};
   const langData = this.data[lang];
   const defaultData = options.useDefaultLang && lang != this.defaultLang && this.data[this.defaultLang];
-  for (let key in this.keys) {
-    if (options.touchedOnly && !this.keys[key]) continue;
-    data[key] = langData.get(key) || defaultData && defaultData.get(key) || '';
-    if (options.markUntouched && !this.keys[key] && !data[key].startsWith(this.extraneousMark))
-      data[key] = this.extraneousMark + data[key];
+  for (let key in this.desc) {
+    if (options.touchedOnly && !this.desc[key].touched) continue;
+    data[key] = {
+      description: this.desc[key].value || this.newLocaleItem,
+      message: langData.get(key) || defaultData && defaultData.get(key) || '',
+    };
+    if (options.markUntouched && !this.desc[key].touched)
+      data[key].touched = false;
   }
   return data;
 };
 Locales.prototype.dump = function (options) {
-  return this.langs.map((lang) => {
+  return this.langs.map(lang => {
     const data = this.getData(lang, options);
-    const string = '[lang]\n' + Object.keys(data).map(function (key) {
-      let value = data[key];
-      const json = JSON.stringify(value);
-      if (json.slice(1, -1).trim() != value) value = json;
-      return key + '=' + value;
-    }).join('\n');
+    const locale = this.data[lang];
+    const out = locale.dump(data, options.extension);
     return new gutil.File({
       base: '',
-      path: this.data[lang].path,
-      contents: new Buffer(string),
+      path: out.path,
+      contents: new Buffer(out.data),
     });
   });
 };
 Locales.prototype.touch = function (key) {
-  this.keys[key] = true;
+  let item = this.desc[key];
+  if (!item) item = this.desc[key] = {
+    value: this.newLocaleItem,
+  };
+  item.touched = true;
 };
 
 function extract(options) {
@@ -139,15 +206,17 @@ function extract(options) {
 
   function endStream(cb) {
     locales.loaded.then(() => {
-      keys.forEach((key) => {
+      keys.forEach(key => {
         locales.touch(key);
       });
       return locales.dump({
         touchedOnly: options.touchedOnly,
         useDefaultLang: options.useDefaultLang,
+        markUntouched: options.markUntouched,
+        extension: options.extension,
       });
-    }).then((files) => {
-      files.forEach((file) => {
+    }).then(files => {
+      files.forEach(file => {
         this.push(file);
       });
       cb();

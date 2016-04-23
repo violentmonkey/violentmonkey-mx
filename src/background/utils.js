@@ -1,6 +1,6 @@
 var scriptUtils = {
   isRemote: function (url) {
-    return url && !/^(file|data):/.test(url);
+    return url && !(/^(file|data):/.test(url));
   },
   fetch: function (url, type, headers) {
     var xhr = new XMLHttpRequest;
@@ -39,7 +39,7 @@ var scriptUtils = {
       if (flag == 1 && group1[0] == '@') {
         var key = group1.slice(1);
         var val = group2.replace(/^\s+|\s+$/g, '');
-        var value = meta[key];
+        value = meta[key];
         // multiple values allowed
         if (value && value.push) value.push(val);
         // only first value will be stored
@@ -164,23 +164,3 @@ var tester = function () {
     testURL: testURL,
   };
 }();
-
-_.forEach = function (arr, cb) {
-  var length = arr.length;
-  for (var i = 0; i < length; i ++) cb(arr[i], i, arr);
-  return arr;
-};
-_.slice = function () {
-  var empty = [];
-  var slice = empty.slice;
-  return function () {
-    return slice.apply(arguments[0] || empty, slice.call(arguments, 1));
-  };
-}();
-_.assign = Object.assign || function () {
-  var res = arguments[0];
-  res && _.forEach(_.slice(arguments, 1), function (obj) {
-    if (obj) for (var k in obj) res[k] = obj[k];
-  });
-  return res;
-};
