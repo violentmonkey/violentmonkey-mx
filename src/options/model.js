@@ -34,12 +34,13 @@ var ScriptList = Backbone.Collection.extend({
     var _this = this;
     _this.loading = true;
     _.sendMessage({cmd: 'GetData'}).then(function (data) {
+      _.options.setAll(data.options);
       _this.loading = false;
       _this.app = data.app;
       _.assign(_this.cache, data.cache);
       _this.reset(data.scripts);
       syncData.reset(data.sync);
-      _.options.setAll(data.options);
+      _.features.init(1);
     });
   },
 });
