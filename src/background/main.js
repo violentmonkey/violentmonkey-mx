@@ -143,8 +143,6 @@ var commands = {
       injectMode: _.options.get('injectMode'),
       version: app.version,
     };
-    // if(src.url == src.tab.url)
-      // chrome.tabs.sendMessage(src.tab.id, {cmd: 'GetBadge'});
     return data.isApplied
     ? vmdb.getScriptsByURL(src.url).then(function (res) {
       return _.assign(data, res);
@@ -188,10 +186,7 @@ var commands = {
           title: _.i18n('Warning'),
           body: _.i18n('msgWarnGrant', [meta.name||_.i18n('labelNoName')]),
           onClicked: function () {
-            _.mx.br.tabs.newTab({
-              activate: true,
-              url: 'http://wiki.greasespot.net/@grant',
-            });
+            _.tabs.create('http://wiki.greasespot.net/@grant');
             this.close();
           },
         });
@@ -215,10 +210,16 @@ var commands = {
   GetBadge: badges.get,
   SetBadge: badges.set,
   InstallScript: function (url, src) {
-    _.mx.br.tabs.newTab({
-      activate: true,
-      url: _.mx.rt.getPrivateUrl() + app.config + '#confirm/' + encodeURIComponent(url),
-    });
+    _.tabs.create(_.mx.rt.getPrivateUrl() + app.config + '#confirm/' + encodeURIComponent(url));
+  },
+  Authenticate: function (data, src) {
+    var service = sync.service(data);
+    service && service.authenticate && service.authenticate();
+    return false;
+  },
+  SyncStart: function (data, src) {
+    sync.sync(data && sync.service(data));
+    return false;
   },
 };
 
@@ -268,21 +269,6 @@ vmdb.initialized.then(function () {
 
 _.mx.rt.icon.setIconImage('icon' + (_.options.get('isApplied') ? '' : 'w'));
 
-_.browserEvents = function () {
-  function register(type, cb) {
-    var cbs = events[type];
-    if (!cbs) cbs = events[type] = [];
-    cbs.push(cb);
-  }
-  var events = {};
-  register('TAB_SWITCH', badges.get);
-  _.mx.br.onBrowserEvent = function (data) {
-    var cbs = events[data.type];
-    cbs && cbs.forEach(function (cb) {
-      cb(data);
-    });
-  };
-  return {
-    register: register,
-  };
-}();
+setTimeout(function () {
+  _.tabs.on('TAB_SWITCH', badges.get);
+});

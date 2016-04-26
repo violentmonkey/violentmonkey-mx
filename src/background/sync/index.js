@@ -481,14 +481,10 @@ var sync = function () {
   });
 
   setTimeout(function () {
-    _.browserEvents.register('ON_NAVIGATE', function (data) {
-      var url = data.url;
-      if (url && services.some(function (service) {
-        return service.checkAuthenticate && service.checkAuthenticate(url);
-      })) {
-        var tab = _.mx.br.tabs.getTabById(data.id);
-        tab && tab.close();
-      }
+    _.tabs.update(function (tab) {
+      tab.url && services.some(function (service) {
+        return service.checkAuthenticate && service.checkAuthenticate(tab.url);
+      }) && _.tabs.remove(tab.id);
     });
   });
 

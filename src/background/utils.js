@@ -164,3 +164,67 @@ var tester = function () {
     testURL: testURL,
   };
 }();
+
+var searchParams = {
+  load: function (string) {
+    return string.split('&').reduce(function (data, piece) {
+      parts = piece.split('=');
+      data[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+      return data;
+    }, {});
+  },
+  dump: function (dict) {
+    var qs = [];
+    for (var k in dict) {
+      qs.push(encodeURIComponent(k) + '=' + encodeURIComponent(dict[k]));
+    }
+    return qs.join('&');
+  },
+};
+
+_.tabs = {
+  create: function (url) {
+    _.mx.br.tabs.newTab({url: url});
+  },
+  update: function (cb) {
+    _.tabs.on('ON_NAVIGATE', function (data) {
+      cb({
+        id: data.id,
+        url: data.url,
+      });
+    });
+    // It seems that ON_NAVIGATE is not triggered for 302
+    // PAGE_LOADED is triggered after URL redirected
+    _.tabs.on('PAGE_LOADED', function (data) {
+      _.tabs.get(data.id).then(function (tab) {
+        cb({
+          id: tab.id,
+          url: tab.url,
+        });
+      });
+    });
+  },
+  get: function (id) {
+    return Promise.resolve(_.mx.br.tabs.getTabById(id));
+  },
+  remove: function (id) {
+    _.tabs.get(id).then(function (tab) {
+      tab && tab.close();
+    });
+  },
+  on: function () {
+    function register(type, cb) {
+      var cbs = events[type];
+      if (!cbs) cbs = events[type] = [];
+      cbs.push(cb);
+    }
+    var events = {};
+    _.mx.br.onBrowserEvent = function (data) {
+      var cbs = events[data.type];
+      cbs && cbs.forEach(function (cb) {
+        cb(data);
+      });
+    };
+    return register;
+  }(),
+};
