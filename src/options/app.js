@@ -31,12 +31,12 @@ BaseView.prototype.initI18n.call(window);
 
 var scriptList, syncData;
 function initMain() {
-  scriptList = new ScriptList();
-  syncData = new Backbone.Collection;
+  scriptList = new ScriptList;
+  syncData = new SyncList;
   _.mx.rt.listen('UpdateItem', function (res) {
     switch (res.cmd) {
     case 'sync':
-      syncData.reset(res.data);
+      syncData.set(res.data);
       break;
     case 'add':
       res.data.message = '';
