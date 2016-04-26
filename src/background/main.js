@@ -132,6 +132,7 @@ var commands = {
   GetData: function (data, src) {
     return vmdb.getData().then(function (data) {
       data.options = _.options.getAll();
+      data.sync = sync.states();
       data.app = app;
       return data;
     });
@@ -262,12 +263,26 @@ vmdb.initialized.then(function () {
   });
   setTimeout(autoUpdate, 2e4);
   _.options.get('startReload') && reinit();
+  sync.init();
 });
 
 _.mx.rt.icon.setIconImage('icon' + (_.options.get('isApplied') ? '' : 'w'));
-_.mx.br.onBrowserEvent = function (data) {
-  switch (data.type) {
-  case 'TAB_SWITCH':
-    badges.get();
+
+_.browserEvents = function () {
+  function register(type, cb) {
+    var cbs = events[type];
+    if (!cbs) cbs = events[type] = [];
+    cbs.push(cb);
   }
-};
+  var events = {};
+  register('TAB_SWITCH', badges.get);
+  _.mx.br.onBrowserEvent = function (data) {
+    var cbs = events[data.type];
+    cbs && cbs.forEach(function (cb) {
+      cb(data);
+    });
+  };
+  return {
+    register: register,
+  };
+}();

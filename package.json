@@ -27,7 +27,7 @@
     "html-minifier": "^2.1.0",
     "merge2": "^1.0.2",
     "ncp": "^2.0.0",
-    "sync-promise-lite": "^0.2.0",
+    "sync-promise-lite": "^0.2.1",
     "through2": "^2.0.1",
     "underscore": "^1.8.3"
   },

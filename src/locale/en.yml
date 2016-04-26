@@ -333,3 +333,36 @@ buttonInstallFromURL:
 msgNamespaceConflict:
   description: Message shown when namespace of the new script conflicts with an existent one.
   message: 'Script namespace conflicts! Please modify @name and @namespace.'
+labelSyncTo:
+  description: Label for sync service.
+  message: Sync to $1
+buttonAuthorized:
+  description: Button shown when permissions are already authorized for sync.
+  message: Authorized
+buttonAuthorizing:
+  description: Button shown when authorization is in progress.
+  message: Authorizing
+buttonAuthorize:
+  description: Button to authorize permissions for sync.
+  message: Authorize
+msgSyncInit:
+  description: Message shown when sync service is initializing.
+  message: Initializing...
+msgSyncInitError:
+  description: Message shown when sync fails in initialization.
+  message: 'Initializing error!'
+msgSyncError:
+  description: Message shown when sync failed.
+  message: 'Sync error!'
+msgSyncReady:
+  description: Message shown when sync will start soon.
+  message: Sync will start soon...
+msgSyncing:
+  description: Message shown when sync is in progress.
+  message: Sync in progress...
+lastSync:
+  description: Label for last sync timestamp.
+  message: Last sync at $1
+labelSync:
+  description: Label for sync options.
+  message: Sync

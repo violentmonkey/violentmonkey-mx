@@ -43,13 +43,19 @@
   function rejectPromise(promise, reason) {
     promise.$$status = REJECTED;
     promise.$$value = reason;
-    then(promise);
+    if (!then(promise)) {
+      console.error('Uncaught (in promise)', reason);
+    }
   }
   function then(promise) {
-    promise.$$then.forEach(function (func) {
-      syncCall(func);
-    });
-    promise.$$then = [];
+    length = promise.$$then.length;
+    if (length) {
+      promise.$$then.forEach(function (func) {
+        syncCall(func);
+      });
+      promise.$$then = [];
+    }
+    return length;
   }
 
   function Promise(resolver) {
@@ -57,7 +63,7 @@
     _this.$$status = PENDING;
     _this.$$value = null;
     _this.$$then = [];
-    resolver(partial(resolvePromise, this), partial(rejectPromise, this));
+    resolver(partial(resolvePromise, _this), partial(rejectPromise, _this));
   }
 
   Promise.prototype.then = function (okHandler, errHandler) {
@@ -67,13 +73,13 @@
         var result;
         var resolved = _this.$$status === FULFILLED;
         var handler = resolved ? okHandler : errHandler;
-        if (handler)
+        if (handler) {
           try {
             result = handler(_this.$$value);
           } catch (e) {
             return reject(e);
           }
-        else {
+        } else {
           result = _this.$$value;
           if (!resolved) return reject(result);
         }

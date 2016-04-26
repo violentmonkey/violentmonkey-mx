@@ -6,11 +6,12 @@ _.mx = {
 };
 _.mx.br = _.mx.rt.create('mx.browser');
 
-_.i18n = function (key, args) {
+_.i18n = function (key) {
 	if (!key) return '';
 	var data = _.mx.rt.locale.t(key);
-	args = args || [];
-	args.unshift(key);
+	var args = [].slice.call(arguments).slice(1);
+	if (Array.isArray(args[0])) args = args[0];
+	args.unshift('');
 	if (/^".*"$/.test(data)) try {
 		data = JSON.parse(data);
 	} catch (e) {
@@ -37,6 +38,11 @@ _.options = function () {
 		trackLocalFile: false,
 		injectMode: 0,
 		autoReload: false,
+    dropbox: {},
+    dropboxEnabled: false,
+    onedrive: {},
+    onedriveEnabled: false,
+    features: null,
 	};
 
   function getOption(key, def) {
@@ -128,3 +134,33 @@ _.getMessenger = function (commands) {
 _.injectContent = function (s) {
 	_.mx.br.executeScript('if(window.mx)try{' + s + '}catch(e){}');
 };
+
+_.features = function () {
+  var FEATURES = 'features';
+  var features = _.options.get(FEATURES);
+  if (!features || !features.data) features = {
+    data: {},
+  };
+
+  return {
+    init: init,
+    hit: hit,
+    isHit: isHit,
+  };
+
+  function init(version) {
+    if (features.version !== version) {
+      _.options.set(FEATURES, features = {
+        version: version,
+        data: {},
+      });
+    }
+  }
+  function hit(key) {
+    features.data[key] = 1;
+    _.options.set(FEATURES, features);
+  }
+  function isHit(key) {
+    return features.data[key];
+  }
+}();

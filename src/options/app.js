@@ -29,16 +29,27 @@ if (!Backbone.history.start())
 
 BaseView.prototype.initI18n.call(window);
 
-var scriptList;
+var scriptList, syncData;
 function initMain() {
   scriptList = new ScriptList();
+  syncData = new Backbone.Collection;
   _.mx.rt.listen('UpdateItem', function (res) {
-    if (res.cmd === 'add') {
+    switch (res.cmd) {
+    case 'sync':
+      syncData.reset(res.data);
+      break;
+    case 'add':
       res.data.message = '';
       scriptList.push(res.data);
-    } else if (res.data) {
-      var model = scriptList.get(res.data.id);
-      if (model) model.set(res.data);
+      break;
+    case 'update':
+      if (res.data) {
+        var model = scriptList.get(res.data.id);
+        if (model) model.set(res.data);
+      }
+      break;
+    case 'del':
+      scriptList.remove(res.data);
     }
   });
 }
