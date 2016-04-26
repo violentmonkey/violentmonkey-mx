@@ -164,3 +164,18 @@ _.features = function () {
     return features.data[key];
   }
 }();
+
+
+_.tabs = {
+  create: function (url) {
+    _.mx.br.tabs.newTab({url: url});
+  },
+  get: function (id) {
+    return Promise.resolve(_.mx.br.tabs.getTabById(id));
+  },
+  remove: function (id) {
+    _.tabs.get(id).then(function (tab) {
+      tab && tab.close();
+    });
+  },
+};

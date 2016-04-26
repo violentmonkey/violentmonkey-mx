@@ -182,10 +182,7 @@ var searchParams = {
   },
 };
 
-_.tabs = {
-  create: function (url) {
-    _.mx.br.tabs.newTab({url: url});
-  },
+_.assign(_.tabs, {
   update: function (cb) {
     _.tabs.on('ON_NAVIGATE', function (data) {
       cb({
@@ -204,14 +201,6 @@ _.tabs = {
       });
     });
   },
-  get: function (id) {
-    return Promise.resolve(_.mx.br.tabs.getTabById(id));
-  },
-  remove: function (id) {
-    _.tabs.get(id).then(function (tab) {
-      tab && tab.close();
-    });
-  },
   on: function () {
     function register(type, cb) {
       var cbs = events[type];
@@ -227,4 +216,4 @@ _.tabs = {
     };
     return register;
   }(),
-};
+});

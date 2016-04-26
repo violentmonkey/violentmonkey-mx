@@ -27,7 +27,6 @@ var app = new App();
 if (!Backbone.history.start())
   app.navigate('', {trigger: true, replace: true});
 
-BaseView.prototype.postrender.call(window);
 $(document).on('click', '[data-feature]', function (e) {
   var target = e.currentTarget;
   _.features.hit(target.dataset.feature);
