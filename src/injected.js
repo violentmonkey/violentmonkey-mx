@@ -176,6 +176,12 @@ var comm = {
     comm.did = comm.vmid + destId;
     document.addEventListener(comm.sid, comm['handle' + srcId].bind(comm), false);
     comm.load = comm.checkLoad = function(){};
+    // check whether the page is injectable via <script>, whether limited by CSP
+    try {
+      comm.injectable = (0, eval)('true');
+    } catch (e) {
+      comm.injectable = false;
+    }
   },
   post: function(data) {
     var e = document.createEvent("MutationEvent");
@@ -511,14 +517,18 @@ var comm = {
       code.push('}.call(this);');
       code = code.join('\n');
       var name = script.custom.name || script.meta.name || script.id;
-      // normal injection
-      try {
-        var func = new Function('g', code);
-      } catch(e) {
-        console.error('Syntax error in script: ' + name + '\n' + e.message);
-        return;
+      if (comm.injectable) {
+        // normal injection
+        try {
+          var func = new Function('g', code);
+        } catch(e) {
+          console.error('Syntax error in script: ' + name + '\n' + e.message);
+          return;
+        }
+        comm.runCode(name, func, wrapper);
+      } else {
+        console.warn('[Violentmonkey] Script injection failed due to CSP!');
       }
-      comm.runCode(name, func, wrapper);
     }
     function run(list) {
       while (list.length) buildCode(list.shift());
