@@ -738,14 +738,20 @@ document.addEventListener("DOMContentLoaded", updatePopup, false);
 
 // For installation
 function checkJS() {
-  if (!document.querySelector('title')) // plain text
+  if (!document.querySelector('title')) {
+    // plain text
     post('Background', {
       cmd: 'InstallScript',
-      data: location.href,
+      data: {
+        url: location.href,
+        from: document.referrer,
+        text: document.body.textContent,
+      },
     }, function () {
       if (history.length > 1) history.go(-1);
       else window.close();
     });
+  }
 }
 if (/\.user\.js$/.test(location.pathname)) {
   if (document.readyState == 'complete')

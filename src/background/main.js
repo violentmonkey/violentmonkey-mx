@@ -124,7 +124,7 @@ _.messenger = function () {
 
 var commands = {
   NewScript: function (data, src) {
-    return Promise.resolve(scriptUtils.newScript());
+    return scriptUtils.newScript();
   },
   RemoveScript: function (id, src) {
     return vmdb.removeScript(id);
@@ -146,7 +146,7 @@ var commands = {
     return data.isApplied
     ? vmdb.getScriptsByURL(src.url).then(function (res) {
       return _.assign(data, res);
-    }) : Promise.resolve(data);
+    }) : data;
   },
   UpdateScriptInfo: function (data, src) {
     return vmdb.updateScriptInfo(data.id, data).then(function (script) {
@@ -204,13 +204,16 @@ var commands = {
     });
   },
   ParseMeta: function (code, src) {
-    return Promise.resolve(scriptUtils.parseMeta(code));
+    return scriptUtils.parseMeta(code);
   },
   AutoUpdate: autoUpdate,
   GetBadge: badges.get,
   SetBadge: badges.set,
-  InstallScript: function (url, src) {
-    _.tabs.create(_.mx.rt.getPrivateUrl() + app.config + '#confirm/' + encodeURIComponent(url));
+  InstallScript: function (data, src) {
+    var params = encodeURIComponent(data.url);
+    if (data.from) params += '/' + encodeURIComponent(data.from);
+    if (data.text) _.cache.set(data.url, data.text);
+    _.tabs.create(_.mx.rt.getPrivateUrl() + app.config + '#confirm/' + params);
   },
   Authenticate: function (data, src) {
     var service = sync.service(data);
@@ -220,6 +223,9 @@ var commands = {
   SyncStart: function (data, src) {
     sync.sync(data && sync.service(data));
     return false;
+  },
+  GetFromCache: function (data, src) {
+    return _.cache.get(data) || null;
   },
 };
 
@@ -248,7 +254,8 @@ vmdb.initialized.then(function () {
     var func = commands[req.cmd];
     if (func) {
       var res = func(req.data, req.src);
-      if (res) return res.then(function (data) {
+      if (res === false) return;
+      return Promise.resolve(res).then(function (data) {
         finish({
           data: data,
           error: null,

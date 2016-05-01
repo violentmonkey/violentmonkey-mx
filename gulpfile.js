@@ -100,6 +100,7 @@ gulp.task('copy-files', () => {
     zindex: false,
   }))
   // Fix: Maxthon does not support internal links with query string
+  // Fixed in v4.9.3.200
   .pipe(replace(/url\(([^)]*)\?[^)]*\)/g, 'url($1)'))
 	.pipe(cssFilter.restore)
 	.pipe(jsFilter);

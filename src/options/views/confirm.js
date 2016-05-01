@@ -36,11 +36,10 @@ var ConfirmView = BaseView.extend({
       require: {},
       resources: {},
       dependencyOK: false,
-      isLocal: false,
+      isLocal: /^file:\/\/\//.test(_this.url),
     };
-    return _this.getScript(_this.url).then(function (res) {
-      _this.data.isLocal = !res.status;
-      _this.data.code = res.responseText;
+    return _this.getScript(_this.url).then(function (text) {
+      _this.data.code = text;
       _this.loadedEditor.then(function () {
         _this.editor.setValueAndFocus(_this.data.code);
       });
@@ -137,17 +136,26 @@ var ConfirmView = BaseView.extend({
   },
   getScript: function (url) {
     var _this = this;
-    var xhr = new XMLHttpRequest;
-    xhr.open('GET', url, true);
-    return new Promise(function (resolve, reject) {
-      xhr.onload = function () {
-        resolve(this);
-      };
-      xhr.onerror = function () {
-        _this.showMessage(_.i18n('msgErrorLoadingData'));
-        reject(this);
-      };
-      xhr.send();
+    return _.sendMessage({
+      cmd: 'GetFromCache',
+      data: url,
+    })
+    .then(function (text) {
+      return text || Promise.reject();
+    })
+    .catch(function () {
+      return new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest;
+        xhr.open('GET', url, true);
+        xhr.onload = function () {
+          resolve(this.responseText);
+        };
+        xhr.onerror = function () {
+          _this.showMessage(_.i18n('msgErrorLoadingData'));
+          reject(this);
+        };
+        xhr.send();
+      });
     });
   },
   getTimeString: function () {
