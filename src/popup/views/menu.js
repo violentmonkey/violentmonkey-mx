@@ -72,7 +72,7 @@ var MenuView = MenuBaseView.extend({
           name: _.i18n('menuFindScripts'),
           symbol: 'fa-hand-o-right',
           onClick: function (e) {
-            var matches = currentTab.url.match(/:\/\/(?:www\.)?([^\/]*)/);
+            var matches = app.currentTab.url.match(/:\/\/(?:www\.)?([^\/]*)/);
             _.tabs.create('https://greasyfork.org/scripts/search?q=' + matches[1]);
           },
         }, top, _this.menuCommands ? _this.menuCommands.$el : _this.menuEnable.$el);
