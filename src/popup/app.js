@@ -28,7 +28,7 @@ if (!Backbone.history.start())
     });
   }
   function scriptSymbol(data) {
-    return data ? 'fa-check' : 'fa-times';
+    return data ? 'check' : 'remove';
   }
   function scriptClick(e, model) {
     var data = !model.get('data');
@@ -82,7 +82,7 @@ if (!Backbone.history.start())
         return commandsMenu.get(name) || new MenuItem({
           id: name,
           name: name,
-          symbol: 'fa-hand-o-right',
+          symbol: 'right-hand',
           onClick: commandClick,
         });
       }));

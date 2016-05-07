@@ -10,7 +10,7 @@ var MenuView = MenuBaseView.extend({
     var top = _this.$el.children().first();
     _this.addMenuItem({
       name: _.i18n('menuManageScripts'),
-      symbol: 'fa-hand-o-right',
+      symbol: 'right-hand',
       onClick: function (e) {
         function startsWith(str1, str2) {
           return str1.slice(0, str2.length) === str2;
@@ -31,7 +31,7 @@ var MenuView = MenuBaseView.extend({
       name: _.i18n('menuScriptEnabled'),
       data: _.options.get('isApplied'),
       symbol: function (data) {
-        return data ? 'fa-check' : 'fa-times';
+        return data ? 'check' : 'remove';
       },
       onClick: function (e, model) {
         var isApplied = !model.get('data');
@@ -56,7 +56,7 @@ var MenuView = MenuBaseView.extend({
       if (!_this.menuCommands) {
         _this.menuCommands = _this.addMenuItem({
           name: _.i18n('menuCommands'),
-          symbol: 'fa-arrow-right',
+          symbol: 'arrow-right',
           onClick: function (e) {
             app.navigate('commands', {trigger: true});
           },
@@ -70,7 +70,7 @@ var MenuView = MenuBaseView.extend({
       if (!_this.menuSearch) {
         _this.menuSearch = _this.addMenuItem({
           name: _.i18n('menuFindScripts'),
-          symbol: 'fa-hand-o-right',
+          symbol: 'right-hand',
           onClick: function (e) {
             var matches = app.currentTab.url.match(/:\/\/(?:www\.)?([^\/]*)/);
             _.tabs.create('https://greasyfork.org/scripts/search?q=' + matches[1]);
