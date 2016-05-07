@@ -12,7 +12,7 @@
     var data = this.data;
     return new Promise(function (resolve, reject) {
       if (key in data) return resolve(data[key]);
-      var xhr = new XMLHttpRequest();
+      var xhr = new XMLHttpRequest;
       xhr.open('GET', key, true);
       xhr.onload = function () {
         resolve(data[key] = _.template(this.responseText, {variable: 'it'}));
@@ -79,3 +79,15 @@ var BaseView = Backbone.View.extend({
 });
 
 BaseView.prototype.postrender.call(window);
+
+!function () {
+  var xhr = new XMLHttpRequest;
+  xhr.open('GET', '/icons/sprite.svg', true);
+  xhr.onload = function () {
+    var div = document.createElement('div');
+    div.style.display = 'none';
+    div.innerHTML = xhr.responseText;
+    document.body.insertBefore(div, document.body.firstChild);
+  };
+  xhr.send();
+}();

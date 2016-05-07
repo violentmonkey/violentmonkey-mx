@@ -18,9 +18,6 @@ body {
 .menu ~ .menu > :first-child {
   border-top: 1px solid silver;
 }
-.fa {
-  width: 1em;
-}
 .menu-item {
   cursor: pointer;
   padding: 5px;
@@ -34,4 +31,12 @@ body {
 }
 .menu-item.disabled:hover {
   color: silver;
+}
+.icon {
+  width: 14px;
+  height: 14px;
+  vertical-align: bottom;
+}
+svg path {
+  fill: currentColor;
 }

@@ -265,6 +265,9 @@ fieldset.title {
 .script .pull-right {
   margin-left: 1em;
 }
+.script .icon {
+  height: 19px;
+}
 .script-info {
   margin-left: 50px;
   line-height: 1.5;
@@ -280,7 +283,6 @@ fieldset.title {
 }
 .script-name {
   font-weight: bold;
-  font-size: 1.17;
 }
 .script-author {
   max-width: 30%;
@@ -356,4 +358,12 @@ fieldset.title {
 }
 .message-show {
   transform: translateY(0);
+}
+.icon {
+  width: 14px;
+  height: 14px;
+  vertical-align: bottom;
+}
+svg path {
+  fill: currentColor;
 }
