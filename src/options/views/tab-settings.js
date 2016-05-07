@@ -34,19 +34,30 @@ var SettingsTab = BaseView.extend({
   name: 'settings',
   events: {
     'change [data-check]': 'updateCheckbox',
-    'change #sInjectMode': 'updateInjectMode',
+    // 'change #sInjectMode': 'updateInjectMode',
     'change #cUpdate': 'updateAutoUpdate',
     'click #bSelect': 'toggleSelection',
     'click #bImport': 'importFile',
     'click #bExport': 'exportData',
     'click #bVacuum': 'onVacuum',
+    'click [data-auth]': 'authenticate',
+    'change [data-sync]': 'toggleSync',
   },
   templateUrl: '/options/templates/tab-settings.html',
+  initialize: function () {
+    BaseView.prototype.initialize.call(this);
+    this.listenTo(syncData, 'reset', this.render);
+  },
   _render: function () {
     var options = _.options.getAll();
     this.$el.html(this.templateFn(options));
-    this.$('#sInjectMode').val(options.injectMode);
-    this.updateInjectHint();
+    var syncServices = this.$('.sync-services');
+    syncData.each(function (service) {
+      var serviceView = new SyncServiceView({model: service});
+      syncServices.append(serviceView.$el);
+    });
+    // this.$('#sInjectMode').val(options.injectMode);
+    // this.updateInjectHint();
     this.exportList = new ExportList;
     this.updateSuboptions();
   },
@@ -67,16 +78,16 @@ var SettingsTab = BaseView.extend({
   updateAutoUpdate: function (e) {
     _.sendMessage({cmd: 'AutoUpdate'});
   },
-  updateInjectHint: function () {
-    this.$('#sInjectMode+span').text([
-      _.i18n('hintInjectModeNormal'),
-      _.i18n('hintInjectModeAdvanced'),
-    ][this.$('#sInjectMode').val()]);
-  },
-  updateInjectMode: function (e) {
-    _.options.set('injectMode', e.target.value);
-    this.updateInjectHint();
-  },
+  // updateInjectHint: function () {
+  //   this.$('#sInjectMode+span').text([
+  //     _.i18n('hintInjectModeNormal'),
+  //     _.i18n('hintInjectModeAdvanced'),
+  //   ][this.$('#sInjectMode').val()]);
+  // },
+  // updateInjectMode: function (e) {
+  //   _.options.set('injectMode', e.target.value);
+  //   this.updateInjectHint();
+  // },
   toggleSelection: function () {
     this.exportList.toggleAll();
   },
@@ -190,13 +201,16 @@ var SettingsTab = BaseView.extend({
     function download(writer) {
       return new Promise(function (resolve, reject) {
         writer.close(function (blob) {
-          var url = URL.createObjectURL(blob);
-          $('<a>').attr({
-            href: url,
-            download: 'scripts.zip',
-          }).trigger('click');
+          resolve(blob);
+        });
+      }).then(function (blob) {
+        var url = URL.createObjectURL(blob);
+        $('<a>').attr({
+          href: url,
+          download: 'scripts.zip',
+        }).trigger('click');
+        setTimeout(function () {
           URL.revokeObjectURL(url);
-          resolve();
         });
       });
     }
@@ -253,5 +267,19 @@ var SettingsTab = BaseView.extend({
     _.sendMessage({cmd: 'Vacuum'}).then(function () {
       button.html(_.i18n('buttonVacuumed'));
     });
+  },
+  authenticate: function (e) {
+    _.sendMessage({cmd: 'Authenticate', data: e.target.dataset.auth});
+  },
+  toggleSync: function (e) {
+    if (e.target.checked) {
+      this.$('[data-sync]').each(function (i, target) {
+        if (target !== e.target && target.checked) {
+          target.checked = false;
+          _.updateCheckbox({target: target});
+        }
+      });
+      _.sendMessage({cmd: 'SyncStart'});
+    }
   },
 });

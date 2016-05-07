@@ -64,10 +64,7 @@ var MainTab = BaseView.extend({
   installFromURL: function () {
     var url = prompt(_.i18n('hintInputURL'));
     if (~url.indexOf('://')) {
-      _.mx.br.tabs.newTab({
-        activate: true,
-        url: _.mx.rt.getPrivateUrl() + scriptList.app.config + '#confirm/' + encodeURIComponent(url),
-      });
+      _.tabs.create(_.mx.rt.getPrivateUrl() + scriptList.app.config + '#confirm/' + encodeURIComponent(url));
     }
   },
 });

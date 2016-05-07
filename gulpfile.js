@@ -7,6 +7,7 @@ const through = require('through2');
 const gulpFilter = require('gulp-filter');
 const order = require('gulp-order');
 const eslint = require('gulp-eslint');
+const replace = require('gulp-replace');
 const bom = require('./scripts/bom');
 const i18n = require('./scripts/i18n');
 const templateCache = require('./scripts/templateCache');
@@ -98,6 +99,9 @@ gulp.task('copy-files', () => {
 	.pipe(cssnano({
     zindex: false,
   }))
+  // Fix: Maxthon does not support internal links with query string
+  // Fixed in v4.9.3.200
+  .pipe(replace(/url\(([^)]*)\?[^)]*\)/g, 'url($1)'))
 	.pipe(cssFilter.restore)
 	.pipe(jsFilter);
   if (isProd) stream = stream.pipe(uglify());

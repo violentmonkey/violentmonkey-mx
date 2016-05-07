@@ -20,8 +20,6 @@ var app = new App();
 if (!Backbone.history.start())
   app.navigate('', {trigger: true, replace: true});
 
-BaseView.prototype.initI18n.call(window);
-
 !function () {
   function commandClick(e, model) {
     _.mx.rt.post(app.currentTab.id, {

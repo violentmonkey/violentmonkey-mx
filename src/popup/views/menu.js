@@ -24,10 +24,7 @@ var MenuView = MenuBaseView.extend({
             return;
           }
         }
-        _.mx.br.tabs.newTab({
-          activate: true,
-          url: url,
-        });
+        _.tabs.create(url);
       },
     }, top);
     _this.menuEnable = _this.addMenuItem({
@@ -76,10 +73,7 @@ var MenuView = MenuBaseView.extend({
           symbol: 'fa-hand-o-right',
           onClick: function (e) {
             var matches = currentTab.url.match(/:\/\/(?:www\.)?([^\/]*)/);
-            _.mx.br.tabs.newTab({
-              activate: true,
-              url: 'https://greasyfork.org/scripts/search?q=' + matches[1],
-            });
+            _.tabs.create('https://greasyfork.org/scripts/search?q=' + matches[1]);
           },
         }, top, _this.menuCommands ? _this.menuCommands.$el : _this.menuEnable.$el);
       }
