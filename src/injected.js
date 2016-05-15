@@ -31,7 +31,7 @@ var _ = {
 function utf8decode (utftext) {
   var string = "";
   var i = 0;
-  var c = 0, c1 = 0, c2 = 0, c3 = 0;
+  var c = 0, c2 = 0, c3 = 0;
   while ( i < utftext.length ) {
     c = utftext.charCodeAt(i);
     if (c < 128) {string += String.fromCharCode(c);i++;}
@@ -181,6 +181,7 @@ var comm = {
       comm.injectable = (0, eval)('true');
     } catch (e) {
       comm.injectable = false;
+      console.warn('[Violentmonkey] Injection is blocked in this page due to CSP!')
     }
   },
   post: function(data) {
@@ -627,7 +628,7 @@ function httpRequest(details) {
     } catch(e) {}
     if (req.response && req.responseType == 'blob') {
       var r = new FileReader();
-      r.onload = function (e) {
+      r.onload = function (_e) {
         data.response = r.result;
         finish();
       };

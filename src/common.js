@@ -1,5 +1,3 @@
-'use strict';
-
 var _ = window._ || {};
 _.mx = {
 	rt: window.external.mxGetRuntime(),
@@ -164,7 +162,6 @@ _.features = function () {
     return features.data[key];
   }
 }();
-
 
 _.tabs = {
   create: function (url) {
