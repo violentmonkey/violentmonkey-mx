@@ -1,13 +1,13 @@
 const gulp = require('gulp');
 const concat = require('gulp-concat');
+const replace = require('gulp-replace');
+const footer = require('gulp-footer');
 const uglify = require('gulp-uglify');
 const cssnano = require('gulp-cssnano');
 const merge2 = require('merge2');
 const through = require('through2');
 const gulpFilter = require('gulp-filter');
-const order = require('gulp-order');
 const eslint = require('gulp-eslint');
-const replace = require('gulp-replace');
 const svgSprite = require('gulp-svg-sprite');
 const bom = require('./scripts/bom');
 const i18n = require('./scripts/i18n');
@@ -17,6 +17,7 @@ const isProd = process.env.NODE_ENV === 'production';
 
 const paths = {
   cache: 'src/cache.js',
+  def: 'src/def.json',
   templates: 'src/**/templates/*.html',
   jsBg: 'src/background/**/*.js',
   jsOptions: 'src/options/**/*.js',
@@ -32,7 +33,6 @@ const paths = {
     'src/*/*.html',
     'src/*/*.css',
   ],
-  def: 'src/def.json',
 };
 
 gulp.task('watch', () => {
@@ -65,29 +65,24 @@ gulp.task('templates', () => {
 
 gulp.task('js-bg', () => {
   var stream = gulp.src(paths.jsBg)
-  .pipe(concat('background/app.js'));
+  .pipe(concat('background/app.js'))
+  .pipe(footer(';define.use("app");'));
   if (isProd) stream = stream.pipe(uglify());
   return stream.pipe(gulp.dest('dist'));
 });
 
 gulp.task('js-options', () => {
   var stream = gulp.src(paths.jsOptions)
-  .pipe(order([
-    '**/tab-*.js',
-    '!**/app.js',
-  ]))
-  .pipe(concat('options/app.js'));
+  .pipe(concat('options/app.js'))
+  .pipe(footer(';define.use("app");'));
   if (isProd) stream = stream.pipe(uglify());
 	return stream.pipe(gulp.dest('dist'));
 });
 
 gulp.task('js-popup', () => {
   var stream = gulp.src(paths.jsPopup)
-  .pipe(order([
-    '**/base.js',
-    '!**/app.js',
-  ]))
-  .pipe(concat('popup/app.js'));
+  .pipe(concat('popup/app.js'))
+  .pipe(footer(';define.use("app");'));
   if (isProd) stream = stream.pipe(uglify());
 	return stream.pipe(gulp.dest('dist'));
 })
@@ -95,7 +90,12 @@ gulp.task('js-popup', () => {
 gulp.task('copy-files', () => {
 	const cssFilter = gulpFilter(['**/*.css'], {restore: true});
 	const jsFilter = gulpFilter(['**/*.js'], {restore: true});
-	var stream = gulp.src(paths.copy)
+	var stream = gulp.src(paths.copy);
+  if (isProd) stream = stream
+  .pipe(jsFilter)
+  .pipe(uglify())
+  .pipe(jsFilter.restore);
+  stream = stream
 	.pipe(cssFilter)
 	.pipe(cssnano({
     zindex: false,
@@ -104,10 +104,6 @@ gulp.task('copy-files', () => {
   // Fixed in v4.9.3.200
   .pipe(replace(/url\(([^)]*)\?[^)]*\)/g, 'url($1)'))
 	.pipe(cssFilter.restore)
-	.pipe(jsFilter);
-  if (isProd) stream = stream.pipe(uglify());
-  return stream
-	.pipe(jsFilter.restore)
 	.pipe(gulp.dest('dist/'));
 });
 
