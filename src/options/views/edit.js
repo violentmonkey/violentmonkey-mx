@@ -1,6 +1,7 @@
 define('views/Edit', function (require, _exports, module) {
   var BaseView = require('cache').BaseView;
   var MetaView = require('views/Meta');
+  var editor = require('editor');
   var models = require('models');
   var app = require('app');
 
@@ -34,7 +35,7 @@ define('views/Edit', function (require, _exports, module) {
         cmd: 'GetScript',
         data: it.id,
       }) : Promise.resolve(it);
-      _this.loadedEditor = _.initEditor({
+      _this.loadedEditor = editor.init({
         container: _this.$('.editor-code')[0],
         onsave: _this.save,
         onexit: _this.close,
