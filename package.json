@@ -1,6 +1,6 @@
 {
   "name": "Violentmonkey-mx",
-  "version": "2.5.2",
+  "version": "2.5.3",
   "description": "Violentmonkey for Maxthon",
   "scripts": {
     "clean": "node -e \"require('del')(['dist'])\"",
