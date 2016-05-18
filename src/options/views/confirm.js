@@ -1,6 +1,7 @@
 define('views/Confirm', function (require, _exports, module) {
   var BaseView = require('cache').BaseView;
   var ConfirmOptionsView = require('views/ConfirmOptions');
+  var editor = require('editor');
 
   module.exports = BaseView.extend({
     el: '#app',
@@ -23,7 +24,7 @@ define('views/Confirm', function (require, _exports, module) {
         url: _this.url,
       }));
       _this.showMessage(_.i18n('msgLoadingData'));
-      _this.loadedEditor = _.initEditor({
+      _this.loadedEditor = editor.init({
         container: _this.$('.editor-code')[0],
         readonly: true,
         onexit: _this.close,

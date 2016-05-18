@@ -211,7 +211,7 @@ var comm = {
   },
   runCode: function(name, func, wrapper) {
     try {
-      func.call(wrapper.window, wrapper);
+      func.call(wrapper.window || wrapper, wrapper);
     } catch (e) {
       console.error('Error running script: ' + name + '\n' + e.message);
     }
