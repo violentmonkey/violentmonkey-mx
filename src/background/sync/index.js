@@ -326,11 +326,11 @@ define('sync', function (require, _exports, module) {
           };
           xhr.send(options.body);
 
-          function requestError(reason) {
+          function requestError() {
             reject({
               url: options.url,
               status: xhr.status,
-              reason: reason || xhr.responseText,
+              xhr: xhr,
             });
           }
         });
