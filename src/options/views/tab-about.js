@@ -3,8 +3,8 @@ define('views/TabAbout', function (require, _exports, module) {
   var app = require('app');
 
   module.exports = BaseView.extend({
-    el: '#tab',
     name: 'about',
+    className: 'content',
     templateUrl: '/options/templates/tab-about.html',
     initialize: function () {
       var _this = this;
