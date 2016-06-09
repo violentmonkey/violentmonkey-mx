@@ -88,7 +88,8 @@ define('views/Script', function (require, _exports, module) {
       });
     },
     onRemoved: function () {
-      this.$el.remove();
+      this.remove();
+      // this.$el.remove();
     },
     onEnable: function () {
       var _this = this;
@@ -136,8 +137,7 @@ define('views/Script', function (require, _exports, module) {
   });
 
   function DND(e, cb) {
-    this.mousemove = this.mousemove.bind(this);
-    this.mouseup = this.mouseup.bind(this);
+    _.bindAll(this, 'mousemove', 'mouseup');
     if (e) {
       e.preventDefault();
       this.start(e);

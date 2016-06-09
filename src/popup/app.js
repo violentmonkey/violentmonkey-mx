@@ -1,9 +1,10 @@
 define('app', function (require, exports, _module) {
-  var MenuView = require('views/Menu');
-  var CommandsView = require('views/Command');
   var models = require('models');
   var Menu = models.Menu;
   var MenuItem = models.MenuItem;
+  var MenuView = require('views/Menu');
+  var CommandsView = require('views/Command');
+  var cache = require('cache');
 
   var scriptsMenu = exports.scriptsMenu = new Menu;
   var commandsMenu = exports.commandsMenu = new Menu;
@@ -12,21 +13,23 @@ define('app', function (require, exports, _module) {
     hasCommands: false,
   });
 
-  var App = Backbone.Router.extend({
+  var App = cache.BaseRouter.extend({
     routes: {
       '': 'renderMenu',
       commands: 'renderCommands',
     },
     renderMenu: function () {
-      this.view && this.view.stopListening();
-      this.view = new MenuView;
+      this.loadView('menu', function () {
+        return new MenuView;
+      });
     },
     renderCommands: function () {
-      this.view && this.view.stopListening();
-      this.view = new CommandsView;
+      this.loadView('commands', function () {
+        return new CommandsView;
+      });
     },
   });
-  var app = new App();
+  var app = new App('#app');
   Backbone.history.start() || app.navigate('', {trigger: true, replace: true});
   exports.navigate = app.navigate.bind(app);
 
