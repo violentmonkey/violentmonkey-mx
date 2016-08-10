@@ -1,15 +1,14 @@
 {
-  "name": "Violentmonkey-mx",
-  "version": "2.4.8",
+  "name": "violentmonkey-mx",
+  "version": "2.5.5",
   "description": "Violentmonkey for Maxthon",
   "scripts": {
-    "clean": "node -e \"require('del')(['dist'])\"",
-    "predev": "gulp build",
+    "clean": "gulp clean",
     "dev": "gulp watch",
     "i18n": "gulp i18n",
     "eslint": "gulp eslint",
     "update": "node scripts/updateLib.js",
-    "version": "npm run clean && npm run predev --production"
+    "build": "NODE_ENV=production gulp build"
   },
   "devDependencies": {
     "codemirror": "^5.14.2",
@@ -34,11 +33,11 @@
   "author": "Gerald <i@gerald.top>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Violentmonkey/Violentmonkey-mx.git"
+    "url": "https://github.com/violentmonkey/violentmonkey-mx.git"
   },
   "bugs": {
-    "url": "https://github.com/Violentmonkey/Violentmonkey-mx/issues"
+    "url": "https://github.com/violentmonkey/violentmonkey-mx/issues"
   },
-  "homepage": "https://github.com/Violentmonkey/Violentmonkey-mx",
+  "homepage": "https://github.com/violentmonkey/violentmonkey-mx",
   "license": "MIT"
 }

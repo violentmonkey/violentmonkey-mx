@@ -1,6 +1,7 @@
 define('app', function (require, exports, _module) {
   var VMDB = require('vmdb');
   var sync = require('sync');
+  var requests = require('requests');
   var badges = require('badges');
   var cache = require('utils/cache');
   var tabsUtils = require('utils/tabs');
@@ -131,6 +132,21 @@ define('app', function (require, exports, _module) {
       return scriptUtils.parseMeta(code);
     },
     AutoUpdate: autoUpdate,
+    GetRequestId: function (_data, _src) {
+      return requests.getRequestId();
+    },
+    HttpRequest: function (details, src) {
+      requests.httpRequest(details, function (res) {
+        _.messenger.send(src.id, {
+          cmd: 'HttpRequested',
+          data: res,
+        });
+      });
+      return false;
+    },
+    AbortRequest: function (id, _src) {
+      return requests.abortRequest(id);
+    },
     GetBadge: badges.get,
     SetBadge: badges.set,
     InstallScript: function (data, _src) {
@@ -182,10 +198,15 @@ define('app', function (require, exports, _module) {
   }
 
   _.messenger = function () {
+    function send(id, data) {
+      _.mx.rt.post(id, data);
+    }
+    function post(data) {
+      send('UpdateItem', data);
+    }
     return {
-      post: function (data) {
-        _.mx.rt.post('UpdateItem', data);
-      },
+      send: send,
+      post: post,
     };
   }();
 
@@ -203,7 +224,7 @@ define('app', function (require, exports, _module) {
       * }
       */
       function finish(res) {
-        _.mx.rt.post(req.src.id, {
+        _.messenger.send(req.src.id, {
           cmd: 'Callback',
           data: {
             id: req.callback,

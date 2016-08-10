@@ -4,6 +4,7 @@ const replace = require('gulp-replace');
 const footer = require('gulp-footer');
 const uglify = require('gulp-uglify');
 const cssnano = require('gulp-cssnano');
+const del = require('del');
 const merge2 = require('merge2');
 const through = require('through2');
 const gulpFilter = require('gulp-filter');
@@ -35,15 +36,7 @@ const paths = {
   ],
 };
 
-gulp.task('watch', () => {
-  gulp.watch([].concat(paths.cache, paths.templates), ['templates']);
-  gulp.watch(paths.jsBg, ['js-bg']);
-  gulp.watch(paths.jsOptions, ['js-options']);
-  gulp.watch(paths.jsPopup, ['js-popup']);
-  gulp.watch(paths.copy, ['copy-files']);
-  gulp.watch(paths.locales, ['copy-i18n']);
-  gulp.watch(paths.def, ['copy-def']);
-});
+gulp.task('clean', () => del(['dist']));
 
 gulp.task('eslint', () => (
   gulp.src([
@@ -173,3 +166,13 @@ gulp.task('i18n', () => (
 	.pipe(bom.add())
   .pipe(gulp.dest('src'))
 ));
+
+gulp.task('watch', ['build'], () => {
+  gulp.watch([].concat(paths.cache, paths.templates), ['templates']);
+  gulp.watch(paths.jsBg, ['js-bg']);
+  gulp.watch(paths.jsOptions, ['js-options']);
+  gulp.watch(paths.jsPopup, ['js-popup']);
+  gulp.watch(paths.copy, ['copy-files']);
+  gulp.watch(paths.locales, ['copy-i18n']);
+  gulp.watch(paths.def, ['copy-def']);
+});

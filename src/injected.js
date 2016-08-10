@@ -72,6 +72,9 @@ rt.listen(id, function (obj) {
         func(obj.data && obj.data.data);
       delete callbacks[obj.id];
     },
+    HttpRequested: function (res) {
+      comm.post({cmd: 'HttpRequested', data: res});
+    },
   };
   var func = maps[obj.cmd];
   if (func) func(obj.data);
@@ -585,9 +588,20 @@ function handleC(e){
       menus.push(data);
       updatePopup();
     },
-    GetRequestId: getRequestId,
-    HttpRequest: httpRequest,
-    AbortRequest: abortRequest,
+    GetRequestId: function () {
+      post('Background', {cmd: 'GetRequestId'}, function (id) {
+        comm.post({
+          cmd: 'GotRequestId',
+          data: id,
+        });
+      });
+    },
+    HttpRequest: function (data) {
+      post('Background', {cmd: 'HttpRequest', data: data});
+    },
+    AbortRequest: function (id) {
+      post('Background', {cmd: 'AbortRequest', data: id});
+    },
     NewTab: newTab,
   };
   var func = maps[req.cmd];
@@ -595,81 +609,6 @@ function handleC(e){
 }
 function newTab(url) {
   window.open(url);
-}
-
-// Requests
-var requests = {};
-function getRequestId() {
-  var id = _.getUniqId();
-  requests[id] = new XMLHttpRequest();
-  comm.post({cmd: 'GotRequestId', data: id});
-}
-function httpRequest(details) {
-  function callback(evt) {
-    function finish(){
-      comm.post({
-        cmd: 'HttpRequested',
-        data: {
-          id: details.id,
-          type: evt.type,
-          resType: req.responseType,
-          data: data
-        }
-      });
-    }
-    var data = {
-      readyState: req.readyState,
-      responseHeaders: req.getAllResponseHeaders(),
-      status: req.status,
-      statusText: req.statusText
-    };
-    try {
-      data.responseText = req.responseText;
-    } catch(e) {}
-    if (req.response && req.responseType == 'blob') {
-      var r = new FileReader();
-      r.onload = function (_e) {
-        data.response = r.result;
-        finish();
-      };
-      r.readAsDataURL(req.response);
-    } else {  // default `null` for blob and '' for text
-      data.response = req.response;
-      finish();
-    }
-    if (evt.type == 'loadend') delete requests[details.id];
-  }
-  var req;
-  if (details.id) req = requests[details.id];
-  else req = new XMLHttpRequest();
-  try {
-    // details.async=true;
-    req.open(details.method, details.url, true, details.user, details.password);
-    if (details.headers)
-      for (var i in details.headers)
-        req.setRequestHeader(i, details.headers[i]);
-    if (details.responseType) req.responseType = 'blob';
-    if (details.overrideMimeType) req.overrideMimeType(details.overrideMimeType);
-    [
-      'abort',
-      'error',
-      'load',
-      'loadend',
-      'progress',
-      'readystatechange',
-      'timeout'
-    ].forEach(function(evt) {
-      req['on' + evt] = callback;
-    });
-    req.send(details.data);
-  } catch (e) {
-    console.warn(e);
-  }
-}
-function abortRequest(id) {
-  var req = requests[id];
-  if (req) req.abort();
-  delete requests[id];
 }
 
 function objEncode(obj) {
