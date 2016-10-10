@@ -52,7 +52,14 @@
       return scriptUtils.newScript();
     },
     RemoveScript: function (id, _src) {
-      return vmdb.removeScript(id);
+      return vmdb.removeScript(id)
+      .then(function () {
+        sync.sync();
+        _.messenger.post({
+          cmd: 'del',
+          data: id,
+        });
+      });
     },
     GetData: function (_data, _src) {
       return vmdb.getData().then(function (data) {
@@ -77,7 +84,8 @@
       }) : data;
     },
     UpdateScriptInfo: function (data, _src) {
-      return vmdb.updateScriptInfo(data.id, data).then(function (script) {
+      return vmdb.updateScriptInfo(data.id, data)
+      .then(function (script) {
         _.messenger.post({
           cmd: 'update',
           data: script,
@@ -119,6 +127,7 @@
           },
         });
         _.messenger.post(res);
+        sync.sync();
         return res.data;
       });
     },
