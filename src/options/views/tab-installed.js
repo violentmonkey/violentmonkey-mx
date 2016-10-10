@@ -1,78 +1,40 @@
-define('views/TabInstalled', function (require, _exports, module) {
-  var BaseView = require('cache').BaseView;
-  var EditView = require('views/Edit');
-  var ScriptView = require('views/Script');
-  var models = require('models');
-  var app = require('app');
+var ScriptItem = require('./script');
+var Edit = require('./edit');
+var cache = require('../../cache');
+var _ = require('../../common');
+var utils = require('../utils');
+var events = utils.events;
+var store = utils.store;
 
-  module.exports = BaseView.extend({
-    name: 'main',
-    className: 'content no-pad',
-    templateUrl: '/options/templates/tab-installed.html',
-    events: {
-      'click #bNew': 'newScript',
-      'click #bUpdate': 'updateAll',
-      'click #bURL': 'installFromURL',
-    },
-    initialize: function () {
+module.exports = {
+  template: cache.get('./tab-installed.html'),
+  components: {
+    ScriptItem: ScriptItem,
+    Edit: Edit,
+  },
+  data: function () {
+    return {
+      script: null,
+      store: store,
+    };
+  },
+  computed: {
+    message: function () {
       var _this = this;
-      BaseView.prototype.initialize.call(_this);
-      _this.listenTo(app.scriptList, 'reset', _this.render);
-      _this.listenTo(app.scriptList, 'add', _this.addOne);
-      _this.listenTo(app.scriptList, 'add update', _this.setBackdrop);
-      _this.listenTo(app.scriptList, 'edit:open', function (model) {
-        _this.closeEdit();
-        _this.editView = new EditView({model: model.clone()});
-        _this.$el.append(_this.editView.$el);
-      });
-      _this.listenTo(app.scriptList, 'edit:close', _this.closeEdit);
-    },
-    remove: function () {
-      var _this = this;
-      _this.clear();
-      BaseView.prototype.remove.call(_this);
-    },
-    closeEdit: function () {
-      var _this = this;
-      if (_this.editView) {
-        _this.editView.remove();
-        _this.editView = null;
+      if (_this.store.loading) {
+        return _.i18n('msgLoading');
+      }
+      if (!_this.store.scripts.length) {
+        return _.i18n('labelNoScripts');
       }
     },
-    _render: function () {
-      var _this = this;
-      _this.clear();
-      _this.$el.html(_this.templateFn());
-      _this.$list = _this.$('.scripts');
-      _this.$bd = _this.$('.backdrop');
-      _this.$bdm = _this.$('.backdrop > div');
-      _this.setBackdrop();
-      _this.addAll();
-    },
-    setBackdrop: function () {
-      var _this = this;
-      if (app.scriptList.loading) {
-        _this.$bd.addClass('mask').show();
-        _this.$bdm.html(_.i18n('msgLoading'));
-      } else if (!app.scriptList.length) {
-        _this.$bd.removeClass('mask').show();
-        _this.$bdm.html(_.i18n('labelNoScripts'));
-      } else {
-        _this.$bd.hide();
-      }
-    },
-    addOne: function (script) {
-      var _this = this;
-      var view = new ScriptView({model: script});
-      _this.childViews.push(view);
-      _this.$list.append(view.$el);
-    },
-    addAll: function () {
-      app.scriptList.forEach(this.addOne, this);
-    },
+  },
+  methods: {
     newScript: function () {
-      _.sendMessage({cmd: 'NewScript'}).then(function (script) {
-        app.scriptList.trigger('edit:open', new models.Script(script));
+      var _this = this;
+      _.sendMessage({cmd: 'NewScript'})
+      .then(function (script) {
+        _this.script = script;
       });
     },
     updateAll: function () {
@@ -80,9 +42,51 @@ define('views/TabInstalled', function (require, _exports, module) {
     },
     installFromURL: function () {
       var url = prompt(_.i18n('hintInputURL'));
-      if (~url.indexOf('://')) {
-        _.tabs.create(_.mx.rt.getPrivateUrl() + app.scriptList.app.config + '#confirm/' + encodeURIComponent(url));
+      if (url && ~url.indexOf('://')) {
+        _.tabs.create(_.mx.rt.getPrivateUrl() + store.app.config + '#confirm/' + encodeURIComponent(url));
       }
     },
-  });
-});
+    editScript: function (id) {
+      var _this = this;
+      _this.script = _this.store.scripts.find(function (script) {
+        return script.id === id;
+      });
+    },
+    endEditScript: function () {
+      this.script = null;
+    },
+    moveScript: function (data) {
+      var _this = this;
+      if (data.from === data.to) return;
+      _.sendMessage({
+        cmd: 'Move',
+        data: {
+          id: _this.store.scripts[data.from].id,
+          offset: data.to - data.from,
+        },
+      })
+      .then(function () {
+        var scripts = _this.store.scripts;
+        var i = Math.min(data.from, data.to);
+        var j = Math.max(data.from, data.to);
+        var seq = [
+          scripts.slice(0, i),
+          scripts.slice(i, j + 1),
+          scripts.slice(j + 1),
+        ];
+        i === data.to
+          ? seq[1].unshift(seq[1].pop())
+          : seq[1].push(seq[1].shift());
+        _this.store.scripts = seq.concat.apply([], seq);
+      });
+    },
+  },
+  created: function () {
+    events.$on('EditScript', this.editScript);
+    events.$on('MoveScript', this.moveScript);
+  },
+  beforeDestroy: function () {
+    events.$off('EditScript', this.editScript);
+    events.$off('MoveScript', this.moveScript);
+  },
+};

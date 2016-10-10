@@ -1,111 +1,145 @@
-define('views/Edit', function (require, _exports, module) {
-  var BaseView = require('cache').BaseView;
-  var MetaView = require('views/Meta');
-  var editor = require('editor');
-  var models = require('models');
-  var app = require('app');
+function fromList(list) {
+  return (list || []).join('\n');
+}
+function toList(text) {
+  return text.split('\n')
+  .map(function (line) {
+    return line.trim();
+  })
+  .filter(function (item) {
+    return item;
+  });
+}
 
-  module.exports = BaseView.extend({
-    className: 'frame edit',
-    templateUrl: '/options/templates/edit.html',
-    events: {
-      'click .button-toggle': 'toggleButton',
-      'change [data-id]': 'updateCheckbox',
-      'click #editorSave': 'save',
-      'click #editorClose': 'close',
-      'click #editorSaveClose': 'saveClose',
+var Message = require('./message');
+var Editor = require('./editor');
+var cache = require('../../cache');
+var _ = require('../../common');
+
+module.exports = {
+  props: ['script', 'onClose'],
+  template: cache.get('./edit.html'),
+  components: {
+    Editor: Editor,
+  },
+  data: function () {
+    return {
+      canSave: false,
+      update: false,
+      code: '',
+      custom: {},
+    };
+  },
+  computed: {
+    placeholders: function () {
+      var script = this.script;
+      return {
+        name: script.meta.name,
+        homepageURL: script.meta.homepageURL,
+        updateURL: script.meta.updateURL || _.i18n('hintUseDownloadURL'),
+        downloadURL: script.meta.downloadURL || script.lastInstallURL,
+      };
     },
-    initialize: function () {
-      var _this = this;
-      _.bindAll(_this, 'save', 'close');
-      BaseView.prototype.initialize.call(_this);
-      _this.metaModel = new models.Meta(_this.model.toJSON(), {parse: true});
-      _this.listenTo(_this.metaModel, 'change', function (model) {
-        _this.model.set('custom', model.toJSON());
-      });
-      _this.listenTo(_this.model, 'change', function (_model) {
-        _this.updateStatus(true);
-      });
+  },
+  watch: {
+    custom: {
+      deep: true,
+      handler: function () {
+        this.canSave = true;
+      },
     },
-    _render: function () {
-      var _this = this;
-      var it = _this.model.toJSON();
-      _this.$el.html(_this.templateFn(it));
-      var gotScript = it.id ? _.sendMessage({
-        cmd: 'GetScript',
-        data: it.id,
-      }) : Promise.resolve(it);
-      _this.loadedEditor = editor.init({
-        container: _this.$('.editor-code')[0],
-        onsave: _this.save,
-        onexit: _this.close,
-        onchange: function (_e) {
-          _this.model.set('code', _this.editor.getValue());
-        },
+  },
+  mounted: function () {
+    var _this = this;
+    (_this.script.id ? _.sendMessage({
+      cmd: 'GetScript',
+      data: _this.script.id,
+    }) : Promise.resolve(_this.script))
+    .then(function (script) {
+      _this.update = script.update;
+      _this.code = script.code;
+      var custom = script.custom;
+      _this.custom = [
+        'name',
+        'homepageURL',
+        'updateURL',
+        'downloadURL',
+      ].reduce(function (value, key) {
+        value[key] = custom[key];
+        return value;
+      }, {
+        keepInclude: custom._include !== false,
+        keepMatch: custom._match !== false,
+        keepExclude: custom._exclude !== false,
+        include: fromList(custom.include),
+        match: fromList(custom.match),
+        exclude: fromList(custom.exclude),
+        'run-at': custom['run-at'] || '',
       });
-      Promise.all([
-        gotScript,
-        _this.loadedEditor,
-      ]).then(function (res) {
-        var script = res[0];
-        var editor = _this.editor = res[1];
-        editor.setValueAndFocus(script.code);
-        editor.clearHistory();
-        _this.updateStatus(false);
+      _this.$nextTick(function () {
+        _this.canSave = false;
       });
-    },
-    updateStatus: function (changed) {
-      this.changed = changed;
-      this.$('#editorSave').prop('disabled', !changed);
-      this.$('#editorSaveClose').prop('disabled', !changed);
-    },
+    });
+  },
+  methods: {
     save: function () {
       var _this = this;
-      var data = _this.model.toJSON();
+      var custom = _this.custom;
+      var value = [
+        'name',
+        'run-at',
+        'homepageURL',
+        'updateURL',
+        'downloadURL',
+      ].reduce(function (value, key) {
+        value[key] = custom[key];
+        return value;
+      }, {
+        _include: custom.keepInclude,
+        _match: custom.keepMatch,
+        _exclude: custom.keepExclude,
+        include: toList(custom.include),
+        match: toList(custom.match),
+        exclude: toList(custom.exclude),
+      });
       return _.sendMessage({
         cmd: 'ParseScript',
         data: {
-          id: data.id,
-          code: data.code,
+          id: _this.script.id,
+          code: _this.code,
           // User created scripts MUST be marked `isNew` so that
           // the backend is able to check namespace conflicts
-          isNew: !data.id,
+          isNew: !_this.script.id,
           message: '',
           more: {
-            custom: data.custom,
-            update: data.update,
-          }
-        }
-      }).then(function (script) {
-        _this.model.set('id', script.id);
-        _this.updateStatus(false);
+            custom: value,
+            update: _this.update,
+          },
+        },
+      })
+      .then(function (script) {
+        _this.script = script;
+        _this.canSave = false;
       }, function (err) {
-        _.showMessage({
-          data: err,
-        });
+        Message.open({text: err});
       });
     },
     close: function () {
-      if (!this.changed || confirm(_.i18n('confirmNotSaved')))
-      app.scriptList.trigger('edit:close');
-    },
-    saveClose: function () {
-      this.save().then(this.close);
-    },
-    toggleButton: function (e) {
-      if (this.metaView) {
-        this.$(e.target).removeClass('active');
-        this.metaView.remove();
-        this.metaView = null;
-      } else {
-        this.$(e.target).addClass('active');
-        this.metaView = new MetaView({model: this.metaModel});
-        this.metaView.$el.insertAfter(e.target);
+      var _this = this;
+      if (!_this.canSave || confirm(_.i18n('confirmNotSaved'))) {
+        _this.onClose();
       }
     },
-    updateCheckbox: function (e) {
-      var res = this.getValue(e.target);
-      this.model.set(res.key, res.value);
+    saveClose: function () {
+      var _this = this;
+      _this.save().then(function () {
+        _this.close();
+      });
     },
-  });
-});
+    contentChange: function (code) {
+      var _this = this;
+      _this.code = code;
+      _this.canSave = true;
+    },
+  },
+};

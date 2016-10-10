@@ -1,39 +1,26 @@
-define('views/Message', function (require, _exports, module) {
-  var BaseView = require('cache').BaseView;
+var cache = require('../../cache');
 
-  module.exports = BaseView.extend({
-    className: 'message',
-    templateUrl: '/options/templates/message.html',
-    transitionTime: 500,
-    initialize: function (options) {
-      var _this = this;
-      _this.options = options;
-      _.bindAll(_this, 'toggle', 'delay', 'remove');
-      BaseView.prototype.initialize.call(_this);
-    },
-    _render: function () {
-      var _this = this;
-      _this.$el
-      .html(_this.templateFn(_this.options))
-      .appendTo(document.body);
-      _this.delay(16)
-      .then(_this.toggle)
-      .then(function () {
-        return _this.delay(_this.options.delay || 2000);
-      })
-      .then(_this.toggle)
-      .then(_this.remove);
-    },
-    delay: function (time) {
-      if (time == null) time = this.transitionTime;
-      return new Promise(function (resolve, _reject) {
-        setTimeout(resolve, time);
-      });
-    },
-    toggle: function () {
-      var _this = this;
-      _this.$el.toggleClass('message-show');
-      return _this.delay();
+function init() {
+  if (div) return;
+  div = document.createElement('div');
+  document.body.appendChild(div);
+  new Vue({
+    el: div,
+    template: cache.get('./message.html'),
+    data: {
+      messages: messages,
     },
   });
-});
+}
+
+var div;
+var messages = [];
+
+exports.open = function (options) {
+  init();
+  messages.push(options);
+  setTimeout(function () {
+    var i = messages.indexOf(options);
+    ~i && messages.splice(i, 1);
+  }, 2000);
+};

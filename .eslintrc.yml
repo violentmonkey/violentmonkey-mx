@@ -12,17 +12,21 @@ rules:
     - 2
     - args: all
       argsIgnorePattern: ^_
+  keyword-spacing:
+    - 2
+  space-before-function-paren:
+    - 2
+    - anonymous: always
+      named: never
 
 env:
   browser: true
-  es6: true
+  node: true
 
 globals:
-  define: true
-  _: true
-  $: true
   zip: true
-  Backbone: true
+  Vue: true
   CodeMirror: true
+  Promise: true
 
 extends: 'eslint:recommended'

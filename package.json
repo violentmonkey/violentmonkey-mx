@@ -4,14 +4,15 @@
   "description": "Violentmonkey for Maxthon",
   "scripts": {
     "clean": "gulp clean",
+    "build": "gulp build",
     "dev": "gulp watch",
     "i18n": "gulp i18n",
-    "eslint": "gulp eslint",
-    "update": "node scripts/updateLib.js",
-    "build": "NODE_ENV=production gulp build"
+    "lint": "gulp lint",
+    "update": "node scripts/update"
   },
   "devDependencies": {
     "codemirror": "^5.14.2",
+    "define-commonjs": "^1.0.0",
     "del": "^2.2.0",
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.0",

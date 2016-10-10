@@ -1,4 +1,4 @@
-var _ = window._ || {};
+var _ = exports;
 _.mx = {
 	rt: window.external.mxGetRuntime(),
 };
@@ -15,7 +15,7 @@ _.i18n = function (key) {
 	} catch (e) {
 		data = data.slice(1, -1);
 	}
-	data = data.replace(/\$(?:\{(\d+)\}|(\d+))/g, function(match, group1, group2) {
+	data = data.replace(/\$(?:\{(\d+)\}|(\d+))/g, function (match, group1, group2) {
 		var arg = args[group1 || group2];
 		return arg == null ? match : arg;
 	});
@@ -23,6 +23,65 @@ _.i18n = function (key) {
 };
 
 _.options = function () {
+	function getOption(key, def) {
+    var value = localStorage.getItem(key), obj;
+    if (value)
+      try {
+        obj = JSON.parse(value);
+      } catch (e) {
+        obj = def;
+      }
+      else obj = def;
+      if (obj == null) obj = defaults[key];
+      return obj;
+  }
+
+  function setOption(key, value) {
+    if (key in defaults) {
+			localStorage.setItem(key, JSON.stringify(value));
+			[hooks[key], hooks['']].forEach(function (group) {
+				group && group.forEach(function (cb) {
+					cb(value, key);
+				});
+			});
+		}
+  }
+
+  function getAllOptions() {
+		return Object.keys(defaults).reduce(function (options, key) {
+			options[key] = getOption(key);
+			return options;
+		}, {});
+  }
+
+  function parseArgs(args) {
+    return args.length === 1 ? {
+      key: '',
+      cb: args[0],
+    } : {
+      key: args[0] || '',
+      cb: args[1],
+    };
+  }
+
+	function hook() {
+		var arg = parseArgs(arguments);
+		var list = hooks[arg.key];
+		if (!list) list = hooks[arg.key] = [];
+		list.push(arg.cb);
+		return function () {
+			unhook(arg.key, arg.cb);
+		};
+	}
+	function unhook() {
+		var arg = parseArgs(arguments);
+		var list = hooks[arg.key];
+		if (list) {
+			var i = list.indexOf(arg.cb);
+			~i && list.splice(i, 1);
+		}
+	}
+
 	var defaults = {
 		isApplied: true,
 		startReload: true,
@@ -42,42 +101,30 @@ _.options = function () {
     onedriveEnabled: false,
     features: null,
 	};
-
-  function getOption(key, def) {
-    var value = localStorage.getItem(key), obj;
-    if (value)
-      try {
-        obj = JSON.parse(value);
-      } catch(e) {
-        obj = def;
-      }
-      else obj = def;
-      if (obj == null) obj = defaults[key];
-      return obj;
-  }
-
-  function setOption(key, value) {
-    if (key in defaults)
-      localStorage.setItem(key, JSON.stringify(value));
-  }
-
-  function getAllOptions() {
-    var options = {};
-    for (var i in defaults) options[i] = getOption(i);
-    return options;
-  }
+	var hooks = {};
 
 	return {
 		get: getOption,
 		set: setOption,
 		getAll: getAllOptions,
+		hook: hook,
+		unhook: unhook,
 	};
 }();
 
-_.updateCheckbox = function (e) {
-  var target = e.target;
-  _.options.set(target.dataset.check, target.checked);
+_.debounce = function (func, time) {
+  function run(thisObj, args) {
+    timer = null;
+    func.apply(thisObj, args);
+  }
+  var timer;
+  return function (args) {
+    timer && clearTimeout(timer);
+    timer = setTimeout(run, time, this, args);
+  };
 };
+
+_.noop = function () {};
 
 _.zfill = function (num, length) {
   num = num.toString();
@@ -96,7 +143,7 @@ _.getLocaleString = function (meta, key) {
 	var languages = [navigator.language];
 	var i = languages[0].indexOf('-');
 	if (i > 0) languages.push(languages[0].slice(0, i));
-  var lang = _.find(languages, function (lang) {
+  var lang = languages.find(function (lang) {
     return (key + ':' + lang) in meta;
   });
   if (lang) key += ':' + lang;
@@ -132,36 +179,6 @@ _.getMessenger = function (commands) {
 _.injectContent = function (s) {
 	_.mx.br.executeScript('if(window.mx)try{' + s + '}catch(e){}');
 };
-
-_.features = function () {
-  var FEATURES = 'features';
-  var features = _.options.get(FEATURES);
-  if (!features || !features.data) features = {
-    data: {},
-  };
-
-  return {
-    init: init,
-    hit: hit,
-    isHit: isHit,
-  };
-
-  function init(version) {
-    if (features.version !== version) {
-      _.options.set(FEATURES, features = {
-        version: version,
-        data: {},
-      });
-    }
-  }
-  function hit(key) {
-    features.data[key] = 1;
-    _.options.set(FEATURES, features);
-  }
-  function isHit(key) {
-    return features.data[key];
-  }
-}();
 
 _.tabs = {
   create: function (url) {

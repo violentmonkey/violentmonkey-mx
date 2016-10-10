@@ -1,5 +1,3 @@
-'use strict';
-
 const fs = require('fs');
 const path = require('path');
 const gutil = require('gulp-util');
@@ -173,8 +171,8 @@ Locales.prototype.touch = function (key) {
 function extract(options) {
   const keys = new Set();
   const patterns = {
-    js: ['_\\.i18n\\(([\'"])(\\w+)\\1', 2],
-    html: ['data-i18n=([\'"]?)(\\w+)\\1', 2],
+    js: ['_\\.i18n\\(\'(\\w+)\'', 1],
+    html: ['i18n\\(\'(\\w+)\'\\)', 1],
   };
 
   const locales = new Locales(options.prefix, options.base);

@@ -1,11 +1,11 @@
-define('app', function (require, exports, _module) {
-  var VMDB = require('vmdb');
-  var sync = require('sync');
-  var requests = require('requests');
-  var badges = require('badges');
-  var cache = require('utils/cache');
-  var tabsUtils = require('utils/tabs');
-  var scriptUtils = require('utils/script');
+  var VMDB = require('./db');
+  var sync = require('./sync');
+  var requests = require('./requests');
+  var badges = require('./badges');
+  var cache = require('./utils/cache');
+  var tabsUtils = require('./utils/tabs');
+  var scriptUtils = require('./utils/script');
+  var _ = require('../common');
 
   var vmdb = exports.vmdb = new VMDB;
   var APP = {};
@@ -58,7 +58,10 @@ define('app', function (require, exports, _module) {
       return vmdb.getData().then(function (data) {
         data.options = _.options.getAll();
         data.sync = sync.states();
-        data.app = _.pick(APP, 'version', 'config');
+        data.app = ['version', 'config'].reduce(function (app, key) {
+          app[key] = APP[key];
+          return app;
+        }, {});
         return data;
       });
     },
@@ -70,7 +73,7 @@ define('app', function (require, exports, _module) {
       };
       return data.isApplied
       ? vmdb.getScriptsByURL(src.url).then(function (res) {
-        return _.assign(data, res);
+        return Object.assign(data, res);
       }) : data;
     },
     UpdateScriptInfo: function (data, _src) {
@@ -258,7 +261,3 @@ define('app', function (require, exports, _module) {
   _.mx.rt.icon.setIconImage('icon' + (_.options.get('isApplied') ? '' : 'w'));
 
   tabsUtils.on('TAB_SWITCH', badges.get);
-  
-  require('sync_dropbox');
-  require('sync_onedrive');
-});
