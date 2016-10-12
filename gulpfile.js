@@ -12,8 +12,9 @@ const definePack = require('define-commonjs/pack/gulp');
 const i18n = require('./scripts/i18n');
 const wrap = require('./scripts/wrap');
 const templateCache = require('./scripts/templateCache');
-const pkg = require('./package.json');
+const json = require('./scripts/json');
 const bom = require('./scripts/bom');
+const pkg = require('./package.json');
 const isProd = process.env.NODE_ENV === 'production';
 
 const paths = {
@@ -127,7 +128,11 @@ gulp.task('js', [
 gulp.task('manifest', () => (
 	gulp.src(paths.def)
 	.pipe(bom.strip())
-  .pipe(replace('__VERSION__', pkg.version))
+  .pipe(json(data => {
+    data[0].version = pkg.version;
+    data[0].service.debug = !isProd;
+    return data;
+  }))
 	.pipe(bom.add())
 	.pipe(gulp.dest('dist'))
 ));
