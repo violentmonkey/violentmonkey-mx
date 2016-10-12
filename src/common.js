@@ -1,3 +1,29 @@
+// Screw Maxthon: Start
+
+Object.assign = Object.assign || function () {
+  var obj = arguments[0];
+  for (var i = 1; i < arguments.length; i ++) {
+    var arg = arguments[i];
+    arg && Object.keys(arg).forEach(function (key) {
+      obj[key] = arg[key];
+    });
+  }
+  return obj;
+};
+
+String.prototype.startsWith = function (str) {
+  return this.slice(0, str.length) === str;
+};
+
+Array.prototype.find = function (predicate) {
+  var length = this.length;
+  for (var i = 0; i < length; i ++) {
+    var item = this[i];
+    if (predicate(item, i, this)) return item;
+  }
+};
+// Screw Maxthon: End
+
 var _ = exports;
 _.mx = {
   rt: window.external.mxGetRuntime(),
