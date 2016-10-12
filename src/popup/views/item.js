@@ -1,32 +1,26 @@
-define('views/MenuItem', function (require, _exports, module) {
-  var BaseView = require('cache').BaseView;
+function wrapHandler(name) {
+  return function () {
+    var _this = this;
+    var options = _this.options;
+    var handler = options[name];
+    handler && handler.call(_this, options);
+  };
+}
 
-  module.exports = BaseView.extend({
-    className: 'menu-item',
-    templateUrl: '/popup/templates/menuitem.html',
-    events: {
-      'click': 'onClick',
-    },
-    initialize: function () {
-      BaseView.prototype.initialize.call(this);
-      this.listenTo(this.model, 'change', this.render);
-      this.listenTo(this.model, 'remove', this.onRemove);
-    },
-    _render: function () {
-      var it = this.model.toJSON();
-      if (typeof it.symbol === 'function')
-      it.symbol = it.symbol(it.data);
-      this.$el.html(this.templateFn(it))
-      .attr('title', it.title === true ? it.name : it.title);
-      if (it.data === false) this.$el.addClass('disabled');
-      else this.$el.removeClass('disabled');
-    },
-    onClick: function (e) {
-      var onClick = this.model.get('onClick');
-      onClick && onClick(e, this.model);
-    },
-    onRemove: function () {
-      this.$el.remove();
-    },
-  });
-});
+var cache = require('../../cache');
+
+module.exports = {
+  props: ['options'],
+  template: cache.get('./item.html'),
+  data: function () {
+    // make options reactive
+    return {
+      reactiveOptions: this.options,
+    };
+  },
+  methods: {
+    onClick: wrapHandler('onClick'),
+    detailClick: wrapHandler('detailClick'),
+  },
+  mounted: wrapHandler('init'),
+};

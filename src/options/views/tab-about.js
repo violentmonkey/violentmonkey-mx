@@ -11,7 +11,7 @@ module.exports = {
     return data;
   },
   computed: {
-    version() {
+    version: function () {
       return this.store.app.version;
     },
   },

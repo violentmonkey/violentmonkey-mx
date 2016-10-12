@@ -18,16 +18,12 @@ module.exports = {
   computed: {
     bot: function () {
       var _this = this;
-      return _this.store.commands.map(function (item) {
+      return _this.store.domains.map(function (domain) {
         return {
-          name: item[0],
-          symbol: 'right-hand',
+          name: domain,
           className: 'ellipsis',
-          onClick: function (options) {
-            _.mx.rt.post(_this.store.currentTab.id, {
-              cmd: 'Command',
-              data: options.name,
-            });
+          onClick: function () {
+            _.tabs.create('https://greasyfork.org/scripts/search?q=' + encodeURIComponent(domain));
           },
         };
       });

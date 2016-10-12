@@ -162,7 +162,9 @@ VMDB.prototype.getValues = function (uris, tx) {
             var item = _this.readSQLResult(res)[0];
             try {
               if (item) data[uri] = JSON.parse(item.data);
-            } catch (e) {}
+            } catch (e) {
+              // ignore invalid JSON
+            }
             resolve(data);
           }, dbError(reject));
         });
@@ -612,9 +614,9 @@ VMDB.prototype.parseScript = function (data) {
       script.uri = scriptUtils.getNameURI(script);
       // use referer page as default homepage
       if (!meta.homepageURL && !script.custom.homepageURL && scriptUtils.isRemote(data.from))
-      script.custom.homepageURL = data.from;
+        script.custom.homepageURL = data.from;
       if (scriptUtils.isRemote(data.url))
-      script.custom.lastInstallURL = data.url;
+        script.custom.lastInstallURL = data.url;
       script.custom.modified = data.modified || Date.now();
       return _this.saveScript(script, tx);
     });
@@ -638,7 +640,7 @@ VMDB.prototype.checkUpdate = function () {
     var okHandler = function (xhr) {
       var meta = scriptUtils.parseMeta(xhr.responseText);
       if (scriptUtils.compareVersion(script.meta.version, meta.version) < 0)
-      return Promise.resolve();
+        return Promise.resolve();
       res.data.checking = false;
       res.data.message = _.i18n('msgNoUpdate');
       _.messenger.post(res);
@@ -680,19 +682,19 @@ VMDB.prototype.checkUpdate = function () {
     var _this = this;
     var promise = processes[script.id];
     if (!promise)
-    promise = processes[script.id] = check(script).then(function (code) {
-      delete processes[script.id];
-      return _this.parseScript({
-        id: script.id,
-        code: code,
-      }).then(function (res) {
-        res.data.checking = false;
-        _.messenger.post(res);
+      promise = processes[script.id] = check(script).then(function (code) {
+        delete processes[script.id];
+        return _this.parseScript({
+          id: script.id,
+          code: code,
+        }).then(function (res) {
+          res.data.checking = false;
+          _.messenger.post(res);
+        });
+      }, function () {
+        delete processes[script.id];
+        //return Promise.reject();
       });
-    }, function () {
-      delete processes[script.id];
-      //return Promise.reject();
-    });
     return promise;
   };
 }();

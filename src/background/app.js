@@ -117,15 +117,15 @@
       return vmdb.parseScript(data).then(function (res) {
         var meta = res.data.meta;
         if (!meta.grant.length && !_.options.get('ignoreGrant'))
-        notify({
-          id: 'VM-NoGrantWarning',
-          title: _.i18n('Warning'),
-          body: _.i18n('msgWarnGrant', [meta.name||_.i18n('labelNoName')]),
-          onClicked: function () {
-            tabsUtils.create('http://wiki.greasespot.net/@grant');
-            this.close();
-          },
-        });
+          notify({
+            id: 'VM-NoGrantWarning',
+            title: _.i18n('Warning'),
+            body: _.i18n('msgWarnGrant', [meta.name||_.i18n('labelNoName')]),
+            onClicked: function () {
+              tabsUtils.create('http://wiki.greasespot.net/@grant');
+              this.close();
+            },
+          });
         _.messenger.post(res);
         sync.sync();
         return res.data;
@@ -205,7 +205,7 @@
       var tab = _.mx.br.tabs.getTab(length);
       var protocol = tab.url.match(/^http(s?):/);
       if (protocol && (!protocol[1] || reloadHTTPS))
-      _.mx.br.executeScript(wrapped, tab.id);
+        _.mx.br.executeScript(wrapped, tab.id);
     }
   }
 

@@ -1,7 +1,5 @@
-!function () {
-
 // make sure this is an HTML page, ignore XML, etc.
-if (document.documentElement.tagName.toLowerCase() != 'html') return;
+if (document.documentElement.tagName.toLowerCase() !== 'html') return;
 
 // avoid running repeatedly due to new document.documentElement
 if (window.VM) return;
@@ -29,7 +27,7 @@ var _ = {
 * http://www.webtoolkit.info/javascript-utf8.html
 */
 function utf8decode(utftext) {
-  var string = "";
+  var string = '';
   var i = 0;
   var c = 0, c2 = 0, c3 = 0;
   while ( i < utftext.length ) {
@@ -184,16 +182,15 @@ var comm = {
       comm.injectable = (0, eval)('true');
     } catch (e) {
       comm.injectable = false;
-      console.warn('[Violentmonkey] Injection is blocked in this page due to CSP!')
+      console.warn('[Violentmonkey] Injection is blocked in this page due to CSP!');
     }
   },
   post: function (data) {
-    var e = document.createEvent("MutationEvent");
-    e.initMutationEvent(this.did, false, false, null, null, null, JSON.stringify(data), e.ADDITION);
+    var e = new CustomEvent(this.did, {detail: data});
     document.dispatchEvent(e);
   },
   handleR: function (e) {
-    var obj = JSON.parse(e.attrName);
+    var obj = e.detail;
     var comm = this;
     var maps = {
       LoadScript: comm.loadScript.bind(comm),
@@ -392,21 +389,21 @@ var comm = {
             var type = v[0];
             v = v.slice(1);
             switch (type) {
-              case 'n':
-                val = Number(v);
-                break;
-              case 'b':
-                val = v == 'true';
-                break;
-              case 'o':
-                try {
-                  val = JSON.parse(v);
-                } catch (e) {
-                  console.warn(e);
-                }
-                break;
-              default:
-                val = v;
+            case 'n':
+              val = Number(v);
+              break;
+            case 'b':
+              val = v == 'true';
+              break;
+            case 'o':
+              try {
+                val = JSON.parse(v);
+              } catch (e) {
+                console.warn(e);
+              }
+              break;
+            default:
+              val = v;
             }
           }
           return val;
@@ -421,11 +418,11 @@ var comm = {
         value: function (key, val) {
           var type = (typeof val)[0];
           switch (type) {
-            case 'o':
-              val = type + JSON.stringify(val);
-              break;
-            default:
-              val = type + val;
+          case 'o':
+            val = type + JSON.stringify(val);
+            break;
+          default:
+            val = type + val;
           }
           value[key] = val;
           saveValues();
@@ -557,14 +554,14 @@ var comm = {
       var list;
       if (script && script.enabled) {
         switch (script.custom['run-at'] || script.meta['run-at']) {
-          case 'document-start':
-            list = start;
-            break;
-          case 'document-idle':
-            list = idle;
-            break;
-          default:
-            list = end;
+        case 'document-start':
+          list = start;
+          break;
+        case 'document-idle':
+          list = idle;
+          break;
+        default:
+          list = end;
         }
         list.push(script);
       }
@@ -574,10 +571,10 @@ var comm = {
   },
 };
 
-var menus = []
+var menus = [];
 var ids = [];
-function handleC(e){
-  var req = JSON.parse(e.attrName);
+function handleC(e) {
+  var req = e.detail;
   var maps = {
     SetValue: function (data) {
       post('Background', {cmd: 'SetValue', data: data});
@@ -621,7 +618,7 @@ function objEncode(obj) {
   return '{' + list.join(',') + '}';
 }
 function inject(code) {
-  var script = document.createElement('script')
+  var script = document.createElement('script');
   var doc = document.body || document.documentElement;
   script.innerHTML = code;
   doc.appendChild(script);
@@ -672,7 +669,7 @@ window.setPopup = function () {
 window.setBadge = function () {
   post('Background', {cmd: 'SetBadge', data: badge.number});
 };
-document.addEventListener("DOMContentLoaded", updatePopup, false);
+document.addEventListener('DOMContentLoaded', updatePopup, false);
 
 // For installation
 function checkJS() {
@@ -697,5 +694,3 @@ if (/\.user\.js$/.test(location.pathname)) {
   else
     window.addEventListener('load', checkJS, false);
 }
-
-}();
