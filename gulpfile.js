@@ -1,7 +1,6 @@
 const del = require('del');
 const gulp = require('gulp');
 const concat = require('gulp-concat');
-const replace = require('gulp-replace');
 const merge2 = require('merge2');
 const cssnano = require('gulp-cssnano');
 const gulpFilter = require('gulp-filter');
@@ -158,8 +157,9 @@ gulp.task('copy-files', () => {
     zindex: false,
   }))
   // Fix: Maxthon does not support internal links with query string
+  // Remove hashstring in font-awesome URLs
   // Fixed in v4.9.3.200
-  .pipe(replace(/url\(([^)]*)\?[^)]*\)/g, 'url($1)'))
+  // .pipe(replace(/url\(([^)]*)\?[^)]*\)/g, 'url($1)'))
 	.pipe(cssFilter.restore)
 	.pipe(gulp.dest('dist/'));
 });
