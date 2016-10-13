@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "codemirror": "^5.14.2",
-    "define-commonjs": "^1.0.0",
+    "define-commonjs": "^1.0.1",
     "del": "^2.2.0",
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.0",

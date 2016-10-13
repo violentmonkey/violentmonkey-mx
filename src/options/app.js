@@ -11,8 +11,9 @@ function initMain() {
       Vue.set(store, key, data[key]);
     });
     store.loading = false;
+    _.options.reset(data.options);
     // utils.features.reset(data.version);
-    utils.features.reset('sync');
+    utils.features.reset('sync', data.options.features);
   });
   _.mx.rt.listen('UpdateItem', function (res) {
     switch (res.cmd) {
@@ -58,11 +59,10 @@ function loadHash() {
   });
 }
 
-var _ = require('../common');
 var utils = require('./utils');
+var _ = require('../common');
 var Main = require('./views/main');
 var Confirm = require('./views/confirm');
-_.sendMessage = _.getMessenger({});
 
 var store = Object.assign(utils.store, {
   loading: false,

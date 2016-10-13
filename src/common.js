@@ -22,6 +22,7 @@ Array.prototype.find = function (predicate) {
     if (predicate(item, i, this)) return item;
   }
 };
+
 // Screw Maxthon: End
 
 var _ = exports;
@@ -48,28 +49,65 @@ _.i18n = function (key) {
   return data;
 };
 
+function normalizeKeys(key) {
+  if (!key) key = [];
+  if (!Array.isArray(key)) key = key.toString().split('.');
+  return key;
+}
+
+_.normalizeKeys = normalizeKeys;
+
+_.object = function () {
+  function get(obj, key, def) {
+    var keys = normalizeKeys(key);
+    for (var i = 0, len = keys.length; i < len; i ++) {
+      if (!obj) return def;
+      obj = obj[keys[i]];
+    }
+    return obj;
+  }
+  function set(obj, key, val) {
+    var keys = normalizeKeys(key);
+    if (!keys.length) return val;
+    var sub = obj = obj || {};
+    for (var i = 0, len = keys.length - 1; i < len; i ++) {
+      key = keys[i];
+      sub = sub[key] = sub[key] || {};
+    }
+    sub[keys[keys.length - 1]] = val;
+    return obj;
+  }
+  return {
+    get: get,
+    set: set,
+  };
+}();
+
 _.options = function () {
   function getOption(key, def) {
+    var keys = normalizeKeys(key);
+    key = keys[0];
     var value = localStorage.getItem(key), obj;
-    if (value)
+    if (value) {
       try {
         obj = JSON.parse(value);
       } catch (e) {
-        obj = def;
+        // ignore invalid JSON
       }
-    else obj = def;
+    }
     if (obj == null) obj = defaults[key];
-    return obj;
+    if (obj == null) obj = def;
+    return keys.length > 1 ? _.object.get(obj, keys.slice(1), def) : obj;
   }
 
   function setOption(key, value) {
+    var keys = normalizeKeys(key);
+    key = keys[0];
     if (key in defaults) {
+      if (keys.length > 1) {
+        value = _.object.set(getOption(key), keys.slice(1), value);
+      }
       localStorage.setItem(key, JSON.stringify(value));
-      [hooks[key], hooks['']].forEach(function (group) {
-        group && group.forEach(function (cb) {
-          cb(value, key);
-        });
-      });
     }
   }
 
@@ -78,34 +116,6 @@ _.options = function () {
       options[key] = getOption(key);
       return options;
     }, {});
-  }
-
-  function parseArgs(args) {
-    return args.length === 1 ? {
-      key: '',
-      cb: args[0],
-    } : {
-      key: args[0] || '',
-      cb: args[1],
-    };
-  }
-
-  function hook() {
-    var arg = parseArgs(arguments);
-    var list = hooks[arg.key];
-    if (!list) list = hooks[arg.key] = [];
-    list.push(arg.cb);
-    return function () {
-      unhook(arg.key, arg.cb);
-    };
-  }
-  function unhook() {
-    var arg = parseArgs(arguments);
-    var list = hooks[arg.key];
-    if (list) {
-      var i = list.indexOf(arg.cb);
-      ~i && list.splice(i, 1);
-    }
   }
 
   var defaults = {
@@ -122,19 +132,14 @@ _.options = function () {
     injectMode: 0,
     autoReload: false,
     dropbox: {},
-    dropboxEnabled: false,
     onedrive: {},
-    onedriveEnabled: false,
     features: null,
   };
-  var hooks = {};
 
   return {
     get: getOption,
     set: setOption,
     getAll: getAllOptions,
-    hook: hook,
-    unhook: unhook,
   };
 }();
 

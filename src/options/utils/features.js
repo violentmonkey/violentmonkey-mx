@@ -1,18 +1,22 @@
 var _ = require('../../common');
 
-var key = 'features';
-var features = _.options.get(key);
-if (!features || !features.data) features = {
-  data: {},
-};
-
-exports.reset = function (version) {
-  if (features.version !== version) {
-    _.options.set(key, features = {
+function init(data, version) {
+  features = data;
+  if (!features || !features.data || features.version !== version) {
+    features = {
       version: version,
       data: {},
-    });
+    };
+    return true;
   }
+}
+
+var key = 'features';
+var features;
+init();
+
+exports.reset = function (version, data) {
+  init(data, version) && _.options.set(key, features);
 };
 
 Vue.directive('feature', {

@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
-var events = require('../utils/events');
-var app = require('../app');
-var tabs = require('../utils/tabs');
 var _ = require('../../common');
+var app = require('../app');
+var events = require('../utils/events');
+var tabs = require('../utils/tabs');
 
 setTimeout(function () {
   // import sync modules
