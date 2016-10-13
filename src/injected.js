@@ -5,23 +5,27 @@ if (document.documentElement.tagName.toLowerCase() !== 'html') return;
 if (window.VM) return;
 window.VM = 1;
 
-var _ = {
-  getUniqId: function () {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  },
-
-  includes: function (arr, item) {
-    var length = arr.length;
-    for (var i = 0; i < length; i ++)
-      if (arr[i] === item) return true;
-    return false;
-  },
-  forEach: function (arr, func, context) {
-    var length = arr.length;
-    for (var i = 0; i < length; i ++)
-      if (func.call(context, arr[i], i, arr) === false) break;
-  },
-};
+function getUniqId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+function includes(arr, item) {
+  for (var i = arr.length; i --;) {
+    if (arr[i] === item) return true;
+  }
+  return false;
+}
+function forEach(arr, func) {
+  var length = arr && arr.length || 0;
+  for (var i = 0; i < length; i ++) func(arr[i], i, arr);
+}
+function map(arr, func) {
+  var comm = this;
+  var res = [];
+  comm.forEach(arr, function (item, i) {
+    res.push(func(item, i, arr));
+  });
+  return res;
+}
 
 /**
 * http://www.webtoolkit.info/javascript-utf8.html
@@ -49,12 +53,12 @@ function utf8decode(utftext) {
 
 // Messages
 var rt = window.external.mxGetRuntime();
-var id = _.getUniqId();
+var id = getUniqId();
 var callbacks = {};
 function post(target, data, callback) {
   data.src = {id: id, url: window.location.href};
   if (callback) {
-    data.callback = _.getUniqId();
+    data.callback = getUniqId();
     callbacks[data.callback] = callback;
   }
   rt.post(target, data);
@@ -159,16 +163,17 @@ function getWrapper() {
 }
 // Communicator
 var comm = {
-  vmid: 'VM_' + _.getUniqId(),
+  vmid: 'VM_' + getUniqId(),
   state: 0,
   utf8decode: utf8decode,
-  getUniqId: _.getUniqId,
+  getUniqId: getUniqId,
 
   // Array functions
   // to avoid using prototype functions
   // since they may be changed by page scripts
-  includes: _.includes,
-  forEach: _.forEach,
+  includes: includes,
+  forEach: forEach,
+  map: map,
   props: Object.getOwnPropertyNames(window),
 
   init: function (srcId, destId) {
@@ -209,9 +214,9 @@ var comm = {
     var func = maps[obj.cmd];
     if (func) func(obj.data);
   },
-  runCode: function (name, func, wrapper) {
+  runCode: function (name, func, args, thisObj) {
     try {
-      func.call(wrapper.window || wrapper, wrapper);
+      func.apply(thisObj, args);
     } catch (e) {
       console.error('Error running script: ' + name + '\n' + e.message);
     }
@@ -304,21 +309,10 @@ var comm = {
     };
   },
   getWrapper: getWrapper,
-  wrapGM: function (script, value, cache) {
-    // Add GM functions
-    // Reference: http://wiki.greasespot.net/Greasemonkey_Manual:API
-    var comm = this;
-    var gm = {};
-    var grant = script.meta.grant || [];
-    var urls = {};
-    if (!grant.length || grant.length == 1 && grant[0] == 'none')
-      // @grant none
-      grant.pop();
-    else {
-      gm['window'] = comm.getWrapper();
+  wrapGM: function (script, cache) {
+    function getValues() {
+      return comm.values[script.uri];
     }
-    value = value || {};
-    if (!comm.includes(grant, 'unsafeWindow')) grant.push('unsafeWindow');
     function propertyToString() {
       return '[Violentmonkey property]';
     }
@@ -326,18 +320,31 @@ var comm = {
       if ('value' in prop) prop.writable = false;
       prop.configurable = false;
       Object.defineProperty(obj, name, prop);
-      if (typeof obj[name] == 'function')
-        obj[name].toString = propertyToString;
+      if (typeof obj[name] == 'function') obj[name].toString = propertyToString;
     }
     function saveValues() {
       comm.post({
         cmd: 'SetValue',
         data: {
           uri: script.uri,
-          values: value,
+          values: getValues(),
         },
       });
     }
+    // Add GM functions
+    // Reference: http://wiki.greasespot.net/Greasemonkey_Manual:API
+    var comm = this;
+    var gm = {};
+    var grant = script.meta.grant || [];
+    var urls = {};
+    if (!grant.length || grant.length == 1 && grant[0] == 'none') {
+      // @grant none
+      grant.pop();
+    } else {
+      gm['window'] = comm.getWrapper();
+    }
+    if (!comm.includes(grant, 'unsafeWindow')) grant.push('unsafeWindow');
+    if (!comm.includes(grant, 'GM_info')) grant.push('GM_info');
     var resources = script.meta.resources || {};
     var gm_funcs = {
       unsafeWindow: {value: window},
@@ -360,7 +367,7 @@ var comm = {
           addProperty('scriptMetaStr', {value: m ? m[1] : ''}, obj);
 
           // whether update is allowed
-          addProperty('scriptWillUpdate', {value: script.update}, obj);
+          addProperty('scriptWillUpdate', {value: !!script.update}, obj);
 
           // Violentmonkey specific data
           addProperty('version', {value: comm.version}, obj);
@@ -378,13 +385,15 @@ var comm = {
       },
       GM_deleteValue: {
         value: function (key) {
-          delete value[key];
+          var values = getValues();
+          delete values[key];
           saveValues();
         },
       },
       GM_getValue: {
         value: function (key, val) {
-          var v = value[key];
+          var values = getValues();
+          var v = values[key];
           if (v) {
             var type = v[0];
             v = v.slice(1);
@@ -411,7 +420,7 @@ var comm = {
       },
       GM_listValues: {
         value: function () {
-          return Object.getOwnPropertyNames(value);
+          return Object.getOwnPropertyNames(getValues());
         },
       },
       GM_setValue: {
@@ -424,7 +433,8 @@ var comm = {
           default:
             val = type + val;
           }
-          value[key] = val;
+          var values = getValues();
+          values[key] = val;
           saveValues();
         },
       },
@@ -439,32 +449,32 @@ var comm = {
       },
       GM_getResourceURL: {
         value: function (name) {
-          for (var i in resources) if (name == i) {
-            i = resources[i];
-            var url = urls[i];
+          for (var k in resources) if (name == k) {
+            var key = resources[k];
+            var url = urls[key];
             if (!url) {
-              var cc = cache[i];
+              var cc = cache[key];
               if (cc) {
-                cc = window.atob(cc);
-                var b = new window.Uint8Array(cc.length);
-                for (var j = 0; j < cc.length; j ++)
-                  b[j] = cc.charCodeAt(j);
-                b = new Blob([b]);
-                urls[i] = url = URL.createObjectURL(b);
+                // Binary string is not supported by blob constructor,
+                // so we have to transform it into array buffer.
+                var bin = window.atob(cc);
+                var arr = new window.Uint8Array(bin.length);
+                for (var i = 0; i < bin.length; i ++) {
+                  arr[i] = bin.charCodeAt(i);
+                }
+                var b = new Blob([arr]);
+                urls[key] = url = URL.createObjectURL(b);
+              } else {
+                url = key;
               }
             }
+            return url;
           }
-          return url;
         }
       },
       GM_addStyle: {
         value: function (css) {
-          if (document.head) {
-            var style = document.createElement('style');
-            style.innerHTML = css;
-            document.head.appendChild(style);
-            return style;
-          }
+          comm.post({cmd: 'AddStyle', data: css});
         },
       },
       GM_log: {
@@ -494,39 +504,41 @@ var comm = {
     };
     comm.forEach(grant, function (name) {
       var prop = gm_funcs[name];
-      if (prop) addProperty(name, prop, gm);
+      prop && addProperty(name, prop, gm);
     });
     return gm;
   },
   loadScript: function (data) {
     function buildCode(script) {
       var require = script.meta.require || [];
-      var wrapper = comm.wrapGM(script, data.values[script.uri], data.cache);
-      var code = [];
-      var part;
-      comm.forEach(Object.getOwnPropertyNames(wrapper), function (name) {
-        code.push(name + '=this["' + name + '"]=g["' + name + '"]');
+      var wrapper = comm.wrapGM(script, data.cache);
+      // Must use Object.getOwnPropertyNames to list unenumerable properties
+      var wrapperKeys = Object.getOwnPropertyNames(wrapper);
+      var code = [
+        comm.map(wrapperKeys, function (name) {
+          return 'this["' + name + '"]=' + name;
+        }).join(';') + ';with(this)!function(){',
+      ];
+      comm.forEach(require, function (key) {
+        var script = data.require[key];
+        script && code.push(script);
       });
-      if (code.length)
-        code = ['var ' + code.join(',') + ';delete g;with(this)!function(){'];
-      else
-        code = [];
-      for (var i = 0; i < require.length; i ++)
-        if ((part = data.require[require[i]])) code.push(part);
       // wrap code to make 'use strict' work
       code.push('!function(){' + script.code + '\n}.call(this)');
       code.push('}.call(this);');
       code = code.join('\n');
       var name = script.custom.name || script.meta.name || script.id;
+      var args = comm.map(wrapperKeys, function (key) {return wrapper[key];});
+      var thisObj = wrapper.window || wrapper;
       if (comm.injectable) {
         // normal injection
         try {
-          var func = new Function('g', code);
+          var func = Function.apply(null, wrapperKeys.concat([code]));
         } catch (e) {
           console.error('Syntax error in script: ' + name + '\n' + e.message);
           return;
         }
-        comm.runCode(name, func, wrapper);
+        comm.runCode(name, func, args, thisObj);
       } else {
         console.warn('[Violentmonkey] Script injection failed due to CSP!');
       }
@@ -540,6 +552,7 @@ var comm = {
     var end = [];
     comm.command = {};
     comm.version = data.version;
+    comm.values = {};
     // reset load and checkLoad
     comm.load = function () {
       run(end);
@@ -550,19 +563,15 @@ var comm = {
         comm.state = 1;
       if (comm.state) comm.load();
     };
+    var listMap = {
+      'document-start': start,
+      'document-idle': idle,
+      'document-end': end,
+    };
     comm.forEach(data.scripts, function (script) {
-      var list;
+      comm.values[script.uri] = data.values[script.uri] || {};
       if (script && script.enabled) {
-        switch (script.custom['run-at'] || script.meta['run-at']) {
-        case 'document-start':
-          list = start;
-          break;
-        case 'document-idle':
-          list = idle;
-          break;
-        default:
-          list = end;
-        }
+        var list = listMap[script.custom['run-at'] || script.meta['run-at']] || end;
         list.push(script);
       }
     });
@@ -576,6 +585,9 @@ var ids = [];
 function handleC(e) {
   var req = e.detail;
   var maps = {
+    NewTab: function (url) {
+      window.open(url);
+    },
     SetValue: function (data) {
       post('Background', {cmd: 'SetValue', data: data});
     },
@@ -597,13 +609,16 @@ function handleC(e) {
     AbortRequest: function (id) {
       post('Background', {cmd: 'AbortRequest', data: id});
     },
-    NewTab: newTab,
+    AddStyle: function (css) {
+      if (document.head) {
+        var style = document.createElement('style');
+        style.innerHTML = css;
+        document.head.appendChild(style);
+      }
+    },
   };
   var func = maps[req.cmd];
   if (func) func(req.data);
-}
-function newTab(url) {
-  window.open(url);
 }
 
 function objEncode(obj) {
@@ -625,7 +640,7 @@ function inject(code) {
   doc.removeChild(script);
 }
 function loadScript(data) {
-  data.scripts.forEach(function (script) {
+  forEach(data.scripts, function (script) {
     ids.push(script.id);
     if (script.enabled) badge.number ++;
   });
