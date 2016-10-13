@@ -470,13 +470,19 @@ VMDB.prototype.getExportData = function (ids, withValues) {
 
 VMDB.prototype.vacuum = function () {
   function getScripts(tx) {
-    return _this.getScriptsByIndex('position', null, tx).then(function (scripts) {
+    return _this.getScriptsByIndex('position', null, tx)
+    .then(function (scripts) {
       var data = {
         require: {},
         cache: {},
         values: {},
       };
-      data.ids = scripts.map(function (script) {
+      var invalid = [];
+      data.ids = scripts.filter(function (script) {
+        if (!script.meta.name) {
+          invalid.push(script.id);
+          return;
+        }
         script.meta.require.forEach(function (uri) {data.require[uri] = 1;});
         Object.keys(script.meta.resources).forEach(function (key) {
           data.cache[script.meta.resources[key]] = 1;
@@ -485,9 +491,23 @@ VMDB.prototype.vacuum = function () {
           data.cache[script.meta.icon] = 1;
         }
         data.values[script.uri] = 1;
-        return script.id;
+        return true;
+      })
+      .map(function (script) {return script.id;});
+      return {data: data, invalid: invalid};
+    })
+    // XXX remove invalid scripts
+    .then(function (res) {
+      return new Promise(function (resolve, reject) {
+        var invalid = res.invalid;
+        if (!invalid.length) resolve();
+        else tx.executeSql('DELETE FROM scripts WHERE id in (' + invalid.join(',') + ')', function (_tx, _res) {
+          resolve();
+        }, dbError(reject));
+      })
+      .then(function () {
+        return res.data;
       });
-      return data;
     });
   }
   function vacuumPosition(ids, tx) {
