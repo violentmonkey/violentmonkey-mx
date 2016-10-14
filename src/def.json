@@ -24,7 +24,7 @@
 		"config": "options/index.html",
 		"service": {
 			"main": "background/index.html",
-			"debug": false
+			"debug": true
 		},
 		"actions": [
 			{

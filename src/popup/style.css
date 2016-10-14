@@ -3,38 +3,56 @@
   padding: 0;
   box-sizing: border-box;
 }
+html {
+  font: 14px menu;
+}
 body {
-  font: menu;
-  font-size: 13px;
   background: #eee;
 }
 .menu {
-  max-width: 300px;
+  max-width: 30rem;
   overflow-x: hidden;
   overflow-y: auto;
-  white-space: nowrap;
+}
+.ellipsis {
+  overflow: hidden;
   text-overflow: ellipsis;
 }
-.menu ~ .menu > :first-child {
-  border-top: 1px solid silver;
-}
-.menu-item {
+.menu-item-label {
   cursor: pointer;
-  padding: 5px;
+  padding: .4rem;
+  white-space: nowrap;
 }
-.menu-item:hover {
+.menu-item-detail:hover,
+.menu-item-label:hover {
   background: cornflowerblue;
   color: white;
 }
-.menu-item.disabled {
+.menu-item.disabled .menu-item-label {
   color: gray;
 }
-.menu-item.disabled:hover {
+.menu-item.disabled .menu-item-label:hover {
   color: silver;
 }
+.menu-item-detail {
+  float: right;
+  border-radius: .1rem;
+  text-align: center;
+  width: 1rem;
+  margin: .4rem;
+  background: #eee;
+  cursor: pointer;
+}
+.menu-item-detail ~ .menu-item-label {
+  padding-right: 2em;
+}
+hr {
+  border: none;
+  border-top: 1px solid silver;
+}
 .icon {
-  width: 14px;
-  height: 14px;
+  width: 1rem;
+  height: 1rem;
   vertical-align: bottom;
 }
 svg path {

@@ -1,20 +1,18 @@
-define('views/TabAbout', function (require, _exports, module) {
-  var BaseView = require('cache').BaseView;
-  var app = require('app');
+var cache = require('../../cache');
+var utils = require('../utils');
+var data = {
+  store: utils.store,
+  language: navigator.language,
+};
 
-  module.exports = BaseView.extend({
-    name: 'about',
-    className: 'content',
-    templateUrl: '/options/templates/tab-about.html',
-    initialize: function () {
-      var _this = this;
-      BaseView.prototype.initialize.call(_this);
-      _this.listenTo(app.scriptList, 'reset', _this.render);
+module.exports = {
+  template: cache.get('./tab-about.html'),
+  data: function () {
+    return data;
+  },
+  computed: {
+    version: function () {
+      return this.store.app.version;
     },
-    _render: function () {
-      this.$el.html(this.templateFn({
-        version: app.scriptList.app.version || '...',
-      }));
-    },
-  });
-});
+  },
+};

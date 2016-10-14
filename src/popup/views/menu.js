@@ -1,90 +1,98 @@
-define('views/Menu', function (require, _exports, module) {
-  var MenuBaseView = require('views/Base');
-  var app = require('app');
+var app = require('../app');
+var MixIn = require('./mixin');
+var _ = require('../../common');
 
-  module.exports = MenuBaseView.extend({
-    initialize: function () {
-      MenuBaseView.prototype.initialize.call(this);
-      this.listenTo(app.scriptsMenu, 'add', this.onMenuAdd);
-      this.listenTo(app.menuOptions, 'change', this.checkMenu);
-    },
-    _render: function () {
-      var _this = this;
-      _this.$el.html(_this.templateFn());
-      var top = _this.$el.children().first();
-      _this.addMenuItem({
+module.exports = {
+  mixins: [MixIn],
+  data: function () {
+    var _this = this;
+    return {
+      top: [{
         name: _.i18n('menuManageScripts'),
-        symbol: 'right-hand',
-        onClick: function (_e) {
-          function startsWith(str1, str2) {
-            return str1.slice(0, str2.length) === str2;
-          }
+        symbol: 'cog',
+        onClick: function () {
           var url = _.mx.rt.getPrivateUrl() + 'options/index.html';
           var confirm = url + '#confirm';
           for (var i = _.mx.br.tabs.length - 1; i --;) {
             var tab = _.mx.br.tabs.getTab(i);
-            if (tab && startsWith(tab.url, url) && !startsWith(tab.url, confirm)) {
+            if (tab && tab.url.startsWith(url) && !tab.url.startsWith(confirm)) {
               tab.activate();
               return;
             }
           }
           _.tabs.create(url);
         },
-      }, top);
-      _this.menuEnable = _this.addMenuItem({
-        name: _.i18n('menuScriptEnabled'),
-        data: _.options.get('isApplied'),
-        symbol: function (data) {
-          return data ? 'check' : 'remove';
+      }, {
+        name: _.i18n('menuFindScripts'),
+        symbol: 'search',
+        hide: function () {
+          var domains = this.store.domains;
+          return !domains || !domains.length;
         },
-        onClick: function (_e, model) {
-          var isApplied = !model.get('data');
-          _.options.set('isApplied', isApplied);
-          model.set({data: isApplied});
-          _.mx.rt.icon.setIconImage('icon' + (isApplied ? '' : 'w'));
+        onClick: function () {
+          var matches = _this.store.currentTab.url.match(/:\/\/(?:www\.)?([^\/]*)/);
+          _.tabs.create('https://greasyfork.org/scripts/search?q=' + matches[1]);
+        },
+        detailClick: function () {
+          app.navigate('Domains');
+        },
+      }, {
+        name: _.i18n('menuCommands'),
+        symbol: 'arrow-right',
+        hide: function () {
+          var commands = _this.store.commands;
+          return !commands || !commands.length;
+        },
+        onClick: function () {
+          app.navigate('Commands');
+        },
+      }, {
+        name: null,
+        symbol: null,
+        disabled: null,
+        init: function (options) {
+          options.disabled = !_.options.get('isApplied');
+          options.name = options.disabled ? _.i18n('menuScriptDisabled') : _.i18n('menuScriptEnabled');
+          options.symbol = options.disabled ? 'remove' : 'check';
+        },
+        onClick: function (options) {
+          _.options.set('isApplied', options.disabled);
+          options.init.call(this, options);
+          _.mx.rt.icon.setIconImage('icon' + (options.disabled ? 'w' : ''));
           _.options.get('autoReload') && _.mx.br.tabs.getCurrentTab().refresh();
         },
-      }, top);
-      app.scriptsMenu.each(_this.onMenuAdd.bind(_this));
-      _this.checkMenu();
-    },
-    onMenuAdd: function (model) {
+      }],
+    };
+  },
+  computed: {
+    bot: function () {
       var _this = this;
-      var bot = _this.$el.children().last();
-      _this.addMenuItem(model, bot);
+      return _this.store.scripts.map(function (script) {
+        return {
+          name: script.custom.name || _.getLocaleString(script.meta, 'name'),
+          className: 'ellipsis',
+          symbol: null,
+          disabled: null,
+          init: function (options) {
+            options.disabled = !script.enabled;
+            options.symbol = options.disabled ? 'remove' : 'check';
+          },
+          onClick: function (options) {
+            var vm = this;
+            _.sendMessage({
+              cmd: 'UpdateScriptInfo',
+              data: {
+                id: script.id,
+                enabled: !script.enabled,
+              },
+            }).then(function () {
+              script.enabled = !script.enabled;
+              options.init.call(vm, options);
+              _.options.get('autoReload') && _.mx.br.tabs.getCurrentTab().refresh();
+            });
+          },
+        };
+      });
     },
-    checkMenu: function () {
-      var _this = this;
-      var top = _this.$el.children().first();
-      if (app.menuOptions.get('hasCommands')) {
-        if (!_this.menuCommands) {
-          _this.menuCommands = _this.addMenuItem({
-            name: _.i18n('menuCommands'),
-            symbol: 'arrow-right',
-            onClick: function (_e) {
-              app.navigate('commands', {trigger: true});
-            },
-          }, top, _this.menuEnable.$el);
-        }
-      } else if (_this.menuCommands) {
-        _this.menuCommands.remove();
-        _this.menuCommands = null;
-      }
-      if (app.menuOptions.get('canSearch')) {
-        if (!_this.menuSearch) {
-          _this.menuSearch = _this.addMenuItem({
-            name: _.i18n('menuFindScripts'),
-            symbol: 'right-hand',
-            onClick: function (_e) {
-              var matches = app.currentTab.url.match(/:\/\/(?:www\.)?([^\/]*)/);
-              _.tabs.create('https://greasyfork.org/scripts/search?q=' + matches[1]);
-            },
-          }, top, _this.menuCommands ? _this.menuCommands.$el : _this.menuEnable.$el);
-        }
-      } else if (_this.menuSearch) {
-        _this.menuSearch.remove();
-        _this.menuSearch = null;
-      }
-    },
-  });
-});
+  },
+};

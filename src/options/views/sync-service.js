@@ -1,27 +1,60 @@
-define('views/SyncService', function (require, _exports, module) {
-  var BaseView = require('cache').BaseView;
-  module.exports = BaseView.extend({
-    className: 'line',
-    templateUrl: '/options/templates/sync-service.html',
-    events: {
-      'click .sync-start': 'retry',
+var cache = require('../../cache');
+var _ = require('../../common');
+var utils = require('../utils');
+var events = utils.events;
+
+module.exports = {
+  props: ['service'],
+  template: cache.get('./sync-service.html'),
+  computed: {
+    labelText: function () {
+      var service = this.service;
+      return _.i18n('labelSyncTo', service.displayName || service.name);
     },
-    initialize: function () {
-      BaseView.prototype.initialize.call(this);
-      this.listenTo(this.model, 'change', this.render);
+    labelAuthenticate: function () {
+      return {
+        authorized: _.i18n('buttonAuthorized'),
+        authorizing: _.i18n('buttonAuthorizing'),
+      }[this.service.authState] || _.i18n('buttonAuthorize');
     },
-    _render: function () {
-      var it = this.model.toJSON();
-      it.enabled = _.options.get(it.name + 'Enabled');
-      if (it.lastSync) it.lastSync = new Date(it.lastSync).toLocaleString();
-      it.progress = it.progress && it.progress.total ? ' (' + it.progress.finished + '/' + it.progress.total + ')' : '';
-      this.$el.html(this.templateFn(it));
+    disableSync: function () {
+      var service = this.service;
+      return !!(
+        ['authorized', 'error'].indexOf(service.authState) < 0 ||
+        ~['ready', 'syncing'].indexOf(service.syncState)
+      );
     },
+    message: function () {
+      var service = this.service;
+      if (service.authState === 'initializing') return _.i18n('msgSyncInit');
+      if (service.authState === 'error') return _.i18n('msgSyncInitError');
+      if (service.syncState === 'error') return _.i18n('msgSyncError');
+      if (service.syncState === 'ready') return _.i18n('msgSyncReady');
+      if (service.syncState === 'syncing') {
+        var progress = '';
+        if (service.progress && service.progress.total) {
+          progress = ' (' + service.progress.finished + '/' + service.progress.total + ')';
+        }
+        return _.i18n('msgSyncing') + progress;
+      }
+      if (service.lastSync) {
+        var lastSync = new Date(service.lastSync).toLocaleString();
+        return _.i18n('lastSync', lastSync);
+      }
+    },
+  },
+  methods: {
     retry: function () {
       _.sendMessage({
         cmd: 'SyncStart',
-        data: this.model.get('name'),
+        data: this.service.name,
       });
     },
-  });
-});
+    authenticate: function () {
+      _.sendMessage({cmd: 'Authenticate', data: this.service.name});
+    },
+    update: function (e) {
+      e.target.checked && events.$emit('EnableService', this.service.name);
+    },
+  },
+};

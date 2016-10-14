@@ -1,31 +1,36 @@
-define('views/Command', function (require, _exports, module) {
-  var MenuBaseView = require('views/Base');
-  var app = require('app');
+var app = require('../app');
+var MixIn = require('./mixin');
+var _ = require('../../common');
 
-  module.exports = MenuBaseView.extend({
-    initialize: function () {
-      MenuBaseView.prototype.initialize.call(this);
-      this.listenTo(app.commandsMenu, 'add', this.onCommandAdd);
-    },
-    _render: function () {
-      if (!app.commandsMenu.length)
-      return app.navigate('', {trigger: true, replace: true});
-      var _this = this;
-      _this.$el.html(_this.templateFn());
-      var top = _this.$el.children().first();
-      _this.addMenuItem({
+module.exports = {
+  mixins: [MixIn],
+  data: function () {
+    return {
+      top: [{
         name: _.i18n('menuBack'),
         symbol: 'arrow-left',
-        onClick: function (_e) {
-          app.navigate('', {trigger: true});
+        onClick: function () {
+          app.navigate();
         },
-      }, top);
-      app.commandsMenu.each(_this.onCommandAdd.bind(_this));
-    },
-    onCommandAdd: function (model) {
+      }],
+    };
+  },
+  computed: {
+    bot: function () {
       var _this = this;
-      var bot = _this.$el.children().last();
-      _this.addMenuItem(model, bot);
+      return _this.store.commands.map(function (item) {
+        return {
+          name: item[0],
+          symbol: 'right-hand',
+          className: 'ellipsis',
+          onClick: function (options) {
+            _.mx.rt.post(_this.store.currentTab.id, {
+              cmd: 'Command',
+              data: options.name,
+            });
+          },
+        };
+      });
     },
-  });
-});
+  },
+};

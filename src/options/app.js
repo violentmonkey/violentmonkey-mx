@@ -1,65 +1,101 @@
-define('app', function (require, exports, _module) {
-  var MainView = require('views/Main');
-  var ConfirmView = require('views/Confirm');
-  var MessageView = require('views/Message');
-  var models = require('models');
-  var cache = require('cache');
-  zip.workerScriptsPath = '/lib/zip.js/';
-
-  _.sendMessage = _.getMessenger({});
-  _.showMessage = function (options) {
-    new MessageView(options);
-  };
-
-  var App = cache.BaseRouter.extend({
-    routes: {
-      '': 'renderMain',
-      'main/:tab': 'renderMain',
-      'confirm/:url': 'renderConfirm',
-      'confirm/:url/:from': 'renderConfirm',
-    },
-    renderMain: function (tab) {
-      this.loadView('main', function () {
-        initMain();
-        return new MainView;
-      }).loadTab(tab);
-    },
-    renderConfirm: function (url, referer) {
-      this.loadView('confirm', function () {
-        return new ConfirmView;
-      }).initData(url, referer);
-    },
-  });
-  var app = new App('#app');
-  Backbone.history.start() || app.navigate('', {trigger: true, replace: true});
-
-  $(document).on('click', '[data-feature]', function (e) {
-    var target = e.currentTarget;
-    _.features.hit(target.dataset.feature);
-    target.classList.remove('feature');
-  });
-
-  function initMain() {
-    var scriptList = exports.scriptList = new models.ScriptList;
-    var syncData = exports.syncData = new models.SyncList;
-    _.mx.rt.listen('UpdateItem', function (res) {
-      switch (res.cmd) {
-      case 'sync':
-        syncData.set(res.data);
-        break;
-      case 'add':
-        res.data.message = '';
-        scriptList.push(res.data);
-        break;
-      case 'update':
-        if (res.data) {
-          var model = scriptList.get(res.data.id);
-          if (model) model.set(res.data);
-        }
-        break;
-      case 'del':
-        scriptList.remove(res.data);
-      }
+function initMain() {
+  store.loading = true;
+  _.sendMessage({cmd: 'GetData'})
+  .then(function (data) {
+    [
+      'cache',
+      'scripts',
+      'sync',
+      'app',
+    ].forEach(function (key) {
+      Vue.set(store, key, data[key]);
     });
-  }
+    store.loading = false;
+  });
+  _.mx.rt.listen('UpdateItem', function (res) {
+    switch (res.cmd) {
+    case 'sync':
+      store.sync = res.data;
+      break;
+    case 'add':
+      res.data.message = '';
+      store.scripts.push(res.data);
+      break;
+    case 'update':
+      if (res.data) {
+        var script = store.scripts.find(function (script) {
+          return script.id === res.data.id;
+        });
+        script && Object.keys(script).forEach(function (key) {
+          Vue.set(script, key, res.data[key]);
+        });
+      }
+      break;
+    case 'del':
+      var i = store.scripts.findIndex(function (script) {
+        return script.id === res.data;
+      });
+      ~i && store.scripts.splice(i, 1);
+    }
+  });
+}
+function loadHash() {
+  var hash = location.hash.slice(1);
+  Object.keys(routes).find(function (key) {
+    var test = routes[key];
+    var params = test(hash);
+    if (params) {
+      hashData.type = key;
+      hashData.params = params;
+      if (init[key]) {
+        init[key]();
+        init[key] = null;
+      }
+      return true;
+    }
+  });
+}
+
+var utils = require('./utils');
+var _ = require('../common');
+var Main = require('./views/main');
+var Confirm = require('./views/confirm');
+
+var store = Object.assign(utils.store, {
+  loading: false,
+  cache: {},
+  scripts: [],
+  sync: [],
+  app: {},
+});
+var init = {
+  Main: initMain,
+};
+var routes = {
+  Main: utils.routeTester([
+    '',
+    'main/:tab',
+  ]),
+  Confirm: utils.routeTester([
+    'confirm/:url',
+    'confirm/:url/:referer',
+  ]),
+};
+var hashData = {
+  type: null,
+  params: null,
+};
+window.addEventListener('hashchange', loadHash, false);
+loadHash();
+zip.workerScriptsPath = '/lib/zip.js/';
+document.title = _.i18n('extName');
+
+new Vue({
+  el: '#app',
+  template: '<component :is=type :params=params></component>',
+  components: {
+    Main: Main,
+    Confirm: Confirm,
+  },
+  data: hashData,
 });

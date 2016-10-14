@@ -3,19 +3,20 @@
   padding: 0;
   box-sizing: border-box;
 }
+html {
+  height: 100%;
+  font: 14px menu;
+  background: #eee;
+}
 body {
   height: 100%;
-  background: #eee;
-  font: menu;
-  font-size: 13px;
 }
 h1 {
   font-size: 1.5rem;
-  text-shadow: #999 3px 3px 5px;
 }
 h1, h2 {
-  margin-top: 1rem;
-  margin-bottom: .5rem;
+  margin-top: .5em;
+  margin-bottom: .5em;
 }
 button {
   padding: 0 .5rem;
@@ -23,8 +24,13 @@ button {
 a {
   color: dodgerblue;
 }
-textarea, input[type=text] {
+textarea,
+input[type=text] {
   width: 100%;
+}
+.suboption.disabled,
+input[disabled] ~ * {
+  color: gray;
 }
 hr {
   border: none;
@@ -41,39 +47,52 @@ hr {
   text-overflow: ellipsis;
   overflow: hidden;
 }
-
-#app {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+.dropdown {
+  position: relative;
+  cursor: pointer;
+  display: inline-block;
 }
+.dropdown:not(.open) .dropdown-menu {
+  display: none;
+}
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 13rem;
+  margin-top: .4rem;
+  padding: 1rem;
+  background: #f8f8f8;
+  border-radius: .3rem;
+  box-shadow: .1rem .2rem .2rem gray;
+  z-index: 10;
+}
+
 .main {
   position: relative;
-  max-width: 900px;
+  max-width: 65rem;
   height: 100%;
   margin: 0 auto;
 }
 aside {
   position: absolute;
   background: #fafafa;
-  top: 50px;
+  top: 3rem;
   left: 0;
-  width: 200px;
-  padding: 10px 10px 0;
+  width: 14rem;
+  padding: 1rem 1rem 0;
   border: 1px solid darkgray;
-  border-radius: 10px 0 0 10px;
   border-right: none;
+  border-radius: 1rem 0 0 1rem;
   text-align: right;
 }
 aside img {
-  width: 64px;
+  width: 5rem;
 }
 .sidemenu > a {
   display: block;
   line-height: 2.5em;
-  font-size: 1.17em;
+  font-size: 1rem;
   font-weight: bold;
   text-decoration: none;
   color: gray;
@@ -82,24 +101,26 @@ aside img {
 .sidemenu > a:hover {
   color: black;
 }
-#tab {
+.content {
   position: relative;
   height: 100%;
-  margin-left: 200px;
+  margin-left: 14rem;
+  padding: 1.2rem;
   background: white;
   border-left: 1px solid darkgray;
   border-right: 1px solid darkgray;
-  overflow-y: hidden;
+  overflow-y: auto;
 }
 .content > header {
-  height: 30px;
-  line-height: 30px;
+  height: 2rem;
+  line-height: 2rem;
   padding: 0 .5rem;
   border-bottom: 1px solid darkgray;
 }
-.backdrop, .scripts {
+.backdrop,
+.scripts {
   position: absolute;
-  top: 30px;
+  top: 2rem;
   left: 0;
   right: 0;
   bottom: 0;
@@ -108,12 +129,12 @@ aside img {
   overflow-y: auto;
 }
 .backdrop {
-  display: none;
   text-align: center;
   color: gray;
   z-index: 9;
 }
-.backdrop > *, .backdrop::after {
+.backdrop > *,
+.backdrop::after {
   display: inline-block;
   vertical-align: middle;
   font-size: 2rem;
@@ -138,35 +159,26 @@ aside img {
 .suboption {
   padding-left: 1.5em;
 }
-.suboption.disabled,
-input[disabled] ~ * {
-  color: gray;
-}
-.content {
-  height: 100%;
-  padding: 20px;
-  overflow-y: auto;
-}
 .no-pad {
   padding: 0;
 }
 fieldset.title {
-  margin-top: 20px;
-  padding: 10px;
+  margin-top: 1rem;
+  padding: .8rem;
   border: none;
   border-top: 1px solid silver;
 }
 .export-list {
   display: block;
   width: 100%;
-  height: 200px;
+  height: 14rem;
   white-space: normal;
 }
 .export-list > option {
   display: inline-block;
-  width: 180px;
-  margin: 2px;
-  padding: 0 5px;
+  width: 13rem;
+  margin: .1rem .2rem;
+  padding: 0 .3rem;
   box-shadow: 0 0 1px black;
 }
 .frame {
@@ -176,33 +188,33 @@ fieldset.title {
   right: 0;
   bottom: 0;
   background: #eee;
-  z-index: 1;
+  z-index: 10;
 }
 .frame-header {
   position: absolute;
   top: 0;
-  left: 5px;
-  right: 5px;
+  left: .5rem;
+  right: .5rem;
   height: 5rem;
-  padding-top: 5px;
-  padding-bottom: 5px;
+  padding-top: .5rem;
+  padding-bottom: .5rem;
 }
 .frame-body {
   position: absolute;
   top: 0;
-  left: 5px;
-  right: 5px;
+  left: .5rem;
+  right: .5rem;
   bottom: 0;
-  padding-top: 5px;
-  padding-bottom: 5px;
+  padding-top: .5rem;
+  padding-bottom: .5rem;
 }
 .frame-footer {
   position: absolute;
-  left: 5px;
-  right: 5px;
+  left: .5rem;
+  right: .5rem;
   bottom: 0;
-  padding-top: 5px;
-  padding-bottom: 5px;
+  padding-top: .5rem;
+  padding-bottom: .5rem;
 }
 .frame-header ~ .frame-body {
   top: 5rem;
@@ -218,45 +230,27 @@ fieldset.title {
   display: inline-block;
   position: relative;
 }
-.button-panel {
-  display: none;
-  position: absolute;
-  top: 100%;
-  right: 0;
-  width: 180px;
-  margin-top: 5px;
-  padding: 1em;
-  background: #f8f8f8;
-  border-radius: 4px;
-  box-shadow: 1px 2px 2px gray;
-  z-index: 10;
-}
 .options-panel label {
   display: block;
 }
-.button-toggle.active ~ .button-panel {
-  display: block;
-}
-.editor-code, .editor-code .CodeMirror {
+.editor-code,
+.editor-code .CodeMirror {
   height: 100%;
 }
-#url {
+.confirm-url {
   float: left;
   max-width: 50%;
 }
-#msg {
+.confirm-msg {
   text-align: right;
 }
 .script {
   position: relative;
-  margin: 10px;
-  padding: 10px;
+  margin: .6rem;
+  padding: .6rem;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: .3rem;
   transition: -webkit-transform .5s;
-}
-.script .hide {
-  display: none;
 }
 .script:hover {
   border-color: darkgray;
@@ -268,32 +262,34 @@ fieldset.title {
 .script .pull-right {
   margin-left: 1em;
 }
-.script .icon {
-  height: 19px;
-}
 .script-info {
-  margin-left: 50px;
+  margin-left: 3.5rem;
   line-height: 1.5;
 }
 .script-info > * {
-  margin-right: 10px;
+  display: inline-block;
+  margin-right: .8rem;
+  vertical-align: middle;
 }
 .script-icon {
   position: absolute;
-  top: 10px;
-  width: 40px;
-  height: 40px;
+  top: .8rem;
+  width: 3rem;
+  height: 3rem;
 }
 .script-name {
   font-weight: bold;
+  font-size: 1rem;
 }
 .script-author {
   max-width: 30%;
 }
 .script-desc {
-  margin: 5px 0 5px 50px;
-  height: 1.2rem;
-  overflow-y: auto;
+  margin-left: 3.5rem;
+  line-height: 2rem;
+}
+.script-desc::after {
+  content: "\200b";
 }
 .disabled .script-icon {
   -webkit-filter: grayscale(.5);
@@ -308,7 +304,7 @@ fieldset.title {
 .dragging {
   position: fixed;
   margin: 0;
-  background: lightgreen;
+  background: wheat;
   z-index: 9;
 }
 .edit .frame-header {
@@ -317,13 +313,13 @@ fieldset.title {
 .edit .frame-header ~ .frame-body {
   top: 4rem;
 }
-.edit .button-panel {
-  width: 450px;
+.edit .dropdown-menu {
+  width: 32rem;
 }
-.edit .button-panel > table {
+.edit .dropdown-menu > table {
   width: 100%;
 }
-.edit .button-panel td:not(.expand) {
+.edit .dropdown-menu td:not(.expand) {
   width: 1px;
   white-space: nowrap;
 }
@@ -338,34 +334,37 @@ fieldset.title {
   border-radius: 50%;
 }
 .feature .feature-text::after {
-  top: -2px;
-  width: 6px;
-  height: 6px;
-  margin-left: 2px;
+  top: -.1rem;
+  width: .4rem;
+  height: .4rem;
+  margin-left: .1rem;
   background: red;
 }
 .message {
   position: absolute;
-  width: 200px;
+  width: 14rem;
   top: 0;
   left: 50%;
-  margin-left: -100px;
-  padding: 16px;
+  margin-left: -7rem;
+  padding: 1rem;
   z-index: 10;
-  transform: translateY(-120%);
-  transition: transform .5s;
   background: white;
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-  box-shadow: 0 0 5px rgba(0,0,0,.2);
+  border-bottom-left-radius: .2rem;
+  border-bottom-right-radius: .2rem;
+  box-shadow: 0 0 .2rem rgba(0,0,0,.2);
 }
-.message-show {
-  transform: translateY(0);
+.message-enter-active,
+.message-leave-active {
+  transition: transform .5s;
+}
+.message-enter,
+.message-leave-active {
+  transform: translateY(-120%);
 }
 .icon {
-  width: 14px;
-  height: 14px;
-  vertical-align: bottom;
+  width: 1rem;
+  height: 1rem;
+  vertical-align: middle;
 }
 svg path {
   fill: currentColor;
