@@ -1,5 +1,9 @@
+// Maxthon 4: localStorage of background is not reachable from options page
+// This module patchs _.options and sync the options data asynchronously.
+
 function reset(data) {
   options = data;
+  hooks.forEach(function (cb) {cb();});
 }
 
 function get(key, def) {
@@ -7,16 +11,18 @@ function get(key, def) {
 }
 
 function set(key, val) {
-  _.sendMessage({
+  _.object.set(options, key, val);
+  return _.sendMessage({
     cmd: 'SetOption',
     data: {
       key: key,
       value: val,
     },
-  });
-  _.object.set(options, key, val);
-  hooks.forEach(function (cb) {
-    cb(val, key);
+  })
+  .then(function () {
+    hooks.forEach(function (cb) {
+      cb(val, key);
+    });
   });
 }
 
@@ -32,7 +38,7 @@ var _ = require('../../common');
 var options = {};
 var hooks = [];
 
-module.exports = {
+_.options = {
   reset: reset,
   get: get,
   set: set,

@@ -27,10 +27,10 @@ function routeTester(paths) {
 
 var _ = require('../../common');
 
-_.sendMessage = _.getMessenger({});
-
 // patch options since options is not reachable by options.html in Maxthon
-_.options = require('./options');
+require('./options');
+
+_.sendMessage = _.getMessenger({});
 
 exports.routeTester = routeTester;
 exports.store = {};

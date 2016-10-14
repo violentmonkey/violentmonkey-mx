@@ -1,6 +1,11 @@
 // Screw Maxthon: Start
+function polyfill(obj, name, value) {
+  if (!obj[name]) Object.defineProperty(obj, name, {
+    value: value,
+  });
+}
 
-Object.assign = Object.assign || function () {
+polyfill(Object, 'assign', function () {
   var obj = arguments[0];
   for (var i = 1; i < arguments.length; i ++) {
     var arg = arguments[i];
@@ -9,19 +14,17 @@ Object.assign = Object.assign || function () {
     });
   }
   return obj;
-};
-
-String.prototype.startsWith = function (str) {
+})
+polyfill(String.prototype, 'startsWith', function (str) {
   return this.slice(0, str.length) === str;
-};
-
-Array.prototype.find = function (predicate) {
+});
+polyfill(Array.prototype, 'find', function (predicate) {
   var length = this.length;
   for (var i = 0; i < length; i ++) {
     var item = this[i];
     if (predicate(item, i, this)) return item;
   }
-};
+});
 
 // Screw Maxthon: End
 
@@ -61,8 +64,9 @@ _.object = function () {
   function get(obj, key, def) {
     var keys = normalizeKeys(key);
     for (var i = 0, len = keys.length; i < len; i ++) {
-      if (!obj) return def;
-      obj = obj[keys[i]];
+      key = keys[i];
+      if (obj && (key in obj)) obj = obj[key];
+      else return def;
     }
     return obj;
   }

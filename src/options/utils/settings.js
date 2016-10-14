@@ -1,22 +1,23 @@
 var _ = require('../../common');
 
-var hooks = {};
-_.options.hook(function (value, key) {
+function update(value, key) {
   var list = hooks[key];
   list && list.forEach(function (el) {
     el.checked = value;
   });
-  setTimeout(onChanged, 0, value, key);
+}
+
+var hooks = {};
+_.options.hook(function (value, key) {
+  if (key) update(value, key);
+  else Object.keys(hooks).forEach(function (key) {
+    update(_.options.get(key), key);
+  });
 });
 
 function onSettingChange(e) {
   var target = e.target;
   _.options.set(target.dataset.setting, target.checked);
-}
-function onChanged(value, key) {
-  if (value && key === 'closeAfterInstall') {
-    _.options.set('trackLocalFile', false);
-  }
 }
 
 Vue.directive('setting', {

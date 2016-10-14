@@ -254,7 +254,11 @@ module.exports = {
           }
         }
       });
-      _.sendMessage({cmd: 'SyncStart'});
+      // Maxthon 4: options is updated asynchronously
+      _.options.set([name, 'enabled'], true)
+      .then(function () {
+        _.sendMessage({cmd: 'SyncStart'});
+      });
     },
   },
 };
