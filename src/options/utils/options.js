@@ -3,7 +3,17 @@
 
 function reset(data) {
   options = data;
-  hooks.forEach(function (cb) {cb();});
+  update();
+}
+
+function update(key, val) {
+  var keys = key ? [key, ''] : Object.keys(hooks);
+  keys.forEach(function (hkey) {
+    var list = hooks[hkey];
+    list && list.forEach(function (cb) {
+      key ? cb(val, key) : hkey ? cb(get(hkey), hkey) : cb();
+    });
+  });
 }
 
 function get(key, def) {
@@ -12,31 +22,47 @@ function get(key, def) {
 
 function set(key, val) {
   _.object.set(options, key, val);
+  update(key, val);
   return _.sendMessage({
     cmd: 'SetOption',
     data: {
       key: key,
       value: val,
     },
-  })
-  .then(function () {
-    hooks.forEach(function (cb) {
-      cb(val, key);
-    });
   });
 }
 
-function hook(cb) {
-  hooks.push(cb);
-  return function () {
-    var i = hooks.indexOf(cb);
-    ~i && hooks.splice(i, 1);
+function parseArgs(args) {
+  return args.length === 1 ? {
+    key: '',
+    cb: args[0],
+  } : {
+    key: args[0] || '',
+    cb: args[1],
   };
+}
+
+function hook() {
+  var arg = parseArgs(arguments);
+  var list = hooks[arg.key];
+  if (!list) list = hooks[arg.key] = [];
+  list.push(arg.cb);
+  return function () {
+    unhook(arg.key, arg.cb);
+  };
+}
+function unhook() {
+  var arg = parseArgs(arguments);
+  var list = hooks[arg.key];
+  if (list) {
+    var i = list.indexOf(arg.cb);
+    ~i && list.splice(i, 1);
+  }
 }
 
 var _ = require('../../common');
 var options = {};
-var hooks = [];
+var hooks = {};
 
 _.options = {
   reset: reset,

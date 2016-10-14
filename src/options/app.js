@@ -11,9 +11,6 @@ function initMain() {
       Vue.set(store, key, data[key]);
     });
     store.loading = false;
-    _.options.reset(data.options);
-    // utils.features.reset(data.version);
-    utils.features.reset('sync', data.options.features);
   });
   _.mx.rt.listen('UpdateItem', function (res) {
     switch (res.cmd) {

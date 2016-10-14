@@ -39,3 +39,9 @@ exports.features = require('./features');
 
 require('./dropdown');
 require('./settings');
+
+_.sendMessage({cmd: 'GetOptions'})
+.then(function (options) {
+  _.options.reset(options);
+  exports.features.reset('sync', options.features);
+});

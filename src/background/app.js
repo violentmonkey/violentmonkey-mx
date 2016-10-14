@@ -63,7 +63,6 @@ var commands = {
   },
   GetData: function (_data, _src) {
     return vmdb.getData().then(function (data) {
-      data.options = _.options.getAll();
       data.sync = sync.states();
       data.app = ['version', 'config'].reduce(function (app, key) {
         app[key] = APP[key];
@@ -94,6 +93,9 @@ var commands = {
   },
   SetValue: function (data, _src) {
     return vmdb.setValue(data.uri, data.values);
+  },
+  GetOptions: function (_data, _src) {
+    return _.options.getAll();
   },
   GetOption: function (data, _src) {
     return _.options.get(data.key, data.def);

@@ -14,16 +14,20 @@ polyfill(Object, 'assign', function () {
     });
   }
   return obj;
-})
+});
 polyfill(String.prototype, 'startsWith', function (str) {
   return this.slice(0, str.length) === str;
 });
-polyfill(Array.prototype, 'find', function (predicate) {
+polyfill(Array.prototype, 'findIndex', function (predicate) {
   var length = this.length;
   for (var i = 0; i < length; i ++) {
     var item = this[i];
-    if (predicate(item, i, this)) return item;
+    if (predicate(item, i, this)) return i;
   }
+  return -1;
+});
+polyfill(Array.prototype, 'find', function (predicate) {
+  return this[this.findIndex(predicate)];
 });
 
 // Screw Maxthon: End
