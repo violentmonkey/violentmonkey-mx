@@ -61,12 +61,18 @@ function unhook() {
 }
 
 var _ = require('../../common');
+var features = require('./features');
 var options = {};
 var hooks = {};
 
 _.options = {
-  reset: reset,
   get: get,
   set: set,
   hook: hook,
 };
+
+_.sendMessage({cmd: 'GetOptions'})
+.then(function (options) {
+  reset(options);
+  features.reset('sync', options.features);
+});

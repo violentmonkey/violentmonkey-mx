@@ -126,6 +126,34 @@ _.options = function () {
     }, {});
   }
 
+  function parseArgs(args) {
+    return args.length === 1 ? {
+      key: '',
+      cb: args[0],
+    } : {
+      key: args[0] || '',
+      cb: args[1],
+    };
+  }
+
+  function hook() {
+    var arg = parseArgs(arguments);
+    var list = hooks[arg.key];
+    if (!list) list = hooks[arg.key] = [];
+    list.push(arg.cb);
+    return function () {
+      unhook(arg.key, arg.cb);
+    };
+  }
+  function unhook() {
+    var arg = parseArgs(arguments);
+    var list = hooks[arg.key];
+    if (list) {
+      var i = list.indexOf(arg.cb);
+      ~i && list.splice(i, 1);
+    }
+  }
+
   var defaults = {
     isApplied: true,
     startReload: true,
@@ -143,11 +171,24 @@ _.options = function () {
     onedrive: {},
     features: null,
   };
+  var hooks = {};
+
+  // XXX migrate sync status options
+  ['dropbox', 'onedrive'].forEach(function (name) {
+    var key = name + 'Enabled';
+    var val = getOption(key);
+    if (val != null) {
+      setOption([name, 'enabled'], val);
+      localStorage.removeItem(key);
+    }
+  });
 
   return {
     get: getOption,
     set: setOption,
     getAll: getAllOptions,
+    hook: hook,
+    unhook: unhook,
   };
 }();
 

@@ -35,7 +35,7 @@ function initItem(el, value) {
 }
 
 var key = 'features';
-var features;
+var features = _.options.get(key);
 var items = [];
 init();
 
