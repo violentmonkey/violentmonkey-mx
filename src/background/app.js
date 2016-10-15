@@ -5,6 +5,7 @@ var badges = require('./badges');
 var cache = require('./utils/cache');
 var tabsUtils = require('./utils/tabs');
 var scriptUtils = require('./utils/script');
+var clipboard = require('./utils/clipboard');
 var _ = require('../common');
 
 var vmdb = exports.vmdb = new VMDB;
@@ -92,7 +93,16 @@ var commands = {
     });
   },
   SetValue: function (data, _src) {
-    return vmdb.setValue(data.uri, data.values);
+    return vmdb.setValue(data.uri, data.values)
+    .then(function () {
+      tabsUtils.broadcast({
+        cmd: 'UpdateValues',
+        data: {
+          uri: data.uri,
+          values: data.values,
+        },
+      });
+    });
   },
   GetOptions: function (_data, _src) {
     return _.options.getAll();
@@ -184,7 +194,36 @@ var commands = {
   GetFromCache: function (data, _src) {
     return cache.get(data) || null;
   },
+  Notification: function (data, _src) {
+    return notification(data);
+  },
+  SetClipboard: function (data, _src) {
+    clipboard.set(data);
+  },
 };
+
+var notification = function () {
+  function notification(data) {
+    var n = new Notification(data.title || _.i18n('extName'), {
+      body: data.text,
+      icon: data.image,
+    });
+    var nid = ++ id;
+    n.onclick = wrapEvent(nid, 'NotificationClick');
+    n.onclose = wrapEvent(nid, 'NotificationClose');
+    return nid;
+  }
+  function wrapEvent(nid, evt) {
+    return function () {
+      tabsUtils.broadcast({
+        cmd: evt,
+        data: nid,
+      });
+    };
+  }
+  var id = 0;
+  return notification;
+}();
 
 function reinit() {
   var func = function (f) {

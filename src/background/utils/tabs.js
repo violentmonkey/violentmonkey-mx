@@ -34,7 +34,12 @@ var on = function () {
   return register;
 }();
 
+function broadcast(data) {
+  _.mx.rt.post('Broadcast', data);
+}
+
 module.exports = Object.assign(_.tabs, {
   update: update,
   on: on,
+  broadcast: broadcast,
 });
