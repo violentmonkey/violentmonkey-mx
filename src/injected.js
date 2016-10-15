@@ -63,7 +63,7 @@ function post(target, data, callback) {
   }
   rt.post(target, data);
 }
-rt.listen(id, function (obj) {
+function onMessage(obj) {
   var maps = {
     Command: function (data) {
       comm.post({cmd: 'Command', data: data});
@@ -77,10 +77,14 @@ rt.listen(id, function (obj) {
     HttpRequested: function (res) {
       comm.post({cmd: 'HttpRequested', data: res});
     },
+    NotificationClick: onNotificationClick,
+    NotificationClose: onNotificationClose,
   };
   var func = maps[obj.cmd];
   if (func) func(obj.data);
-});
+}
+rt.listen(id, onMessage);
+rt.listen('Broadcast', onMessage);
 
 /**
  * @desc Wrap methods to prevent unexpected modifications.
@@ -213,6 +217,21 @@ var comm = {
       UpdateValues: function (data) {
         var values = comm.values;
         if (values && values[data.uri]) values[data.uri] = data.values;
+      },
+      NotificationClicked: function (id) {
+        var options = comm.notif[id];
+        if (options) {
+          var onclick = options.onclick;
+          onclick && onclick();
+        }
+      },
+      NotificationClosed: function (id) {
+        var options = comm.notif[id];
+        if (options) {
+          delete comm.notif[id];
+          var ondone = options.ondone;
+          ondone && ondone();
+        }
       },
     };
     var func = maps[obj.cmd];
@@ -505,6 +524,30 @@ var comm = {
           return comm.Request(details);
         },
       },
+      GM_notification: {
+        value: function (text, title, image, onclick) {
+          if (!text) {
+            throw 'Invalid parameters.';
+          }
+          var options = typeof text === 'object' ? text : {
+            text: text,
+            title: title,
+            image: image,
+            onclick: onclick,
+          };
+          var id = comm.notif[''] = (comm.notif[''] || 0) + 1;
+          comm.notif[id] = options;
+          comm.post({
+            cmd: 'Notification',
+            data: {
+              id: id,
+              text: options.text,
+              title: options.title,
+              image: options.image,
+            },
+          });
+        },
+      },
     };
     comm.forEach(grant, function (name) {
       var prop = gm_funcs[name];
@@ -555,6 +598,7 @@ var comm = {
     var idle = [];
     var end = [];
     comm.command = {};
+    comm.notif = {};
     comm.version = data.version;
     comm.values = {};
     // reset load and checkLoad
@@ -620,9 +664,28 @@ function handleC(e) {
         document.head.appendChild(style);
       }
     },
+    Notification: onNotificationCreate,
   };
   var func = maps[req.cmd];
   if (func) func(req.data);
+}
+
+var notifications = {};
+function onNotificationCreate(options) {
+  post('Background', {cmd: 'Notification', data: options}, function (nid) {
+    notifications[nid] = options.id;
+  });
+}
+function onNotificationClick(nid) {
+  var id = notifications[nid];
+  id && comm.post({cmd: 'NotificationClicked', data: id});
+}
+function onNotificationClose(nid) {
+  var id = notifications[nid];
+  if (id) {
+    comm.post({cmd: 'NotificationClosed', data: id});
+    delete notifications[nid];
+  }
 }
 
 function objEncode(obj) {

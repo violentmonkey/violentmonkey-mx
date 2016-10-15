@@ -193,7 +193,33 @@ var commands = {
   GetFromCache: function (data, _src) {
     return cache.get(data) || null;
   },
+  Notification: function (data, _src) {
+    return notification(data);
+  },
 };
+
+var notification = function () {
+  function notification(data) {
+    var n = new Notification(data.title || _.i18n('extName'), {
+      body: data.text,
+      icon: data.image,
+    });
+    var nid = ++ id;
+    n.onclick = wrapEvent(nid, 'NotificationClick');
+    n.onclose = wrapEvent(nid, 'NotificationClose');
+    return nid;
+  }
+  function wrapEvent(nid, evt) {
+    return function () {
+      tabsUtils.broadcast({
+        cmd: evt,
+        data: nid,
+      });
+    };
+  }
+  var id = 0;
+  return notification;
+}();
 
 function reinit() {
   var func = function (f) {
