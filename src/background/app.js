@@ -5,6 +5,7 @@ var badges = require('./badges');
 var cache = require('./utils/cache');
 var tabsUtils = require('./utils/tabs');
 var scriptUtils = require('./utils/script');
+var clipboard = require('./utils/clipboard');
 var _ = require('../common');
 
 var vmdb = exports.vmdb = new VMDB;
@@ -195,6 +196,9 @@ var commands = {
   },
   Notification: function (data, _src) {
     return notification(data);
+  },
+  SetClipboard: function (data, _src) {
+    clipboard.set(data);
   },
 };
 

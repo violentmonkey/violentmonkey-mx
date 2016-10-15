@@ -548,6 +548,17 @@ var comm = {
           });
         },
       },
+      GM_setClipboard: {
+        value: function (text, type) {
+          comm.post({
+            cmd: 'SetClipboard',
+            data: {
+              type: type,
+              data: text,
+            },
+          });
+        },
+      },
     };
     comm.forEach(grant, function (name) {
       var prop = gm_funcs[name];
@@ -665,6 +676,9 @@ function handleC(e) {
       }
     },
     Notification: onNotificationCreate,
+    SetClipboard: function (data) {
+      post('Background', {cmd: 'SetClipboard', data: data});
+    },
   };
   var func = maps[req.cmd];
   if (func) func(req.data);
