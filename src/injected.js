@@ -210,6 +210,10 @@ var comm = {
         var req = comm.requests[r.id];
         if (req) req.callback(r);
       },
+      UpdateValues: function (data) {
+        var values = comm.values;
+        if (values && values[data.uri]) values[data.uri] = data.values;
+      },
     };
     var func = maps[obj.cmd];
     if (func) func(obj.data);

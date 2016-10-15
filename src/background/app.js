@@ -92,7 +92,16 @@ var commands = {
     });
   },
   SetValue: function (data, _src) {
-    return vmdb.setValue(data.uri, data.values);
+    return vmdb.setValue(data.uri, data.values)
+    .then(function () {
+      tabsUtils.broadcast({
+        cmd: 'UpdateValues',
+        data: {
+          uri: data.uri,
+          values: data.values,
+        },
+      });
+    });
   },
   GetOptions: function (_data, _src) {
     return _.options.getAll();
