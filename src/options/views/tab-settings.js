@@ -122,7 +122,7 @@ function exportData(selectedIds) {
   }
   if (!selectedIds.length) return;
   var withValues = _.options.get('exportValues');
-  _.sendMessage({
+  return _.sendMessage({
     cmd: 'ExportZip',
     data: {
       values: withValues,
@@ -228,7 +228,7 @@ module.exports = {
     exportData: function () {
       var _this = this;
       _this.exporting = true;
-      exportData(_this.selectedIds)
+      Promise.resolve(exportData(_this.selectedIds))
       .catch(_.noop)
       .then(function () {
         _this.exporting = false;

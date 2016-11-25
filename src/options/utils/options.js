@@ -32,6 +32,10 @@ function set(key, val) {
   });
 }
 
+function getAll() {
+  return options;
+}
+
 function parseArgs(args) {
   return args.length === 1 ? {
     key: '',
@@ -69,6 +73,7 @@ _.options = {
   get: get,
   set: set,
   hook: hook,
+  getAll: getAll,
 };
 
 _.sendMessage({cmd: 'GetOptions'})
