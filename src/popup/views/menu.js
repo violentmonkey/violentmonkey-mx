@@ -58,7 +58,7 @@ module.exports = {
         onClick: function (options) {
           _.options.set('isApplied', options.disabled);
           options.init.call(this, options);
-          _.mx.rt.icon.setIconImage('icon' + (options.disabled ? 'w' : ''));
+          _.setIcon('icon' + (options.disabled ? 'w' : ''));
           _.options.get('autoReload') && _.mx.br.tabs.getCurrentTab().refresh();
         },
       }],

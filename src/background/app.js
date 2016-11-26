@@ -311,6 +311,6 @@ vmdb.initialized.then(function () {
   sync.init();
 });
 
-_.mx.rt.icon.setIconImage('icon' + (_.options.get('isApplied') ? '' : 'w'));
+_.setIcon('icon' + (_.options.get('isApplied') ? '' : 'w'));
 
 tabsUtils.on('TAB_SWITCH', badges.get);

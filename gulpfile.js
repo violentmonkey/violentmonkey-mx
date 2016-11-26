@@ -18,7 +18,7 @@ const isProd = process.env.NODE_ENV === 'production';
 
 const paths = {
   cache: 'src/cache.js',
-  def: 'src/def.json',
+  def: 'src/def.yml',
   templates: [
     'src/**/*.html',
     '!src/**/index.html',
@@ -51,7 +51,7 @@ gulp.task('watch', ['build'], () => {
   gulp.watch(paths.jsCollect, ['js']);
   gulp.watch(paths.copy, ['copy-files']);
   gulp.watch(paths.locales, ['copy-i18n']);
-  gulp.watch(paths.def, ['copy-def']);
+  gulp.watch(paths.def, ['manifest']);
 });
 
 gulp.task('lint', () => (

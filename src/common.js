@@ -38,6 +38,18 @@ _.mx = {
 };
 _.mx.br = _.mx.rt.create('mx.browser');
 
+_.setIcon = function (icon) {
+  // Initialize on first call
+  function setIcon(icon) {
+    _.mx.rt.icon.setIconImage(icon);
+    tIcon && tIcon.setIconImage(icon);
+  }
+  var ui = _.mx.rt.create('mx.app.ui');
+  var tIcon = ui && ui.getEntryPointByActionName && ui.getEntryPointByActionName('icon', 'toolbar');
+  _.setIcon = setIcon;
+  setIcon(icon);
+};
+
 _.i18n = function (key) {
   if (!key) return '';
   var data = _.mx.rt.locale.t(key);
