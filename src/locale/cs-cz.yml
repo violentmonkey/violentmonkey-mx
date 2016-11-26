@@ -6,14 +6,14 @@ extDescription:
   message: Podpora uživatelských skriptů pro Maxthon.
 extTranslator:
   description: Information of the translator.
-  message: 'R3gi <regiprogi@gmail.com>'
+  message: R3gi <regiprogi@gmail.com>
   touched: false
 msgUpdated:
   description: Message shown when a script is updated/reinstalled.
   message: Skript aktualizován.
 msgErrorFetchingScript:
   description: Message shown when Violentmonkey fails fetching a new version of the script.
-  message: 'Chyba načítání skriptů!'
+  message: Chyba načítání skriptů!
 msgInstalled:
   description: Message shown when a script is installed.
   message: Skript nainstalován.
@@ -22,7 +22,9 @@ Warning:
   message: Varování
 msgWarnGrant:
   description: Message shown when `@grant` is not found in a script.
-  message: 'Skript [$1] nemá žádné „@grant“ řádky, což není doporučeno a může způsobovat problémy. Pro více informací klepněte sem.'
+  message: >-
+    Skript [$1] nemá žádné „@grant“ řádky, což není doporučeno a může způsobovat
+    problémy. Pro více informací klepněte sem.
 labelNoName:
   description: Text as the name of a script when no @name is assigned.
   message: Bez názvu
@@ -30,7 +32,9 @@ msgUpdating:
   description: Message shown when a new version of script is being fetched.
   message: Aktualizování…
 msgNewVersion:
-  description: 'Message shown when a new version of script is found by @updateURL, but no @downloadURL is provided.'
+  description: >-
+    Message shown when a new version of script is found by @updateURL, but no
+    @downloadURL is provided.
   message: Nalezena nová verze.
 msgCheckingForUpdate:
   description: Message shown when a script is being checked for updates by version numbers.
@@ -60,10 +64,14 @@ buttonClose:
   description: Button to close window.
   message: Zavřít
 msgErrorLoadingData:
-  description: Message shown on confirm page when the script to be installed cannot be loaded.
+  description: >-
+    Message shown on confirm page when the script to be installed cannot be
+    loaded.
   message: Chyba načítání skriptu.
 msgLoadedData:
-  description: Message shown in the confirm page when a javascript file to be installed is loaded.
+  description: >-
+    Message shown in the confirm page when a javascript file to be installed is
+    loaded.
   message: Skript načten.
 msgErrorLoadingDependency:
   description: Message shown when not all requirements are loaded successfully.
@@ -146,7 +154,9 @@ labelRelated:
   message: 'Související odkazy: '
 anchorSupportPage:
   description: Link to the support page of Violentmonkey.
-  message: '<a href=https://github.com/gera2ld/Violentmonkey-mx/wiki target=_blank>Violentmonkey</a>'
+  message: >-
+    <a href=https://github.com/gera2ld/Violentmonkey-mx/wiki
+    target=_blank>Violentmonkey</a>
 labelDonate:
   description: Label of link to donate page.
   message: Podpořte vývoj
@@ -251,7 +261,9 @@ buttonUpdate:
   description: Check a script for updates.
   message: Zkontrolovat aktualizace
 msgImported:
-  description: Message shown after import. There is an argument referring to the count of scripts imported.
+  description: >-
+    Message shown after import. There is an argument referring to the count of
+    scripts imported.
   message: 'Počet importovaných položek: $1'
 hintUseDownloadURL:
   description: Shown as a place holder for @updateURL when it is not assigned
@@ -269,7 +281,9 @@ buttonVacuumed:
   message: Data vyluxována
 hintVacuum:
   description: Hint for vacuuming data.
-  message: Zlikvidování redudance a pokus o znovu načtení chybějících zdrojů z mezipaměti.
+  message: >-
+    Zlikvidování redudance a pokus o znovu načtení chybějících zdrojů z
+    mezipaměti.
 menuManageScripts:
   description: 'Menu item to manage scripts, or to open the options page of the extension.'
   message: Správa skriptů
@@ -312,18 +326,23 @@ labelAutoReloadCurrentTab:
 labelInjectMode:
   description: Label for a combo box to choose script injection modes.
   message: ''
+  touched: false
 injectModeNormal:
   description: 'Script injection mode: Normal'
   message: ''
+  touched: false
 injectModeAdvanced:
   description: 'Script injection mode: Advanced'
   message: ''
+  touched: false
 hintInjectModeNormal:
   description: Hint to explain the normal injection mode.
   message: ''
+  touched: false
 hintInjectModeAdvanced:
   description: Hint to explain the advanced injection mode.
   message: ''
+  touched: false
 hintInputURL:
   description: Hint for a prompt box to input URL of a user script.
   message: ''
@@ -331,7 +350,9 @@ buttonInstallFromURL:
   description: Button to ask for URL of a user script.
   message: ''
 msgNamespaceConflict:
-  description: Message shown when namespace of the new script conflicts with an existent one.
+  description: >-
+    Message shown when namespace of the new script conflicts with an existent
+    one.
   message: ''
 labelSyncTo:
   description: Label for sync service.
@@ -365,4 +386,10 @@ lastSync:
   message: ''
 labelSync:
   description: Label for sync options.
+  message: ''
+msgInvalidScript:
+  description: Message shown when script is invalid.
+  message: ''
+menuScriptDisabled:
+  description: 'Menu item showing the status of Violentmonkey, when disabled.'
   message: ''

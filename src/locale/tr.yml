@@ -6,14 +6,14 @@ extDescription:
   message: Maxthon için Userscript desteği.
 extTranslator:
   description: Information of the translator.
-  message: 'Erdem Uysal <erdem@erdemuysal.net>'
+  message: Erdem Uysal <erdem@erdemuysal.net>
   touched: false
 msgUpdated:
   description: Message shown when a script is updated/reinstalled.
   message: Script güncellendi
 msgErrorFetchingScript:
   description: Message shown when Violentmonkey fails fetching a new version of the script.
-  message: 'Script alınamadı!'
+  message: Script alınamadı!
 msgInstalled:
   description: Message shown when a script is installed.
   message: Script kuruldu.
@@ -22,7 +22,9 @@ Warning:
   message: Warning
 msgWarnGrant:
   description: Message shown when `@grant` is not found in a script.
-  message: 'Script [$1] has no `@grant` lines, which is not recommended and may cause failures. Click to see more details.'
+  message: >-
+    Script [$1] has no `@grant` lines, which is not recommended and may cause
+    failures. Click to see more details.
 labelNoName:
   description: Text as the name of a script when no @name is assigned.
   message: İsimsiz
@@ -30,7 +32,9 @@ msgUpdating:
   description: Message shown when a new version of script is being fetched.
   message: Güncelleniyor...
 msgNewVersion:
-  description: 'Message shown when a new version of script is found by @updateURL, but no @downloadURL is provided.'
+  description: >-
+    Message shown when a new version of script is found by @updateURL, but no
+    @downloadURL is provided.
   message: Yeni sürüm bulundu.
 msgCheckingForUpdate:
   description: Message shown when a script is being checked for updates by version numbers.
@@ -60,10 +64,14 @@ buttonClose:
   description: Button to close window.
   message: Kapat
 msgErrorLoadingData:
-  description: Message shown on confirm page when the script to be installed cannot be loaded.
+  description: >-
+    Message shown on confirm page when the script to be installed cannot be
+    loaded.
   message: Script yüklenemedi.
 msgLoadedData:
-  description: Message shown in the confirm page when a javascript file to be installed is loaded.
+  description: >-
+    Message shown in the confirm page when a javascript file to be installed is
+    loaded.
   message: Script yüklendi.
 msgErrorLoadingDependency:
   description: Message shown when not all requirements are loaded successfully.
@@ -146,7 +154,9 @@ labelRelated:
   message: 'Related links: '
 anchorSupportPage:
   description: Link to the support page of Violentmonkey.
-  message: '<a href=https://github.com/gera2ld/Violentmonkey-mx/wiki target=_blank>Violentmonkey</a>'
+  message: >-
+    <a href=https://github.com/gera2ld/Violentmonkey-mx/wiki
+    target=_blank>Violentmonkey</a>
 labelDonate:
   description: Label of link to donate page.
   message: Donate
@@ -230,7 +240,7 @@ buttonSaveClose:
   message: Kaydet ve Kapat
 labelNoScripts:
   description: Message shown when no script is installed.
-  message: "Oops, you haven't got any script yet."
+  message: 'Oops, you haven''t got any script yet.'
 hintSupportPage:
   description: Hint for support page.
   message: Destek sayfası
@@ -251,7 +261,9 @@ buttonUpdate:
   description: Check a script for updates.
   message: Güncellemeleri kontrol et
 msgImported:
-  description: Message shown after import. There is an argument referring to the count of scripts imported.
+  description: >-
+    Message shown after import. There is an argument referring to the count of
+    scripts imported.
   message: $1 öğe kullanılmak üzere alındı.
 hintUseDownloadURL:
   description: Shown as a place holder for @updateURL when it is not assigned
@@ -269,7 +281,9 @@ buttonVacuumed:
   message: Veriler vakumlandı
 hintVacuum:
   description: Hint for vacuuming data.
-  message: Gereksiz verileri temizleyin ve gerekli kaynakların ön belleğe yüklenmesini sağlayın.
+  message: >-
+    Gereksiz verileri temizleyin ve gerekli kaynakların ön belleğe yüklenmesini
+    sağlayın.
 menuManageScripts:
   description: 'Menu item to manage scripts, or to open the options page of the extension.'
   message: Scriptleri yönet
@@ -312,18 +326,23 @@ labelAutoReloadCurrentTab:
 labelInjectMode:
   description: Label for a combo box to choose script injection modes.
   message: ''
+  touched: false
 injectModeNormal:
   description: 'Script injection mode: Normal'
   message: ''
+  touched: false
 injectModeAdvanced:
   description: 'Script injection mode: Advanced'
   message: ''
+  touched: false
 hintInjectModeNormal:
   description: Hint to explain the normal injection mode.
   message: ''
+  touched: false
 hintInjectModeAdvanced:
   description: Hint to explain the advanced injection mode.
   message: ''
+  touched: false
 hintInputURL:
   description: Hint for a prompt box to input URL of a user script.
   message: ''
@@ -331,7 +350,9 @@ buttonInstallFromURL:
   description: Button to ask for URL of a user script.
   message: ''
 msgNamespaceConflict:
-  description: Message shown when namespace of the new script conflicts with an existent one.
+  description: >-
+    Message shown when namespace of the new script conflicts with an existent
+    one.
   message: ''
 labelSyncTo:
   description: Label for sync service.
@@ -365,4 +386,10 @@ lastSync:
   message: ''
 labelSync:
   description: Label for sync options.
+  message: ''
+msgInvalidScript:
+  description: Message shown when script is invalid.
+  message: ''
+menuScriptDisabled:
+  description: 'Menu item showing the status of Violentmonkey, when disabled.'
   message: ''
