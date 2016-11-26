@@ -1,6 +1,6 @@
 {
   "name": "violentmonkey-mx",
-  "version": "2.6.1",
+  "version": "2.6.2",
   "description": "Violentmonkey for Maxthon",
   "scripts": {
     "clean": "gulp clean",
