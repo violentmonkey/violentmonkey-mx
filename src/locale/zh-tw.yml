@@ -30,7 +30,9 @@ msgUpdating:
   description: Message shown when a new version of script is being fetched.
   message: 正在更新...
 msgNewVersion:
-  description: 'Message shown when a new version of script is found by @updateURL, but no @downloadURL is provided.'
+  description: >-
+    Message shown when a new version of script is found by @updateURL, but no
+    @downloadURL is provided.
   message: 發現新版本。
 msgCheckingForUpdate:
   description: Message shown when a script is being checked for updates by version numbers.
@@ -60,10 +62,14 @@ buttonClose:
   description: Button to close window.
   message: 關閉
 msgErrorLoadingData:
-  description: Message shown on confirm page when the script to be installed cannot be loaded.
+  description: >-
+    Message shown on confirm page when the script to be installed cannot be
+    loaded.
   message: 加载脚本数据发生错误。
 msgLoadedData:
-  description: Message shown in the confirm page when a javascript file to be installed is loaded.
+  description: >-
+    Message shown in the confirm page when a javascript file to be installed is
+    loaded.
   message: 脚本数据已加载。
 msgErrorLoadingDependency:
   description: Message shown when not all requirements are loaded successfully.
@@ -200,7 +206,7 @@ labelKeepInclude:
   message: 保留原有的包含規則
 labelCustomInclude:
   description: Label of custom @include rules.
-  message: '自定義包含規則：<em>（每行一個）</em>'
+  message: 自定義包含規則：<em>（每行一個）</em>
 labelMatch:
   description: Label of @match rules.
   message: 匹配規則
@@ -209,7 +215,7 @@ labelKeepMatch:
   message: 保留原有的匹配規則
 labelCustomMatch:
   description: Label of custom @match rules.
-  message: '自定義匹配規則：<em>（每行一個）</em>'
+  message: 自定義匹配規則：<em>（每行一個）</em>
 labelExclude:
   description: Label of @exclude rules.
   message: 排除規則
@@ -218,7 +224,7 @@ labelKeepExclude:
   message: 保留原有的排除規則
 labelCustomExclude:
   description: Label of custom @exclude rules.
-  message: '自定義排除規則：<em>（每行一個）</em>'
+  message: 自定義排除規則：<em>（每行一個）</em>
 labelAllowUpdate:
   description: Option to allow checking updates for a script.
   message: 允許更新
@@ -230,7 +236,9 @@ buttonSaveClose:
   message: 儲存並關閉
 labelNoScripts:
   description: Message shown when no script is installed.
-  message: "你居然没有脚本！<br>快<a href=http://gerald.top/tag/userjs target=_blank>点此</a>查看<a href=http://gerald.top target=_blank style='color:orange'>Gerald</a>的脚本吧~"
+  message: >-
+    你居然没有脚本！<br>快<a href=http://gerald.top/tag/userjs target=_blank>点此</a>查看<a
+    href=http://gerald.top target=_blank style='color:orange'>Gerald</a>的脚本吧~
 hintSupportPage:
   description: Hint for support page.
   message: 支持页面
@@ -251,7 +259,9 @@ buttonUpdate:
   description: Check a script for updates.
   message: 檢查更新
 msgImported:
-  description: Message shown after import. There is an argument referring to the count of scripts imported.
+  description: >-
+    Message shown after import. There is an argument referring to the count of
+    scripts imported.
   message: 已匯入$1個腳本。
 hintUseDownloadURL:
   description: Shown as a place holder for @updateURL when it is not assigned
@@ -312,18 +322,23 @@ labelAutoReloadCurrentTab:
 labelInjectMode:
   description: Label for a combo box to choose script injection modes.
   message: 脚本注入模式：
+  touched: false
 injectModeNormal:
   description: 'Script injection mode: Normal'
   message: 普通
+  touched: false
 injectModeAdvanced:
   description: 'Script injection mode: Advanced'
   message: 高级
+  touched: false
 hintInjectModeNormal:
   description: Hint to explain the normal injection mode.
   message: '简单粗暴，但是在某些安全性高的页面会注入失败，如https://github.com'
+  touched: false
 hintInjectModeAdvanced:
   description: Hint to explain the advanced injection mode.
   message: 不走寻常路，可以在大部分页面成功注入
+  touched: false
 hintInputURL:
   description: Hint for a prompt box to input URL of a user script.
   message: 请输入地址：
@@ -331,7 +346,9 @@ buttonInstallFromURL:
   description: Button to ask for URL of a user script.
   message: 通过地址安装
 msgNamespaceConflict:
-  description: Message shown when namespace of the new script conflicts with an existent one.
+  description: >-
+    Message shown when namespace of the new script conflicts with an existent
+    one.
   message: 脚本命名空间冲突，请修改@name和@namespace！
 labelSyncTo:
   description: Label for sync service.
@@ -366,3 +383,9 @@ lastSync:
 labelSync:
   description: Label for sync options.
   message: 同步
+msgInvalidScript:
+  description: Message shown when script is invalid.
+  message: ''
+menuScriptDisabled:
+  description: 'Menu item showing the status of Violentmonkey, when disabled.'
+  message: ''

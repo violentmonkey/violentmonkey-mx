@@ -13,7 +13,7 @@ msgUpdated:
   message: Скрипт обновлен.
 msgErrorFetchingScript:
   description: Message shown when Violentmonkey fails fetching a new version of the script.
-  message: 'Ошибка выборки скрипта!'
+  message: Ошибка выборки скрипта!
 msgInstalled:
   description: Message shown when a script is installed.
   message: Скрипт установлен.
@@ -22,7 +22,9 @@ Warning:
   message: Warning
 msgWarnGrant:
   description: Message shown when `@grant` is not found in a script.
-  message: 'Script [$1] has no `@grant` lines, which is not recommended and may cause failures. Click to see more details.'
+  message: >-
+    Script [$1] has no `@grant` lines, which is not recommended and may cause
+    failures. Click to see more details.
 labelNoName:
   description: Text as the name of a script when no @name is assigned.
   message: Без имени
@@ -30,7 +32,9 @@ msgUpdating:
   description: Message shown when a new version of script is being fetched.
   message: Обновление...
 msgNewVersion:
-  description: 'Message shown when a new version of script is found by @updateURL, but no @downloadURL is provided.'
+  description: >-
+    Message shown when a new version of script is found by @updateURL, but no
+    @downloadURL is provided.
   message: Найдена новая версия.
 msgCheckingForUpdate:
   description: Message shown when a script is being checked for updates by version numbers.
@@ -60,10 +64,14 @@ buttonClose:
   description: Button to close window.
   message: Закрыть
 msgErrorLoadingData:
-  description: Message shown on confirm page when the script to be installed cannot be loaded.
+  description: >-
+    Message shown on confirm page when the script to be installed cannot be
+    loaded.
   message: Ошибка при загрузке данных скрипта.
 msgLoadedData:
-  description: Message shown in the confirm page when a javascript file to be installed is loaded.
+  description: >-
+    Message shown in the confirm page when a javascript file to be installed is
+    loaded.
   message: Данные скрипта загружены.
 msgErrorLoadingDependency:
   description: Message shown when not all requirements are loaded successfully.
@@ -146,7 +154,9 @@ labelRelated:
   message: 'Связанные ссылки: '
 anchorSupportPage:
   description: Link to the support page of Violentmonkey.
-  message: '<a href=https://github.com/gera2ld/Violentmonkey-mx/wiki target=_blank>Violentmonkey</a>'
+  message: >-
+    <a href=https://github.com/gera2ld/Violentmonkey-mx/wiki
+    target=_blank>Violentmonkey</a>
 labelDonate:
   description: Label of link to donate page.
   message: Пожертвовать
@@ -164,7 +174,7 @@ labelTranslator:
   message: 'Переводчик: '
 anchorTranslator:
   description: Translator shown on about tab.
-  message: '<a>Wald</a>'
+  message: <a>Wald</a>
 labelCurrentLang:
   description: Label of current language.
   message: 'Current language: '
@@ -230,7 +240,7 @@ buttonSaveClose:
   message: Сохранить и закрыть
 labelNoScripts:
   description: Message shown when no script is installed.
-  message: "Oops, you haven't got any script yet."
+  message: 'Oops, you haven''t got any script yet.'
 hintSupportPage:
   description: Hint for support page.
   message: Страница поддержки
@@ -251,7 +261,9 @@ buttonUpdate:
   description: Check a script for updates.
   message: Проверить обновления
 msgImported:
-  description: Message shown after import. There is an argument referring to the count of scripts imported.
+  description: >-
+    Message shown after import. There is an argument referring to the count of
+    scripts imported.
   message: $1 скрипт(ов) импортировано.
 hintUseDownloadURL:
   description: Shown as a place holder for @updateURL when it is not assigned
@@ -312,18 +324,23 @@ labelAutoReloadCurrentTab:
 labelInjectMode:
   description: Label for a combo box to choose script injection modes.
   message: ''
+  touched: false
 injectModeNormal:
   description: 'Script injection mode: Normal'
   message: ''
+  touched: false
 injectModeAdvanced:
   description: 'Script injection mode: Advanced'
   message: ''
+  touched: false
 hintInjectModeNormal:
   description: Hint to explain the normal injection mode.
   message: ''
+  touched: false
 hintInjectModeAdvanced:
   description: Hint to explain the advanced injection mode.
   message: ''
+  touched: false
 hintInputURL:
   description: Hint for a prompt box to input URL of a user script.
   message: 'Введите URL:'
@@ -331,7 +348,9 @@ buttonInstallFromURL:
   description: Button to ask for URL of a user script.
   message: Установить по ссылке
 msgNamespaceConflict:
-  description: Message shown when namespace of the new script conflicts with an existent one.
+  description: >-
+    Message shown when namespace of the new script conflicts with an existent
+    one.
   message: ''
 labelSyncTo:
   description: Label for sync service.
@@ -365,4 +384,10 @@ lastSync:
   message: ''
 labelSync:
   description: Label for sync options.
+  message: ''
+msgInvalidScript:
+  description: Message shown when script is invalid.
+  message: ''
+menuScriptDisabled:
+  description: 'Menu item showing the status of Violentmonkey, when disabled.'
   message: ''

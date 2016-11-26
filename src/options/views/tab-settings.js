@@ -122,7 +122,7 @@ function exportData(selectedIds) {
   }
   if (!selectedIds.length) return;
   var withValues = _.options.get('exportValues');
-  _.sendMessage({
+  return _.sendMessage({
     cmd: 'ExportZip',
     data: {
       values: withValues,
@@ -170,7 +170,6 @@ var Message = require('./message');
 var SyncService = require('./sync-service');
 var utils = require('../utils');
 var store = utils.store;
-var events = utils.events;
 var cache = require('../../cache');
 var _ = require('../../common');
 
@@ -195,10 +194,6 @@ module.exports = {
   },
   created: function () {
     this.updateSelection(true);
-    events.$on('EnableService', this.onEnableService);
-  },
-  beforeDestroy: function () {
-    events.$off('EnableService', this.onEnableService);
   },
   methods: {
     updateAutoUpdate: function () {
@@ -228,7 +223,7 @@ module.exports = {
     exportData: function () {
       var _this = this;
       _this.exporting = true;
-      exportData(_this.selectedIds)
+      Promise.resolve(exportData(_this.selectedIds))
       .catch(_.noop)
       .then(function () {
         _this.exporting = false;
@@ -247,7 +242,7 @@ module.exports = {
     onEnableService: function (name) {
       store.sync.forEach(function (service) {
         if (service.name !== name) {
-          var key = service.name + 'Enabled';
+          var key = service.name + '.enabled';
           var enabled = _.options.get(key);
           if (enabled) {
             _.options.set(key, false);
