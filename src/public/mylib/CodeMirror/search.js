@@ -42,6 +42,7 @@
 			dialog = wrap.appendChild(document.createElement("div"));
 			dialog.className='CodeMirror-dialog';
 		}
+    var _ = CodeMirror;
 		var text=_.i18n('labelSearch')+'<input class=CodeMirror-search placeholder="'+_.i18n('labelSearchFor')+'"><button class=CodeMirror-findPrev>&lt;</button><button class=CodeMirror-findNext>&gt;</button><button class=CodeMirror-cancel>&times;</button>',closed=false,iS,iR;
 		if(rep) text+='<br>'+_.i18n('labelReplace')+'<input class=CodeMirror-replace placeholder="'+_.i18n('labelReplaceWith')+'"><button class=CodeMirror-replaceNext>'+_.i18n('buttonReplace')+'</button><button class=CodeMirror-replaceAll>'+_.i18n('buttonReplaceAll')+'</button>';
 		dialog.innerHTML=text;
