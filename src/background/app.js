@@ -314,3 +314,12 @@ vmdb.initialized.then(function () {
 _.setIcon('icon' + (_.options.get('isApplied') ? '' : 'w'));
 
 tabsUtils.on('TAB_SWITCH', badges.get);
+tabsUtils.on('ON_NAVIGATE', function (tab) {
+  // file:/// URLs will not be injected on Maxthon 5
+  if (/^file:\/\/\/.*?\.user\.js$/.test(tab.url)) {
+    commands.InstallScript({
+      url: tab.url,
+    });
+    _.tabs.remove(tab.id);
+  }
+});

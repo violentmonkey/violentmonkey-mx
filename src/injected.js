@@ -784,7 +784,7 @@ function checkJS() {
     });
   }
 }
-if (/\.user\.js$/.test(location.pathname)) {
+if (!(/^file:\/\/\//.test(location.href)) && /\.user\.js$/.test(location.pathname)) {
   if (document.readyState == 'complete')
     checkJS();
   else
