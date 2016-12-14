@@ -33,6 +33,7 @@ const mappings = {
   CodeMirror: 'codemirror',
   'define.js': 'define-commonjs',
   'promise.js': 'sync-promise-lite',
+  'vue.min.js': 'vue/dist',
 };
 
 function updateFile(dest, src) {
