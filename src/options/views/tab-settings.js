@@ -87,6 +87,8 @@ function importData(file) {
     });
   }).then(function (count) {
     Message.open({text: _.i18n('msgImported', [count])});
+  }, function (err) {
+    console.error(err);
   });
 }
 function exportData(selectedIds) {
