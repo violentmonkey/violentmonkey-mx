@@ -303,12 +303,14 @@ labelSearch:
 labelSearchFor:
   description: Text shown as a place holder in the search box.
   message: Найти для...
+  touched: false
 labelReplace:
   description: Label for replace input in search box.
   message: 'Заменить на: '
 labelReplaceWith:
   description: Text shown as a place holder in the replace box.
   message: Заменить на...
+  touched: false
 buttonReplace:
   description: Button to replace the current match.
   message: Заменить
@@ -390,4 +392,7 @@ msgInvalidScript:
   message: ''
 menuScriptDisabled:
   description: 'Menu item showing the status of Violentmonkey, when disabled.'
+  message: ''
+labelLineNumber:
+  description: Label for line number jumper.
   message: ''
