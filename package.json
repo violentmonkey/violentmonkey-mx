@@ -3,7 +3,7 @@
   "version": "2.5.5",
   "description": "Violentmonkey for Maxthon",
   "scripts": {
-    "clean": "gulp clean",
+    "prebuild": "gulp clean",
     "build": "gulp build",
     "dev": "gulp watch",
     "i18n": "gulp i18n",
