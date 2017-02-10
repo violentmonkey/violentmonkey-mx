@@ -305,12 +305,14 @@ labelSearch:
 labelSearchFor:
   description: Text shown as a place holder in the search box.
   message: Hledat…
+  touched: false
 labelReplace:
   description: Label for replace input in search box.
   message: 'Nahradit: '
 labelReplaceWith:
   description: Text shown as a place holder in the replace box.
   message: Nahradit čím…
+  touched: false
 buttonReplace:
   description: Button to replace the current match.
   message: Nahradit
@@ -392,4 +394,7 @@ msgInvalidScript:
   message: ''
 menuScriptDisabled:
   description: 'Menu item showing the status of Violentmonkey, when disabled.'
+  message: ''
+labelLineNumber:
+  description: Label for line number jumper.
   message: ''

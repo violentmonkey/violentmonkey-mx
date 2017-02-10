@@ -301,12 +301,14 @@ labelSearch:
 labelSearchFor:
   description: Text shown as a place holder in the search box.
   message: 查找...
+  touched: false
 labelReplace:
   description: Label for replace input in search box.
   message: 替换：
 labelReplaceWith:
   description: Text shown as a place holder in the replace box.
   message: 替换成...
+  touched: false
 buttonReplace:
   description: Button to replace the current match.
   message: 替换
@@ -388,4 +390,7 @@ msgInvalidScript:
   message: ''
 menuScriptDisabled:
   description: 'Menu item showing the status of Violentmonkey, when disabled.'
+  message: ''
+labelLineNumber:
+  description: Label for line number jumper.
   message: ''
