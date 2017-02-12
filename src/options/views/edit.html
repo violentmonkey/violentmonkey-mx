@@ -79,7 +79,7 @@
     </div>
     <h2 v-text="i18n('labelScriptEditor')"></h2>
   </div>
-  <div class="frame-block flex-auto">
+  <div class="frame-block flex-auto p-rel">
     <editor class="abs-full" :content="code" @change="contentChange" @ready="initEditor" :commands="commands"></editor>
   </div>
   <div class="frame-block" v-show="search.show">
