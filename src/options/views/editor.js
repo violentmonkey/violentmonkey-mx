@@ -51,7 +51,6 @@ function initCodeMirror() {
   return addScripts(
     {src: '/lib/CodeMirror/lib/codemirror.js'}
   ).then(function () {
-    CodeMirror.i18n = _.i18n;
     return addScripts([
       {src: '/lib/CodeMirror/mode/javascript/javascript.js'},
       {src: '/lib/CodeMirror/addon/comment/continuecomment.js'},
@@ -85,7 +84,6 @@ function indentWithTab(cm) {
   }
 }
 
-var _ = require('../../common');
 var cache = require('../../cache');
 var readyCodeMirror = initCodeMirror();
 
