@@ -135,6 +135,7 @@ labelDataExport:
 labelScriptsToExport:
   description: Label shown on top of the script list for export.
   message: 要导出的脚本
+  touched: false
 labelExportScriptData:
   description: Option to export script data along with scripts.
   message: 导出脚本数据
@@ -153,6 +154,7 @@ labelRelated:
 anchorSupportPage:
   description: Link to the support page of Violentmonkey.
   message: '<a href=http://gerald.top/code/vm-mx target=_blank>暴力猴</a>'
+  touched: false
 labelDonate:
   description: Label of link to donate page.
   message: 捐助
@@ -283,12 +285,14 @@ hintVacuum:
 menuManageScripts:
   description: 'Menu item to manage scripts, or to open the options page of the extension.'
   message: 管理脚本
+  touched: false
 menuFindScripts:
   description: Menu item to find scripts for a site.
   message: 为此站点查找脚本
 menuBack:
   description: Menu item to go back to main menu from script commands.
   message: 返回
+  touched: false
 menuCommands:
   description: Menu item to list script commands.
   message: 脚本命令...
@@ -355,15 +359,19 @@ msgNamespaceConflict:
 labelSyncTo:
   description: Label for sync service.
   message: 同步到 $1
+  touched: false
 buttonAuthorized:
   description: Button shown when permissions are already authorized for sync.
   message: 已授权
+  touched: false
 buttonAuthorizing:
   description: Button shown when authorization is in progress.
   message: 正在授权
+  touched: false
 buttonAuthorize:
   description: Button to authorize permissions for sync.
   message: 授权
+  touched: false
 msgSyncInit:
   description: Message shown when sync service is initializing.
   message: 正在初始化...
@@ -394,3 +402,57 @@ menuScriptDisabled:
 labelLineNumber:
   description: Label for line number jumper.
   message: 行号：
+msgSavedBlacklist:
+  description: Message shown when blacklist are saved.
+  message: 黑名单已更新！
+msgSavedCustomCSS:
+  description: Message shown when custom CSS is saved.
+  message: 自定义样式已更新！
+labelSyncDisabled:
+  description: Label for option to disable sync service.
+  message: 无
+labelSyncAuthorizing:
+  description: Label for button when authorization is in progress.
+  message: 授权中
+labelSyncRevoke:
+  description: Label for button to revoke authorization for a service.
+  message: 取消授权
+labelSyncAuthorize:
+  description: Label for button to authorize a service.
+  message: 授权
+menuDashboard:
+  description: Label for menu item to open dashboard.
+  message: 打开控制台
+menuMatchedScripts:
+  description: Label for menu listing matched scripts.
+  message: 匹配的脚本
+labelGeneral:
+  description: Label for general settings.
+  message: 通用
+labelBlacklist:
+  description: Label for global blacklist settings in security section.
+  message: 黑名单
+descBlacklist:
+  description: HTML Description for the global blacklist.
+  message: 此列表匹配的URL将不会被注入脚本。每行都是一条<code>@exclude</code>规则但是将用于全局。
+buttonSaveBlacklist:
+  description: Button to save global blacklist.
+  message: 保存
+labelCustomCSS:
+  description: Label for custom CSS section.
+  message: 自定义样式
+descCustomCSS:
+  description: Description of custom CSS section.
+  message: 这里可以为管理页面和脚本安装页面设置自定义CSS。如果你不确定它的意思，请不要修改。
+buttonSaveCustomCSS:
+  description: Label for button to save custom CSS.
+  message: 保存
+labelSyncService:
+  description: Label for sync service select.
+  message: 同步到
+labelSyncSettings:
+  description: Label for sync settings.
+  message: 设置
+labelSyncScriptStatus:
+  description: Label for option to sync script status.
+  message: 同步脚本状态

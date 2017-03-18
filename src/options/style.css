@@ -10,6 +10,7 @@ html {
 }
 body {
   height: 100%;
+  font-size: 1em;
 }
 h1 {
   font-size: 1.5rem;
@@ -20,6 +21,7 @@ h1, h2 {
 }
 button {
   padding: 0 .5rem;
+  font-size: 1rem;
 }
 a {
   color: dodgerblue;
@@ -28,7 +30,6 @@ textarea,
 input[type=text] {
   width: 100%;
 }
-.suboption.disabled,
 input[disabled] ~ * {
   color: gray;
 }
@@ -36,6 +37,15 @@ hr {
   border: none;
   border-top: 1px solid darkgray;
 }
+fieldset {
+  padding: .3rem;
+  margin-top: .5rem;
+  border: 1px solid silver;
+  textarea {
+    height: 5em;
+  }
+}
+
 .pull-left {
   float: left;
 }
@@ -59,7 +69,16 @@ hr {
   position: relative;
 }
 .mr-1 {
-  margin-right: 1em;
+  margin-right: .5em;
+}
+.mt-1 {
+  margin-top: .5em;
+}
+.mb-1 {
+  margin-bottom: .5em;
+}
+.mb-2 {
+  margin-bottom: 1em;
 }
 .h-100 {
   height: 100%;
@@ -87,7 +106,6 @@ hr {
 }
 .dropdown {
   position: relative;
-  cursor: pointer;
   display: inline-block;
 }
 .dropdown:not(.open) .dropdown-menu {
@@ -129,7 +147,7 @@ aside img {
 }
 .sidemenu > a {
   display: block;
-  line-height: 2.5em;
+  line-height: 2.5rem;
   font-size: 1rem;
   font-weight: bold;
   text-decoration: none;
@@ -190,21 +208,32 @@ aside img {
   color: green;
   font-weight: bold;
 }
-.line {
-  display: block;
-  line-height: 2;
-}
-.suboption {
-  padding-left: 1.5em;
-}
 .no-pad {
   padding: 0;
 }
-fieldset.title {
-  margin-top: 1rem;
-  padding: .8rem;
+section {
+  position: relative;
+  margin-top: 2rem;
+  padding: 1.2rem .8rem .8rem;
   border: none;
   border-top: 1px solid silver;
+  > h3 {
+    position: absolute;
+    padding: 0 .2rem;
+    top: -.6em;
+    left: .8rem;
+    line-height: 1;
+    background: white;
+  }
+  > h4 {
+    margin-bottom: .3rem;
+  }
+  > p {
+    margin-bottom: .3rem;
+  }
+}
+code {
+  background: #F7E999;
 }
 .export-list {
   display: block;
@@ -221,10 +250,6 @@ fieldset.title {
 }
 .frame-block {
   padding: .5rem;
-}
-.buttons > * {
-  display: inline-block;
-  position: relative;
 }
 .options-panel label {
   display: block;
@@ -248,7 +273,7 @@ fieldset.title {
   padding: .6rem;
   border: 1px solid #ccc;
   border-radius: .3rem;
-  transition: -webkit-transform .5s;
+  transition: transform .5s;
 }
 .script:hover {
   border-color: darkgray;
@@ -263,11 +288,13 @@ fieldset.title {
 .script-info {
   margin-left: 3.5rem;
   line-height: 1.5;
-}
-.script-info > * {
-  display: inline-block;
-  margin-right: .8rem;
-  vertical-align: middle;
+  align-items: center;
+  > * {
+    margin-right: .8rem;
+  }
+  .icon {
+    display: block;
+  }
 }
 .script-icon {
   position: absolute;
@@ -290,7 +317,6 @@ fieldset.title {
   content: "\200b";
 }
 .disabled .script-icon {
-  -webkit-filter: grayscale(.5);
   filter: grayscale(.5);
 }
 .disabled .script-name {
@@ -308,33 +334,35 @@ fieldset.title {
 .edit {
   background: #eee;
   z-index: 10;
+  .dropdown-menu {
+    width: 32rem;
+    > table {
+      width: 100%;
+    }
+    td:not(.expand) {
+      width: 1px;
+      white-space: nowrap;
+    }
+  }
 }
-.edit .dropdown-menu {
-  width: 32rem;
-}
-.edit .dropdown-menu > table {
-  width: 100%;
-}
-.edit .dropdown-menu td:not(.expand) {
-  width: 1px;
-  white-space: nowrap;
-}
-.feature-text {
-  position: relative;
-}
-.feature .feature-text::after {
-  content: '';
-  display: block;
-  position: absolute;
-  left: 100%;
-  border-radius: 50%;
-}
-.feature .feature-text::after {
-  top: -.1rem;
-  width: .4rem;
-  height: .4rem;
-  margin-left: .1rem;
-  background: red;
+.feature {
+  &-text {
+    position: relative;
+    &::after {
+      .feature & {
+        content: '';
+        display: block;
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        top: -.1rem;
+        left: 100%;
+        border-radius: 50%;
+        margin-left: .1rem;
+        background: red;
+      }
+    }
+  }
 }
 .message {
   position: absolute;
@@ -364,4 +392,10 @@ fieldset.title {
 }
 svg path {
   fill: currentColor;
+}
+
+.tab-settings {
+  textarea {
+    height: 10em;
+  }
 }

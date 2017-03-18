@@ -144,9 +144,6 @@ _.sendMessage = function (data) {
   .then(function (res) {
     if (res && res.error) throw res.error;
     return res && res.data;
-  })
-  .catch(function (err) {
-    console.error(err);
   });
 };
 

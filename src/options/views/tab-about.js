@@ -1,7 +1,6 @@
-var cache = require('../../cache');
-var utils = require('../utils');
+var cache = require('src/cache');
 var data = {
-  store: utils.store,
+  version: browser.runtime.getManifest().version,
   language: navigator.language,
 };
 
@@ -9,10 +8,5 @@ module.exports = {
   template: cache.get('./tab-about.html'),
   data: function () {
     return data;
-  },
-  computed: {
-    version: function () {
-      return this.store.app.version;
-    },
   },
 };

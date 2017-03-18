@@ -137,6 +137,7 @@ labelDataExport:
 labelScriptsToExport:
   description: Label shown on top of the script list for export.
   message: Scripts to export
+  touched: false
 labelExportScriptData:
   description: Option to export script data along with scripts.
   message: Export script data
@@ -157,6 +158,7 @@ anchorSupportPage:
   message: >-
     <a href=https://github.com/gera2ld/Violentmonkey-mx/wiki
     target=_blank>Violentmonkey</a>
+  touched: false
 labelDonate:
   description: Label of link to donate page.
   message: Donate
@@ -285,12 +287,14 @@ hintVacuum:
 menuManageScripts:
   description: 'Menu item to manage scripts, or to open the options page of the extension.'
   message: Manage scripts
+  touched: false
 menuFindScripts:
   description: Menu item to find scripts for a site.
   message: Find scripts for this site
 menuBack:
   description: Menu item to go back to main menu from script commands.
   message: Back
+  touched: false
 menuCommands:
   description: Menu item to list script commands.
   message: Script commands...
@@ -357,15 +361,19 @@ msgNamespaceConflict:
 labelSyncTo:
   description: Label for sync service.
   message: Sync to $1
+  touched: false
 buttonAuthorized:
   description: Button shown when permissions are already authorized for sync.
   message: Authorized
+  touched: false
 buttonAuthorizing:
   description: Button shown when authorization is in progress.
   message: Authorizing
+  touched: false
 buttonAuthorize:
   description: Button to authorize permissions for sync.
   message: Authorize
+  touched: false
 msgSyncInit:
   description: Message shown when sync service is initializing.
   message: Initializing...
@@ -396,3 +404,61 @@ menuScriptDisabled:
 labelLineNumber:
   description: Label for line number jumper.
   message: 'Line no.: '
+msgSavedBlacklist:
+  description: Message shown when blacklist are saved.
+  message: Blacklist updated.
+msgSavedCustomCSS:
+  description: Message shown when custom CSS is saved.
+  message: Custom style is updated.
+labelSyncDisabled:
+  description: Label for option to disable sync service.
+  message: None
+labelSyncAuthorizing:
+  description: Label for button when authorization is in progress.
+  message: Authorizing
+labelSyncRevoke:
+  description: Label for button to revoke authorization for a service.
+  message: Revoke
+labelSyncAuthorize:
+  description: Label for button to authorize a service.
+  message: Authorize
+menuDashboard:
+  description: Label for menu item to open dashboard.
+  message: Open Dashboard
+menuMatchedScripts:
+  description: Label for menu listing matched scripts.
+  message: Matched scripts
+labelGeneral:
+  description: Label for general settings.
+  message: General
+labelBlacklist:
+  description: Label for global blacklist settings in security section.
+  message: Blacklist
+descBlacklist:
+  description: HTML Description for the global blacklist.
+  message: >-
+    URL matched in this list will not be injected by scripts. Each line is an
+    <code>@exclude</code> rule but globally applied.
+buttonSaveBlacklist:
+  description: Button to save global blacklist.
+  message: Save
+labelCustomCSS:
+  description: Label for custom CSS section.
+  message: Custom Style
+descCustomCSS:
+  description: Description of custom CSS section.
+  message: >-
+    Custom CSS for options page and script installation page. If you are not
+    sure what this is for, please do not edit it.
+buttonSaveCustomCSS:
+  description: Label for button to save custom CSS.
+  message: Save
+labelSyncService:
+  description: Label for sync service select.
+  message: Sync to
+labelSyncSettings:
+  description: Label for sync settings.
+  message: Settings
+labelSyncScriptStatus:
+  description: Label for option to sync script status.
+  message: Sync script status

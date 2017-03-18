@@ -59,23 +59,23 @@ function sendMessage(data) {
     return res && res.data;
   });
 }
-browser.runtime.onMessage.addListener(function (req, src) {
-  var handlers = {
-    Command: function (data) {
-      comm.post({cmd: 'Command', data: data});
-    },
-    HttpRequested: function (res) {
-      comm.post({cmd: 'HttpRequested', data: res});
-    },
-    UpdateValues: function (data) {
-      comm.post({cmd: 'UpdateValues', data: data});
-    },
-    NotificationClick: onNotificationClick,
-    NotificationClose: onNotificationClose,
-  }
-  var func = handlers[req.cmd];
-  if (func) func(req.data, src);
-});
+// browser.runtime.onMessage.addListener(function (req, src) {
+//   var handlers = {
+//     Command: function (data) {
+//       comm.post({cmd: 'Command', data: data});
+//     },
+//     HttpRequested: function (res) {
+//       comm.post({cmd: 'HttpRequested', data: res});
+//     },
+//     UpdateValues: function (data) {
+//       comm.post({cmd: 'UpdateValues', data: data});
+//     },
+//     NotificationClick: onNotificationClick,
+//     NotificationClose: onNotificationClose,
+//   };
+//   var func = handlers[req.cmd];
+//   if (func) func(req.data, src);
+// });
 
 /**
  * @desc Wrap methods to prevent unexpected modifications.
@@ -745,13 +745,13 @@ var badge = {
   willSet: false,
 };
 function updatePopup() {
-  post('Popup', {cmd: 'GetPopup'});
+  sendMessage({cmd: 'GetPopup'});
 }
 function updateBadge() {
-  post('Background', {cmd: 'GetBadge'});
+  sendMessage({cmd: 'GetBadge'});
 }
 window.setPopup = function () {
-  post('Popup', {
+  sendMessage({
     cmd: 'SetPopup',
     data: {
       ids: ids,
@@ -759,8 +759,14 @@ window.setPopup = function () {
     },
   });
 };
-window.setBadge = function () {
-  post('Background', {cmd: 'SetBadge', data: badge.number});
+window.setBadge = function (tabId) {
+  sendMessage({
+    cmd: 'SetBadge',
+    data: {
+      tabId: tabId,
+      number: badge.number,
+    },
+  });
 };
 document.addEventListener('DOMContentLoaded', updatePopup, false);
 
@@ -768,7 +774,7 @@ document.addEventListener('DOMContentLoaded', updatePopup, false);
 function checkJS() {
   if (!document.querySelector('title')) {
     // plain text
-    post('Background', {
+    sendMessage({
       cmd: 'InstallScript',
       data: {
         url: location.href,

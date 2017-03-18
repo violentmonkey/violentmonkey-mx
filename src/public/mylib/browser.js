@@ -2,13 +2,6 @@
   function getUniqId() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   }
-  function setResult(promise, result) {
-    if (result && result.error) {
-      promise.reject(result.error);
-    } else {
-      promise.resolve(result && result.data);
-    }
-  }
   function initMessageListener() {
     if (onMessageListeners) return;
     onMessageListeners = [];
@@ -30,10 +23,9 @@
           result.then(function (data) {
             sendResponse({data: data});
           }, function (err) {
-            console.error(err);
             sendResponse({error: err});
           });
-        } else {
+        } else if (typeof result !== 'undefined') {
           sendResponse({data: result});
         }
       });
@@ -47,13 +39,14 @@
       if (res.callback) {
         var promise = promises[res.callback];
         delete promises[res.callback];
-        promise && setResult(promise, res.data);
+        promise && promise.resolve(res.data);
       }
     });
   }
-  function initTabEvents() {
-    if (onTabUpdatedListeners) return;
-    onTabUpdatedListeners = [];
+  function initTabsEvents() {
+    if (onTabsUpdatedListeners) return;
+    onTabsUpdatedListeners = [];
+    onTabsActivatedListeners = [];
     br.onBrowserEvent = function (data) {
       if (~[
         'ON_NAVIGATE',
@@ -61,11 +54,22 @@
         // PAGE_LOADED is triggered after URL redirected
         'PAGE_LOADED',
       ].indexOf(data.type)) {
-        onTabUpdatedListeners.forEach(function (listener) {
+        onTabsUpdatedListeners.forEach(function (listener) {
           listener(data.id, data);
         });
       }
+      if (data.type === 'TAB_SWITCH') {
+        onTabsActivatedListeners.forEach(function (listener) {
+          listener({
+            tabId: data.to,
+          });
+        });
+      }
     };
+  }
+  function updateBadge() {
+    var text = badges[currentTabId] || '';
+    rt.icon.showBadge(text);
   }
   if (typeof browser === 'undefined') {
     var EXTENSION = 'EXTENSION';
@@ -77,14 +81,36 @@
     var onMessageListeners;
     var onNotificationClickListeners = [];
     var onNotificationCloseListeners = [];
-    var onTabUpdatedListeners;
+    var onTabsUpdatedListeners, onTabsActivatedListeners;
     var manifest = {/*= manifest */};
+    var badges = {};
+    var currentTabId;
     win.browser = {
       browserAction: {
+        setBadgeText: function (data) {
+          badges[data.tabId] = data.text;
+          updateBadge();
+        },
         setIcon: function (icon) {
           rt.icon.setIconImage(icon);
           var toolbarIcon = ui && ui.getEntryPointByActionName && ui.getEntryPointByActionName('icon', 'toolbar');
           toolbarIcon && toolbarIcon.setIconImage(icon);
+        },
+      },
+      i18n: {
+        getMessage: function (name, args) {
+          var message = rt.locale.t(name);
+          if (/^".*"$/.test(message)) try {
+            message = JSON.parse(message);
+          } catch (e) {
+            message = message.slice(1, -1);
+          }
+          if (typeof args === 'string') args = [args];
+          var data = message.replace(/\$(?:\{(\d+)\}|(\d+))/g, function (match, group1, group2) {
+            var arg = args[group1 || group2];
+            return arg || '';
+          });
+          return data;
         },
       },
       notifications: {
@@ -131,6 +157,11 @@
             onNotificationClickListeners.push(listener);
           },
         },
+        onClosed: {
+          addListener: function (listener) {
+            onNotificationCloseListeners.push(listener);
+          },
+        },
       },
       runtime: {
         getManifest: function () {
@@ -138,24 +169,9 @@
         },
         getURL: function (path) {
           var base = rt.getPrivateUrl();
+          path = path || '';
           if (path.startsWith('/')) path = path.slice(1);
           return base + path;
-        },
-        i18n: {
-          getMessage: function (name, args) {
-            var message = rt.locale.t(name);
-            if (/^".*"$/.test(message)) try {
-              message = JSON.parse(message);
-            } catch (e) {
-              message = message.slice(1, -1);
-            }
-            if (typeof args === 'string') args = [args];
-            var data = message.replace(/\$(?:\{(\d+)\}|(\d+))/g, function (match, group1, group2) {
-              var arg = args[group1 || group2];
-              return arg || '';
-            });
-            return data;
-          },
         },
         onMessage: {
           addListener: function (listener) {
@@ -192,6 +208,20 @@
         get: function (id) {
           return Promise.resolve(br.tabs.getTabById(id));
         },
+        update: function (id, data) {
+          var tab;
+          if (typeof id === 'object') {
+            data = id;
+            tab = br.tabs.getCurrentTab();
+          } else {
+            tab = br.tabs.getTabById(id);
+          }
+          if (tab) {
+            data.active && tab.activate();
+            data.url && tab.navigate(data.url);
+          }
+          return Promise.resolve(tab);
+        },
         remove: function (id) {
           var tab = br.tabs.getTabById(id);
           tab && tab.close();
@@ -205,18 +235,28 @@
             tabs.push(br.tabs.getCurrentTab());
           } else {
             for (var i = 0; i < br.tabs.length; i++) {
-              tabs.push(br.getTab(i));
+              tabs.push(br.tabs.getTab(i));
             }
           }
           return Promise.resolve(tabs);
         },
+        onActivated: {
+          addListener: function (listener) {
+            initTabsEvents();
+            onTabsActivatedListeners.push(listener);
+          },
+        },
         onUpdated: {
           addListener: function (listener) {
-            initTabEvents();
-            onTabUpdatedListeners.push(listener);
+            initTabsEvents();
+            onTabsUpdatedListeners.push(listener);
           },
         },
       },
     };
+    win.browser.tabs.onActivated.addListener(function (data) {
+      currentTabId = data.tabId;
+      updateBadge();
+    });
   }
 }(this);

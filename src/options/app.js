@@ -6,7 +6,6 @@ function initMain() {
       'cache',
       'scripts',
       'sync',
-      'app',
     ].forEach(function (key) {
       Vue.set(store, key, data[key]);
     });

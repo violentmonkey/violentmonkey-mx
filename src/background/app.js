@@ -6,7 +6,6 @@ var cache = require('./utils/cache');
 var scriptUtils = require('./utils/script');
 var clipboard = require('./utils/clipboard');
 var options = require('./options');
-// var badges = require('./badges');
 
 var vmdb = exports.vmdb = new VMDB;
 var VM_VER = browser.runtime.getManifest().version;
@@ -71,7 +70,7 @@ var commands = {
   },
   GetInjected: function (url, _src) {
     var data = {
-      isApplied: _.options.get('isApplied'),
+      isApplied: options.get('isApplied'),
       version: VM_VER,
     };
     return data.isApplied
@@ -161,8 +160,6 @@ var commands = {
   AbortRequest: function (id, _src) {
     return requests.abortRequest(id);
   },
-  GetBadge: badges.get,
-  SetBadge: badges.set,
   InstallScript: function (data, _src) {
     var params = encodeURIComponent(data.url);
     if (data.from) params += '/' + encodeURIComponent(data.from);
@@ -279,11 +276,10 @@ vmdb.initialized.then(function () {
 });
 
 function setIcon(isApplied) {
-  browser.browserAction.setIcon('icon' + isApplied ? '' : 'w');
+  browser.browserAction.setIcon('icon' + (isApplied ? '' : 'w'));
 }
 setIcon(options.get('isApplied'));
 
-// tabsUtils.on('TAB_SWITCH', badges.get);
 browser.tabs.onUpdated.addListener(function (tabId, changes) {
   // file:/// URLs will not be injected on Maxthon 5
   if (/^file:\/\/\/.*?\.user\.js$/.test(changes.url)) {
@@ -293,3 +289,38 @@ browser.tabs.onUpdated.addListener(function (tabId, changes) {
     browser.tabs.remove(tabId);
   }
 });
+
+!function () {
+  function clear(tabId) {
+    browser.browserAction.setBadgeText({
+      text: '',
+      tabId: tabId,
+    });
+  }
+  function getBadge() {
+    browser.tabs.query({active: true})
+    .then(function (tabs) {
+      var currentTab = tabs[0];
+      clear(currentTab.id);
+      _.injectContent('setBadge(' + JSON.stringify(currentTab.id) + ')');
+    });
+  }
+  function setBadge(data, src) {
+    var item = badges[src.id];
+    if (!item) item = badges[src.id] = {num: 0};
+    item.num += data.number;
+    options.get('showBadge') && browser.browserAction.setBadgeText({
+      tabId: data.tabId,
+      text: item.num || '',
+    });
+    if (item.timer) clearTimeout(item.timer);
+    item.timer = setTimeout(function () {
+      delete badges[src.id];
+    });
+  }
+  var badges = {};
+  var debouncedGetBadges = _.debounce(getBadge, 100);
+  browser.tabs.onActivated.addListener(debouncedGetBadges);
+  commands.GetBadge = debouncedGetBadges;
+  commands.SetBadge = setBadge;
+}();
