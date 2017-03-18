@@ -1,28 +1,24 @@
-var Menu = require('./views/menu');
-var Commands = require('./views/command');
-var Domains = require('./views/domain');
+var _ = require('src/common');
+_.initOptions();
+var App = require('./views/app');
 var utils = require('./utils');
-var _ = require('../common');
 
-var app = new Vue({
+new Vue({
   el: '#app',
-  template: '<component :is=type></component>',
-  components: {
-    Menu: Menu,
-    Commands: Commands,
-    Domains: Domains,
-  },
-  data: {
-    type: 'Menu',
-  },
-  methods: {
-    navigate: function (type) {
-      this.type = type || 'Menu';
-    },
+  render: function (h) {
+    return h(App);
   },
 });
 
-exports.navigate = app.navigate.bind(app);
+var handlers = {
+  UpdateOptions: function (data) {
+    _.options.update(data);
+  },
+};
+browser.runtime.onMessage.addListener(function (req, src) {
+  var func = handlers[req.cmd];
+  if (func) return func(req.data, src);
+});
 
 !function () {
   function clear() {
@@ -44,7 +40,7 @@ exports.navigate = app.navigate.bind(app);
   }, 100);
   var delayedClear;
 
-  var commands = {
+  Object.assign(handlers, {
     GetPopup: init,
     SetPopup: function (data, currentTab) {
       cancelClear();
@@ -69,19 +65,7 @@ exports.navigate = app.navigate.bind(app);
         utils.store.scripts = scripts;
       });
     },
-  };
-  _.sendMessage = _.getMessenger({});
-  _.mx.rt.listen('Popup', function (req) {
-    var func = commands[req.cmd];
-    if (func) func(req.data, req.src);
   });
-
+  browser.tabs.onUpdated.addListener(init);
   init();
-  _.mx.br.onBrowserEvent = function (data) {
-    switch (data.type) {
-    case 'TAB_SWITCH':
-    case 'ON_NAVIGATE':
-      init();
-    }
-  };
 }();
