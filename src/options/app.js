@@ -11,16 +11,17 @@ function initMain() {
       Vue.set(store, key, data[key]);
     });
     store.loading = false;
+    utils.features.reset('sync');
   });
-  var handlers = {
-    sync: function (data) {
+  Object.assign(handlers, {
+    UpdateSync: function (data) {
       store.sync = data;
     },
-    add: function (data) {
+    AddScript: function (data) {
       data.message = '';
       store.scripts.push(data);
     },
-    update: function (data) {
+    UpdateScript: function (data) {
       if (!data) return;
       var script = store.scripts.find(function (script) {
         return script.id === data.id;
@@ -29,16 +30,12 @@ function initMain() {
         Vue.set(script, key, data[key]);
       });
     },
-    del: function (data) {
+    RemoveScript: function (data) {
       var i = store.scripts.findIndex(function (script) {
         return script.id === data;
       });
       ~i && store.scripts.splice(i, 1);
     },
-  };
-  _.mx.rt.listen('UpdateItem', function (res) {
-    var handle = handlers[res.cmd];
-    handle && handle(res.data);
   });
 }
 function loadHash() {
@@ -57,9 +54,23 @@ function loadHash() {
     }
   });
 }
+function initCustomCSS() {
+  var style;
+  _.options.hook(function (changes) {
+    var customCSS = changes.customCSS || '';
+    if (customCSS && !style) {
+      style = document.createElement('style');
+      document.head.appendChild(style);
+    }
+    if (customCSS || style) {
+      style.innerHTML = customCSS;
+    }
+  });
+}
 
-var utils = require('./utils');
 var _ = require('../common');
+_.initOptions();
+var utils = require('./utils');
 var Main = require('./views/main');
 var Confirm = require('./views/confirm');
 
@@ -87,17 +98,29 @@ var hashData = {
   type: null,
   params: null,
 };
+var handlers = {
+  UpdateOptions: function (data) {
+    _.options.update(data);
+  },
+};
+browser.runtime.onMessage.addListener(function (res) {
+  var handle = handlers[res.cmd];
+  handle && handle(res.data);
+});
 window.addEventListener('hashchange', loadHash, false);
-loadHash();
 zip.workerScriptsPath = '/lib/zip.js/';
 document.title = _.i18n('extName');
+loadHash();
+initCustomCSS();
 
-new Vue({
-  el: '#app',
-  template: '<component :is=type :params=params></component>',
-  components: {
-    Main: Main,
-    Confirm: Confirm,
-  },
-  data: hashData,
+_.options.ready.then(function () {
+  new Vue({
+    el: '#app',
+    template: '<component :is=type :params=params></component>',
+    components: {
+      Main: Main,
+      Confirm: Confirm,
+    },
+    data: hashData,
+  });
 });

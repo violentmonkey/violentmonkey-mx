@@ -182,7 +182,7 @@ VMDB.prototype.getScriptsByURL = function (url) {
       var require = {};
       var cache = {};
       data.scripts = scripts.filter(function (script) {
-        if (tester.testURL(url, script)) {
+        if (!tester.testBlacklist(url) && tester.testURL(url, script)) {
           data.uris.push(script.uri);
           script.meta.require.forEach(function (key) {
             require[key] = 1;
@@ -271,6 +271,12 @@ VMDB.prototype.removeScript = function (id) {
       tx.executeSql('DELETE FROM scripts WHERE id=?', [id], function (_tx, _res) {
         resolve();
       }, dbError(reject));
+    });
+  })
+  .then(function () {
+    browser.runtime.sendMessage({
+      cmd: 'RemoveScript',
+      data: id,
     });
   });
 };
@@ -579,7 +585,7 @@ VMDB.prototype.parseScript = function (data) {
   var meta = scriptUtils.parseMeta(data.code);
   if (!meta.name) return Promise.reject(_.i18n('msgInvalidScript'));
   var res = {
-    cmd: 'update',
+    cmd: 'UpdateScript',
     data: {
       message: data.message == null ? _.i18n('msgUpdated') : data.message || '',
     },
@@ -623,7 +629,7 @@ VMDB.prototype.parseScript = function (data) {
         if (data.isNew) throw _.i18n('msgNamespaceConflict');
       } else {
         script = scriptUtils.newScript();
-        res.cmd = 'add';
+        res.cmd = 'AddScript';
         res.data.message = _.i18n('msgInstalled');
       }
       data.more && Object.keys(data.more).forEach(function (key) {
@@ -649,7 +655,7 @@ VMDB.prototype.parseScript = function (data) {
 VMDB.prototype.checkUpdate = function () {
   function check(script) {
     var res = {
-      cmd: 'update',
+      cmd: 'UpdateScript',
       data: {
         id: script.id,
         checking: true,
@@ -663,35 +669,35 @@ VMDB.prototype.checkUpdate = function () {
         return Promise.resolve();
       res.data.checking = false;
       res.data.message = _.i18n('msgNoUpdate');
-      _.messenger.post(res);
+      browser.runtime.sendMessage(res);
       return Promise.reject();
     };
     var errHandler = function (_xhr) {
       res.data.checking = false;
       res.data.message = _.i18n('msgErrorFetchingUpdateInfo');
-      _.messenger.post(res);
+      browser.runtime.sendMessage(res);
       return Promise.reject();
     };
     var update = function () {
       if (!downloadURL) {
         res.data.message = '<span class="new">' + _.i18n('msgNewVersion') + '</span>';
-        _.messenger.post(res);
+        browser.runtime.sendMessage(res);
         return Promise.reject();
       }
       res.data.message = _.i18n('msgUpdating');
-      _.messenger.post(res);
+      browser.runtime.sendMessage(res);
       return scriptUtils.fetch(downloadURL).then(function (xhr) {
         return xhr.responseText;
       }, function (_xhr) {
         res.data.checking = false;
         res.data.message = _.i18n('msgErrorFetchingScript');
-        _.messenger.post(res);
+        browser.runtime.sendMessage(res);
         return Promise.reject();
       });
     };
     if (!updateURL) return Promise.reject();
     res.data.message = _.i18n('msgCheckingForUpdate');
-    _.messenger.post(res);
+    browser.runtime.sendMessage(res);
     return scriptUtils.fetch(updateURL, null, {
       Accept: 'text/x-userscript-meta',
     }).then(okHandler, errHandler).then(update);
@@ -709,7 +715,7 @@ VMDB.prototype.checkUpdate = function () {
           code: code,
         }).then(function (res) {
           res.data.checking = false;
-          _.messenger.post(res);
+          browser.runtime.sendMessage(res);
         });
       }, function () {
         delete processes[script.id];

@@ -26,12 +26,17 @@
     return module.data.exports;
   }
 
-  function use(names) {
-    if (!Array.isArray(names)) names = [names];
-    names.forEach(require);
+  function use() {
+    var items = [];
+    var len = arguments.length;
+    for (var i = 0; i < len; i ++) items = items.concat(arguments[i]);
+    items.forEach(function (item) {
+      typeof item === 'function' ? item(require) : require(item);
+    });
   }
 
   var modules = {};
-  root.define = define;
   define.use = use;
+
+  root.define = define;
 }(this);

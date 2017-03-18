@@ -8,6 +8,7 @@ window.VM = 1;
 function getUniqId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
+function noop() {}
 function includes(arr, item) {
   for (var i = arr.length; i --;) {
     if (arr[i] === item) return true;
@@ -51,40 +52,30 @@ function utf8decode(utftext) {
   return string;
 }
 
-// Messages
-var rt = window.external.mxGetRuntime();
-var id = getUniqId();
-var callbacks = {};
-function post(target, data, callback) {
-  data.src = {id: id, url: window.location.href};
-  if (callback) {
-    data.callback = getUniqId();
-    callbacks[data.callback] = callback;
-  }
-  rt.post(target, data);
+function sendMessage(data) {
+  return browser.runtime.sendMessage(data)
+  .then(function (res) {
+    if (res && res.error) throw res.error;
+    return res && res.data;
+  });
 }
-function onMessage(obj) {
-  var maps = {
+browser.runtime.onMessage.addListener(function (req, src) {
+  var handlers = {
     Command: function (data) {
       comm.post({cmd: 'Command', data: data});
-    },
-    Callback: function (obj) {
-      var func = callbacks[obj.id];
-      if (func && (!obj.data || !obj.data.error))
-        func(obj.data && obj.data.data);
-      delete callbacks[obj.id];
     },
     HttpRequested: function (res) {
       comm.post({cmd: 'HttpRequested', data: res});
     },
+    UpdateValues: function (data) {
+      comm.post({cmd: 'UpdateValues', data: data});
+    },
     NotificationClick: onNotificationClick,
     NotificationClose: onNotificationClose,
-  };
-  var func = maps[obj.cmd];
-  if (func) func(obj.data);
-}
-rt.listen(id, onMessage);
-rt.listen('Broadcast', onMessage);
+  }
+  var func = handlers[req.cmd];
+  if (func) func(req.data, src);
+});
 
 /**
  * @desc Wrap methods to prevent unexpected modifications.
@@ -508,8 +499,8 @@ var comm = {
         },
       },
       GM_openInTab: {
-        value: function (url) {
-          comm.post({cmd: 'NewTab', data: url});
+        value: function (url, background) {
+          comm.post({cmd: 'OpenTab', data: {url: url, active: !background}});
         },
       },
       GM_registerMenuCommand: {
@@ -648,18 +639,9 @@ var ids = [];
 function handleC(e) {
   var req = e.detail;
   var maps = {
-    NewTab: function (url) {
-      window.open(url);
-    },
-    SetValue: function (data) {
-      post('Background', {cmd: 'SetValue', data: data});
-    },
-    RegisterMenu: function (data) {
-      menus.push(data);
-      updatePopup();
-    },
     GetRequestId: function () {
-      post('Background', {cmd: 'GetRequestId'}, function (id) {
+      sendMessage({cmd: 'GetRequestId'})
+      .then(function (id) {
         comm.post({
           cmd: 'GotRequestId',
           data: id,
@@ -667,10 +649,20 @@ function handleC(e) {
       });
     },
     HttpRequest: function (data) {
-      post('Background', {cmd: 'HttpRequest', data: data});
+      sendMessage({cmd: 'HttpRequest', data: data});
     },
     AbortRequest: function (id) {
-      post('Background', {cmd: 'AbortRequest', data: id});
+      sendMessage({cmd: 'AbortRequest', data: id});
+    },
+    OpenTab: function (data) {
+      sendMessage({cmd: 'OpenTab', data: data});
+    },
+    SetValue: function (data) {
+      sendMessage({cmd: 'SetValue', data: data});
+    },
+    RegisterMenu: function (data) {
+      if (window.top === window) menus.push(data);
+      updatePopup();
     },
     AddStyle: function (css) {
       if (document.head) {
@@ -681,7 +673,7 @@ function handleC(e) {
     },
     Notification: onNotificationCreate,
     SetClipboard: function (data) {
-      post('Background', {cmd: 'SetClipboard', data: data});
+      sendMessage({cmd: 'SetClipboard', data: data});
     },
   };
   var func = maps[req.cmd];
@@ -690,7 +682,8 @@ function handleC(e) {
 
 var notifications = {};
 function onNotificationCreate(options) {
-  post('Background', {cmd: 'Notification', data: options}, function (nid) {
+  sendMessage({cmd: 'Notification', data: options})
+  .then(function (nid) {
     notifications[nid] = options.id;
   });
 }
@@ -742,7 +735,7 @@ function initCommunicator() {
   );
   comm.handleC = handleC;
   comm.init(C, R);
-  post('Background', {cmd: 'GetInjected'}, loadScript);
+  sendMessage({cmd: 'GetInjected'}).then(loadScript);
 }
 initCommunicator();
 
@@ -789,8 +782,6 @@ function checkJS() {
   }
 }
 if (!(/^file:\/\/\//.test(location.href)) && /\.user\.js$/.test(location.pathname)) {
-  if (document.readyState == 'complete')
-    checkJS();
-  else
-    window.addEventListener('load', checkJS, false);
+  if (document.readyState == 'complete') checkJS();
+  else window.addEventListener('load', checkJS, false);
 }

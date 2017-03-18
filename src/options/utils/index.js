@@ -25,16 +25,9 @@ function routeTester(paths) {
   };
 }
 
-var _ = require('../../common');
-_.sendMessage = _.getMessenger({});
-
-// patch options since options is not reachable by options.html in Maxthon
-require('./options');
-
 exports.routeTester = routeTester;
 exports.store = {};
-exports.events = new Vue;
+exports.features = require('./features');
 
-require('./features');
 require('./dropdown');
 require('./settings');

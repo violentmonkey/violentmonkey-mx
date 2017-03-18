@@ -11,19 +11,22 @@
     "update": "node scripts/update"
   },
   "devDependencies": {
+    "cssnano": "^3.10.0",
     "del": "^2.2.0",
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.0",
-    "gulp-cssnano": "^2.1.2",
     "gulp-eslint": "^3.0.1",
-    "gulp-filter": "^4.0.0",
+    "gulp-filter": "^5.0.0",
     "gulp-footer": "^1.0.5",
+    "gulp-postcss": "^6.3.0",
+    "gulp-replace": "^0.5.4",
     "gulp-svg-sprite": "^1.2.19",
-    "gulp-uglify": "^2.0.0",
-    "gulp-util": "^3.0.4",
-    "html-minifier": "^3.2.3",
-    "merge2": "^1.0.2",
+    "gulp-uglify": "^2.1.0",
+    "gulp-util": "^3.0.8",
+    "html-minifier": "^3.4.1",
+    "merge2": "^1.0.3",
     "ncp": "^2.0.0",
+    "precss": "^1.4.0",
     "sync-promise-lite": "^0.2.3",
     "through2": "^2.0.3"
   },
@@ -38,8 +41,8 @@
   "homepage": "https://github.com/violentmonkey/violentmonkey-mx",
   "license": "MIT",
   "dependencies": {
-    "codemirror": "^5.23.0",
-    "define-commonjs": "^1.0.1",
-    "vue": "^2.1.10"
+    "codemirror": "^5.24.2",
+    "define-commonjs": "^1.1.2",
+    "vue": "^2.2.4"
   }
 }

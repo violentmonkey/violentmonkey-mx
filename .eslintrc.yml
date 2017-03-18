@@ -38,5 +38,6 @@ globals:
   Vue: true
   CodeMirror: true
   Promise: true
+  browser: true
 
 extends: 'eslint:recommended'

@@ -1,59 +1,73 @@
-var _ = require('../../common');
+var _ = require('src/common');
 
-function init(data, version) {
-  features = data;
-  if (!features || !features.data || features.version !== version) {
-    features = {
+var key = 'features';
+var hooks = _.initHooks();
+var revoke = _.options.hook(function (data) {
+  if (data[key]) {
+    features = data[key];
+    revoke();
+    revoke = null;
+    hooks.fire();
+    hooks = null;
+  }
+});
+var features = _.options.get(key);
+if (!features || !features.data) features = {
+  data: {},
+};
+var items = {};
+
+exports.reset = function (version) {
+  if (features.version !== version) {
+    _.options.set(key, features = {
       version: version,
       data: {},
-    };
-    return true;
+    });
   }
-}
-function initItem(el, value) {
-  function clear() {
-    el.classList.remove('feature');
-    el.removeEventListener('click', onFeatureClick, false);
-  }
+};
+
+function getContext(el, value) {
   function onFeatureClick(_e) {
     features.data[value] = 1;
     _.options.set(key, features);
-    clear();
+    el.classList.remove('feature');
+    el.removeEventListener('click', onFeatureClick, false);
+  }
+  function clear() {
+    el.removeEventListener('click', onFeatureClick, false);
   }
   function reset() {
     clear();
-    if (!features.data[value]) {
-      el.classList.add('feature');
-      el.addEventListener('click', onFeatureClick, false);
-    }
+    if (!features.version || features.data[value]) return;
+    el.classList.add('feature');
+    el.addEventListener('click', onFeatureClick, false);
   }
-  reset();
   return {
     el: el,
     reset: reset,
+    clear: clear,
   };
 }
 
-var key = 'features';
-var features = _.options.get(key);
-var items = [];
-init();
-
-exports.reset = function (version, data) {
-  init(data, version) && _.options.set(key, features);
-  items.forEach(function (item) {
-    item.reset();
-  });
-};
-
 Vue.directive('feature', {
   bind: function (el, binding) {
-    items.push(initItem(el, binding.value));
+    var value = binding.value;
+    var item = getContext(el, value);
+    var list = items[value] = items[value] || [];
+    list.push(item);
+    item.reset();
+    hooks && hooks.hook(item.reset);
   },
-  unbind: function (el) {
-    var i = items.findIndex(function (item) {
-      return item.el === el;
-    });
-    ~i && items.splice(i, 1);
+  unbind: function (el, binding) {
+    var list = items[binding.value];
+    if (list) {
+      var index = list.findIndex(function (item) {
+        return item.el === el;
+      });
+      if (~index) {
+        list[index].clear();
+        list.splice(index, 1);
+      }
+    }
   },
 });

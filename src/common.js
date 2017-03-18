@@ -36,39 +36,9 @@ polyfill(Array.prototype, 'find', function (predicate) {
 // Screw Maxthon: End
 
 var _ = exports;
-_.mx = {
-  rt: window.external.mxGetRuntime(),
-};
-_.mx.br = _.mx.rt.create('mx.browser');
 
-_.setIcon = function (icon) {
-  // Initialize on first call
-  function setIcon(icon) {
-    _.mx.rt.icon.setIconImage(icon);
-    tIcon && tIcon.setIconImage(icon);
-  }
-  var ui = _.mx.rt.create('mx.app.ui');
-  var tIcon = ui && ui.getEntryPointByActionName && ui.getEntryPointByActionName('icon', 'toolbar');
-  _.setIcon = setIcon;
-  setIcon(icon);
-};
-
-_.i18n = function (key) {
-  if (!key) return '';
-  var data = _.mx.rt.locale.t(key);
-  var args = [].slice.call(arguments).slice(1);
-  if (Array.isArray(args[0])) args = args[0];
-  args.unshift('');
-  if (/^".*"$/.test(data)) try {
-    data = JSON.parse(data);
-  } catch (e) {
-    data = data.slice(1, -1);
-  }
-  data = data.replace(/\$(?:\{(\d+)\}|(\d+))/g, function (match, group1, group2) {
-    var arg = args[group1 || group2];
-    return arg == null ? match : arg;
-  });
-  return data;
+_.i18n = function (name, args) {
+  return browser.i18n.getMessage(name, args) || name;
 };
 
 function normalizeKeys(key) {
@@ -106,106 +76,79 @@ _.object = function () {
   };
 }();
 
-_.options = function () {
+_.initHooks = function () {
+  var hooks = [];
+
+  function fire(data) {
+    hooks.slice().forEach(function (hook) {
+      hook(data);
+    });
+  }
+
+  function hook(callback) {
+    hooks.push(callback);
+    return function () {
+      var i = hooks.indexOf(callback);
+      ~i && hooks.splice(i, 1);
+    };
+  }
+
+  return {
+    hook: hook,
+    fire: fire,
+  };
+};
+
+_.initOptions = function () {
+  var options = {};
+  var hooks = _.initHooks();
+  var ready = _.sendMessage({cmd: 'GetAllOptions'})
+  .then(function (data) {
+    options = data;
+    data && hooks.fire(data);
+  });
+
   function getOption(key, def) {
     var keys = normalizeKeys(key);
-    key = keys[0];
-    var value = localStorage.getItem(key), obj;
-    if (value) {
-      try {
-        obj = JSON.parse(value);
-      } catch (e) {
-        // ignore invalid JSON
-      }
-    }
-    if (obj == null) obj = defaults[key];
-    if (obj == null) obj = def;
-    return keys.length > 1 ? _.object.get(obj, keys.slice(1), def) : obj;
+    return _.object.get(options, keys, def);
   }
 
   function setOption(key, value) {
-    var keys = normalizeKeys(key);
-    key = keys[0];
-    if (key in defaults) {
-      if (keys.length > 1) {
-        value = _.object.set(getOption(key), keys.slice(1), value);
-      }
-      localStorage.setItem(key, JSON.stringify(value));
-    }
+    _.sendMessage({
+      cmd: 'SetOptions',
+      data: {
+        key: key,
+        value: value,
+      },
+    });
   }
 
-  function getAllOptions() {
-    return Object.keys(defaults).reduce(function (options, key) {
-      options[key] = getOption(key);
-      return options;
-    }, {});
+  function updateOptions(data) {
+    Object.keys(data).forEach(function (key) {
+      _.object.set(options, key, data[key]);
+    });
+    hooks.fire(data);
   }
 
-  function parseArgs(args) {
-    return args.length === 1 ? {
-      key: '',
-      cb: args[0],
-    } : {
-      key: args[0] || '',
-      cb: args[1],
-    };
-  }
-
-  function hook() {
-    var arg = parseArgs(arguments);
-    var list = hooks[arg.key];
-    if (!list) list = hooks[arg.key] = [];
-    list.push(arg.cb);
-    return function () {
-      unhook(arg.key, arg.cb);
-    };
-  }
-  function unhook() {
-    var arg = parseArgs(arguments);
-    var list = hooks[arg.key];
-    if (list) {
-      var i = list.indexOf(arg.cb);
-      ~i && list.splice(i, 1);
-    }
-  }
-
-  var defaults = {
-    isApplied: true,
-    startReload: true,
-    reloadHTTPS: false,
-    autoUpdate: true,
-    ignoreGrant: false,
-    lastUpdate: 0,
-    showBadge: true,
-    exportValues: true,
-    closeAfterInstall: false,
-    trackLocalFile: false,
-    injectMode: 0,
-    autoReload: false,
-    dropbox: {},
-    onedrive: {},
-    features: null,
-  };
-  var hooks = {};
-
-  // XXX migrate sync status options
-  ['dropbox', 'onedrive'].forEach(function (name) {
-    var key = name + 'Enabled';
-    var val = getOption(key);
-    if (val != null) {
-      setOption([name, 'enabled'], val);
-      localStorage.removeItem(key);
-    }
-  });
-
-  return {
+  _.options = {
     get: getOption,
     set: setOption,
-    getAll: getAllOptions,
-    hook: hook,
-    unhook: unhook,
+    update: updateOptions,
+    hook: hooks.hook,
+    ready: ready,
   };
-}();
+};
+
+_.sendMessage = function (data) {
+  return browser.runtime.sendMessage(data)
+  .then(function (res) {
+    if (res && res.error) throw res.error;
+    return res && res.data;
+  })
+  .catch(function (err) {
+    console.error(err);
+  });
+};
 
 _.debounce = function (func, time) {
   function run(thisObj, args) {
@@ -245,46 +188,8 @@ _.getLocaleString = function (meta, key) {
   return meta[key] || '';
 };
 
-_.getMessenger = function (commands) {
-  var id = _.getUniqId();
-  var callbacks = {};
-  commands = commands || {};
-  commands.Callback = function (ret) {
-    var func = callbacks[ret.id];
-    if (func) {
-      delete callbacks[ret.id];
-      func(ret.data);
-    }
+_.injectContent = function (br) {
+  return function (script) {
+    br.executeScript('if(window.mx)try{' + script + '}catch(e){}');
   };
-  _.mx.rt.listen(id, function (ret) {
-    var func = commands[ret.cmd];
-    func && func(ret.data);
-  });
-  return function (data) {
-    return new Promise(function (resolve, reject) {
-      data.src = {id: id};
-      callbacks[data.callback = _.getUniqId()] = function (res) {
-        res && res.error ? reject(res.error) : resolve(res && res.data);
-      };
-      _.mx.rt.post('Background', data);
-    });
-  };
-};
-
-_.injectContent = function (s) {
-  _.mx.br.executeScript('if(window.mx)try{' + s + '}catch(e){}');
-};
-
-_.tabs = {
-  create: function (url) {
-    _.mx.br.tabs.newTab({url: url});
-  },
-  get: function (id) {
-    return Promise.resolve(_.mx.br.tabs.getTabById(id));
-  },
-  remove: function (id) {
-    _.tabs.get(id).then(function (tab) {
-      tab && tab.close();
-    });
-  },
-};
+}(window.external.mxGetRuntime().create('mx.browser'));

@@ -2,11 +2,12 @@ const del = require('del');
 const gulp = require('gulp');
 const concat = require('gulp-concat');
 const merge2 = require('merge2');
-const cssnano = require('gulp-cssnano');
+const postcss = require('gulp-postcss');
 const gulpFilter = require('gulp-filter');
 const eslint = require('gulp-eslint');
 const uglify = require('gulp-uglify');
 const svgSprite = require('gulp-svg-sprite');
+const replace = require('gulp-replace');
 const definePack = require('define-commonjs/pack/gulp');
 const i18n = require('./scripts/i18n');
 const wrap = require('./scripts/wrap');
@@ -21,7 +22,7 @@ const paths = {
   def: 'src/def.yml',
   templates: [
     'src/**/*.html',
-    '!src/**/index.html',
+    '!src/*/index.html',
   ],
   jsCollect: [
     'src/**/*.js',
@@ -39,10 +40,12 @@ const paths = {
   copy: [
     'src/injected.js',
     'src/public/**',
+    'src/icons/**',
     'src/*/*.html',
     'src/*/*.css',
   ],
 };
+const values = {};
 
 gulp.task('clean', () => del(['dist']));
 
@@ -79,7 +82,11 @@ gulp.task('templates', ['collect-js'], () => {
     gulp.src(paths.templates).pipe(cacheObj),
   ])
   .pipe(concat('cache.js'))
-  .pipe(collect.pack(null, file => 'src/cache.js'));
+  .pipe(collect.pack({
+    getPath(file) {
+      return 'src/cache.js';
+    },
+  }));
   if (isProd) stream = stream.pipe(uglify());
 	return stream.pipe(gulp.dest('dist'));
 });
@@ -93,7 +100,7 @@ gulp.task('js-common', ['collect-js'], () => {
 
 gulp.task('js-bg', ['collect-js'], () => {
   var stream = gulp.src(paths.jsBg)
-  .pipe(collect.pack('src/background/app.js'))
+  .pipe(collect.pack({main: 'src/background/app.js'}))
   .pipe(concat('background/app.js'));
   if (isProd) stream = stream.pipe(uglify());
   return stream.pipe(gulp.dest('dist'));
@@ -102,7 +109,7 @@ gulp.task('js-bg', ['collect-js'], () => {
 gulp.task('js-options', ['templates', 'collect-js'], () => {
   var stream = gulp.src(paths.jsOptions)
   .pipe(cacheObj.replace())
-  .pipe(collect.pack('src/options/app.js'))
+  .pipe(collect.pack({main: 'src/options/app.js'}))
   .pipe(concat('options/app.js'));
   if (isProd) stream = stream.pipe(uglify());
 	return stream.pipe(gulp.dest('dist'));
@@ -111,7 +118,7 @@ gulp.task('js-options', ['templates', 'collect-js'], () => {
 gulp.task('js-popup', ['templates', 'collect-js'], () => {
   var stream = gulp.src(paths.jsPopup)
   .pipe(cacheObj.replace())
-  .pipe(collect.pack('src/popup/app.js'))
+  .pipe(collect.pack({main: 'src/popup/app.js'}))
   .pipe(concat('popup/app.js'));
   if (isProd) stream = stream.pipe(uglify());
 	return stream.pipe(gulp.dest('dist'));
@@ -130,32 +137,35 @@ gulp.task('manifest', () => (
   .pipe(json(data => {
     data[0].version = pkg.version;
     data[0].service.debug = !isProd;
+    values.manifest = data[0];
     return data;
   }))
 	.pipe(bom.add())
 	.pipe(gulp.dest('dist'))
 ));
 
-gulp.task('copy-files', () => {
+gulp.task('copy-files', ['manifest'], () => {
   const injectedFilter = gulpFilter(['**/injected.js'], {restore: true});
 	const cssFilter = gulpFilter(['**/*.css'], {restore: true});
 	const jsFilter = gulpFilter(['**/*.js'], {restore: true});
-	var stream = gulp.src(paths.copy)
+	var stream = gulp.src(paths.copy, {base: 'src'})
   .pipe(injectedFilter)
   .pipe(wrap({
     header: '!function(){\n',
     footer: '\n}();',
   }))
-  .pipe(injectedFilter.restore);
-  if (isProd) stream = stream
+  .pipe(injectedFilter.restore)
   .pipe(jsFilter)
-  .pipe(uglify())
-  .pipe(jsFilter.restore);
+  .pipe(replace(/\{\/\*=(.*?)\*\/\}/g, (m, g) => JSON.stringify(values[g.trim()]) || m));
+  if (isProd) stream = stream
+  .pipe(uglify());
   stream = stream
+  .pipe(jsFilter.restore)
 	.pipe(cssFilter)
-	.pipe(cssnano({
-    zindex: false,
-  }))
+  .pipe(postcss([
+    require('precss')(),
+    isProd && require('cssnano')(),
+  ].filter(Boolean)))
   // Fix: Maxthon does not support internal links with query string
   // Remove hashstring in font-awesome URLs
   // Fixed in v4.9.3.200
@@ -189,7 +199,7 @@ gulp.task('svg', () => (
       },
     },
   }))
-  .pipe(gulp.dest('dist/icons'))
+  .pipe(gulp.dest('dist/public'))
 ));
 
 gulp.task('build', [
