@@ -23,6 +23,7 @@
           result.then(function (data) {
             sendResponse({data: data});
           }, function (err) {
+            console.error(err);
             sendResponse({error: err});
           });
         } else if (typeof result !== 'undefined') {
@@ -251,7 +252,8 @@
             tabs.push(br.tabs.getCurrentTab());
           } else {
             for (var i = 0; i < br.tabs.length; i++) {
-              tabs.push(br.tabs.getTab(i));
+              var tab = br.tabs.getTab(i);
+              if (!options.url || options.url === tab.url.split('#')[0]) tabs.push(tab);
             }
           }
           return Promise.resolve(tabs);

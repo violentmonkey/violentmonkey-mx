@@ -68,13 +68,13 @@ var commands = {
       return data;
     });
   },
-  GetInjected: function (url, _src) {
-    var data = {
+  GetInjected: function (data, src) {
+    data = {
       isApplied: options.get('isApplied'),
       version: VM_VER,
     };
     return data.isApplied
-      ? vmdb.getScriptsByURL(url).then(function (res) {
+      ? vmdb.getScriptsByURL(src.url).then(function (res) {
         return Object.assign(data, res);
       }) : data;
   },
