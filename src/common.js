@@ -153,8 +153,10 @@ _.debounce = function (func, time) {
     func.apply(thisObj, args);
   }
   var timer;
-  return function (args) {
+  return function () {
     timer && clearTimeout(timer);
+    var args = [];
+    for (var i = 0; i < arguments.length; i++) args.push(arguments[i]);
     timer = setTimeout(run, time, this, args);
   };
 };

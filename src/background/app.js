@@ -319,8 +319,9 @@ browser.tabs.onUpdated.addListener(function (tabId, changes) {
     });
   }
   var badges = {};
-  var debouncedGetBadges = _.debounce(getBadge, 100);
-  browser.tabs.onActivated.addListener(debouncedGetBadges);
-  commands.GetBadge = debouncedGetBadges;
+  var debouncedGetBadge = _.debounce(getBadge, 100);
+  browser.tabs.onActivated.addListener(debouncedGetBadge);
+  commands.GetBadge = debouncedGetBadge;
   commands.SetBadge = setBadge;
+  commands.BROWSER_SetBadge = browser.browserAction.setBadgeText.initBackground();
 }();

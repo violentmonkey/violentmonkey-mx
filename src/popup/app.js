@@ -66,6 +66,7 @@ browser.runtime.onMessage.addListener(function (req, src) {
       });
     },
   });
+  browser.tabs.onActivated.addListener(init);
   browser.tabs.onUpdated.addListener(init);
   init();
 }();
