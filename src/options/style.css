@@ -26,10 +26,6 @@ button {
 a {
   color: dodgerblue;
 }
-textarea,
-input[type=text] {
-  width: 100%;
-}
 input[disabled] ~ * {
   color: gray;
 }
@@ -37,13 +33,9 @@ hr {
   border: none;
   border-top: 1px solid darkgray;
 }
-fieldset {
-  padding: .3rem;
-  margin-top: .5rem;
-  border: 1px solid silver;
-  textarea {
-    height: 5em;
-  }
+textarea {
+  display: block;
+  width: 100%;
 }
 
 .pull-left {
@@ -62,10 +54,12 @@ fieldset {
   flex-direction: column;
 }
 .flex-auto {
-  height: 0;
   flex: auto;
+  .flex-col > & {
+    height: 0;
+  }
 }
-.p-rel {
+.pos-rel {
   position: relative;
 }
 .mr-1 {
@@ -79,6 +73,10 @@ fieldset {
 }
 .mb-2 {
   margin-bottom: 1em;
+}
+.px-2 {
+  margin-left: 1em;
+  margin-right: 1em;
 }
 .h-100 {
   height: 100%;
@@ -364,27 +362,6 @@ code {
     }
   }
 }
-.message {
-  position: absolute;
-  width: 14rem;
-  top: 0;
-  left: 50%;
-  margin-left: -7rem;
-  padding: 1rem;
-  z-index: 10;
-  background: white;
-  border-bottom-left-radius: .2rem;
-  border-bottom-right-radius: .2rem;
-  box-shadow: 0 0 .2rem rgba(0,0,0,.2);
-}
-.message-enter-active,
-.message-leave-active {
-  transition: transform .5s;
-}
-.message-enter,
-.message-leave-active {
-  transform: translateY(-120%);
-}
 .icon {
   width: 1rem;
   height: 1rem;
@@ -398,4 +375,26 @@ svg path {
   textarea {
     height: 10em;
   }
+}
+
+.CodeMirror-foldmarker {
+  color: blue;
+  text-shadow: #b9f 1px 1px 2px, #b9f -1px -1px 2px, #b9f 1px -1px 2px, #b9f -1px 1px 2px;
+  font-family: arial;
+  line-height: .3;
+  cursor: pointer;
+}
+.CodeMirror-foldgutter {
+  width: .7em;
+}
+.CodeMirror-foldgutter-open,
+.CodeMirror-foldgutter-folded {
+  color: #555;
+  cursor: pointer;
+}
+.CodeMirror-foldgutter-open:after {
+  content: "\25BE";
+}
+.CodeMirror-foldgutter-folded:after {
+  content: "\25B8";
 }

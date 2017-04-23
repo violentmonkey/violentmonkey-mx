@@ -1,72 +1,73 @@
-var _ = require('src/common');
-_.initOptions();
-var App = require('./views/app');
-var utils = require('./utils');
+import Vue from 'vue';
+import 'src/common/sprite';
+import options from 'src/common/options';
+import { i18n, sendMessage, injectContent, debounce } from 'src/common';
+import App from './views/app';
+import { store } from './utils';
+
+Vue.prototype.i18n = i18n;
 
 new Vue({
-  el: '#app',
-  render: function (h) {
-    return h(App);
-  },
-});
+  render: h => h(App),
+}).$mount('#app');
 
-var handlers = {
-  UpdateOptions: function (data) {
-    _.options.update(data);
+const handlers = {
+  UpdateOptions(data) {
+    options.update(data);
   },
 };
-browser.runtime.onMessage.addListener(function (req, src) {
-  var func = handlers[req.cmd];
+browser.runtime.onMessage.addListener((req, src) => {
+  const func = handlers[req.cmd];
   if (func) return func(req.data, src);
 });
 
-!function () {
-  function clear() {
-    utils.store.scripts = [];
-    utils.store.commands = [];
-    utils.store.domains = [];
-    delayedClear = null;
-  }
-  function cancelClear() {
-    delayedClear && clearTimeout(delayedClear);
-  }
-  function delayClear() {
-    cancelClear();
-    delayedClear = setTimeout(clear, 200);
-  }
-  var init = _.debounce(function () {
-    _.injectContent('setPopup()');
+{
+  const init = debounce(() => {
+    injectContent('setPopup()');
     delayClear();
   }, 100);
-  var delayedClear;
+  let delayedClear;
 
   Object.assign(handlers, {
     GetPopup: init,
-    SetPopup: function (data, currentTab) {
+    SetPopup(data, currentTab) {
       cancelClear();
-      utils.store.currentTab = currentTab;
+      store.currentTab = currentTab;
       if (currentTab && /^https?:\/\//i.test(currentTab.url)) {
-        var matches = currentTab.url.match(/:\/\/(?:www\.)?([^\/]*)/);
-        var domain = matches[1];
-        var domains = domain.split('.').reduceRight(function (res, part) {
-          var last = res[0];
-          if (last) part += '.' + last;
-          res.unshift(part);
+        const matches = currentTab.url.match(/:\/\/(?:www\.)?([^/]*)/);
+        const domain = matches[1];
+        const domains = domain.split('.').reduceRight((res, part) => {
+          const last = res[0];
+          const subdomain = last ? `${part}.${last}` : part;
+          res.unshift(subdomain);
           return res;
         }, []);
-        domains.length > 1 && domains.pop();
-        utils.store.domains = domains;
+        if (domains.length > 1) domains.pop();
+        store.domains = domains;
       }
-      utils.store.commands = data.menus;
-      _.sendMessage({
+      store.commands = data.menus;
+      sendMessage({
         cmd: 'GetMetas',
         data: data.ids,
-      }).then(function (scripts) {
-        utils.store.scripts = scripts;
-      });
+      })
+      .then(scripts => { store.scripts = scripts; });
     },
   });
   browser.tabs.onActivated.addListener(init);
   browser.tabs.onUpdated.addListener(init);
   init();
-}();
+
+  function clear() {
+    store.scripts = [];
+    store.commands = [];
+    store.domains = [];
+    delayedClear = null;
+  }
+  function cancelClear() {
+    if (delayedClear) clearTimeout(delayedClear);
+  }
+  function delayClear() {
+    cancelClear();
+    delayedClear = setTimeout(clear, 200);
+  }
+}

@@ -1,108 +1,101 @@
-var _ = require('src/common');
-var events = require('../utils/events');
-var app = require('../app');
-var options = require('../options');
+import { debounce, normalizeKeys, request, noop } from 'src/common';
+import getEventEmitter from '../utils/events';
+import { getOption, setOption, hookOptions } from '../utils/options';
+import { getScriptsByIndex, parseScript, removeScript, checkPosition } from '../utils/db';
 
-var serviceNames = [];
-var services = {};
-var autoSync = _.debounce(function () {
-  sync();
-}, 60 * 60 * 1000);
-var working = Promise.resolve();
-var syncConfig = initConfig();
+const serviceNames = [];
+const services = {};
+const autoSync = debounce(sync, 60 * 60 * 1000);
+let working = Promise.resolve();
+const syncConfig = initConfig();
 
-function getFilename(uri) {
-  return 'vm-' + encodeURIComponent(uri);
+export function getFilename(uri) {
+  return `vm-${encodeURIComponent(uri)}`;
 }
-function isScriptFile(name) {
+export function isScriptFile(name) {
   return /^vm-/.test(name);
 }
-function getURI(name) {
+export function getURI(name) {
   return decodeURIComponent(name.slice(3));
 }
 
 function initConfig() {
   function get(key, def) {
-    var keys = _.normalizeKeys(key);
+    const keys = normalizeKeys(key);
     keys.unshift('sync');
-    return options.get(keys, def);
+    return getOption(keys, def);
   }
   function set(key, value) {
-    var keys = _.normalizeKeys(key);
+    const keys = normalizeKeys(key);
     keys.unshift('sync');
-    options.set(keys, value);
+    setOption(keys, value);
   }
   function init() {
-    var sync = options.get('sync');
-    if (!sync || !sync.services) {
-      sync = {
+    let config = getOption('sync');
+    if (!config || !config.services) {
+      config = {
         services: {},
       };
 
       // XXX Migrate from old data
       ['dropbox', 'onedrive']
-      .forEach(function (key) {
-        sync.services[key] = options.get(key);
+      .forEach(key => {
+        config.services[key] = getOption(key);
       });
 
-      set([], sync);
+      set([], config);
     }
   }
   init();
-  return {get: get, set: set};
+  return { get, set };
 }
-
-function ServiceConfig(name) {
-  this.name = name;
-}
-ServiceConfig.prototype.normalizeKeys = function (key) {
-  var keys = _.normalizeKeys(key);
-  keys.unshift('services', this.name);
-  return keys;
-};
-ServiceConfig.prototype.get = function (key, def) {
-  var keys = this.normalizeKeys(key);
-  return syncConfig.get(keys, def);
-};
-ServiceConfig.prototype.set = function (key, val) {
-  var _this = this;
-  if (typeof key === 'object') {
-    var data = key;
-    Object.keys(data).forEach(function (key) {
-      var keys = _this.normalizeKeys(key);
-      syncConfig.set(keys, data[key]);
-    });
-  } else {
-    var keys = _this.normalizeKeys(key);
-    syncConfig.set(keys, val);
+function serviceConfig(name) {
+  function getKeys(key) {
+    const keys = normalizeKeys(key);
+    keys.unshift('services', name);
+    return keys;
   }
-};
-ServiceConfig.prototype.clear = function () {
-  syncConfig.set(this.normalizeKeys(), {});
-};
-
-function serviceState(validStates, initialState, onChange) {
-  var state = initialState || validStates[0];
-  return {
-    get: function () {return state;},
-    set: function (_state) {
-      if (~validStates.indexOf(_state)) {
-        state = _state;
-        onChange && onChange();
-      } else {
-        console.warn('Invalid state:', _state);
-      }
-      return state;
-    },
-    is: function (states) {
-      if (!Array.isArray(states)) states = [states];
-      return ~states.indexOf(state);
-    },
-  };
+  function get(key, def) {
+    return syncConfig.get(getKeys(key), def);
+  }
+  function set(key, val) {
+    if (typeof key === 'object') {
+      const data = key;
+      Object.keys(data).forEach(k => {
+        syncConfig.set(getKeys(k), data[k]);
+      });
+    } else {
+      syncConfig.set(getKeys(key), val);
+    }
+  }
+  function clear() {
+    syncConfig.set(getKeys(), {});
+  }
+  return { get, set, clear };
 }
-function getStates() {
-  return serviceNames.map(function (name) {
-    var service = services[name];
+function serviceState(validStates, initialState, onChange) {
+  let state = initialState || validStates[0];
+  function get() {
+    return state;
+  }
+  function set(newState) {
+    if (validStates.includes(newState)) {
+      state = newState;
+      if (onChange) onChange();
+    } else {
+      console.warn('Invalid state:', newState);
+    }
+    return get();
+  }
+  function is(states) {
+    const stateArray = Array.isArray(states) ? states : [states];
+    return stateArray.includes(state);
+  }
+  return { get, set, is };
+}
+export function getStates() {
+  return serviceNames.map(name => {
+    const service = services[name];
     return {
       name: service.name,
       displayName: service.displayName,
@@ -114,305 +107,273 @@ function getStates() {
   });
 }
 
-function serviceFactory(base, options) {
-  var Service = function () {
-    this.initialize.apply(this, arguments);
+function serviceFactory(base) {
+  const Service = function constructor(...args) {
+    if (!(this instanceof Service)) return new Service(...args);
+    this.initialize(...args);
   };
-  Service.prototype = Object.assign(Object.create(base), options);
+  Service.prototype = base;
   Service.extend = extendService;
   return Service;
 }
 function extendService(options) {
-  return serviceFactory(this.prototype, options);
+  return serviceFactory(Object.assign(Object.create(this.prototype), options));
 }
-var BaseService = serviceFactory({
+
+const onStateChange = debounce(() => {
+  browser.runtime.sendMessage({
+    cmd: 'UpdateSync',
+    data: getStates(),
+  });
+});
+
+export const BaseService = serviceFactory({
   name: 'base',
   displayName: 'BaseService',
   delayTime: 1000,
   urlPrefix: '',
   metaFile: 'Violentmonkey',
-  delay: function (time) {
-    if (time == null) time = this.delayTime;
-    return new Promise(function (resolve, _reject) {
-      setTimeout(resolve, time);
-    });
-  },
-  initialize: function (name) {
-    var _this = this;
-    _this.onStateChange = _.debounce(_this.onStateChange.bind(_this));
-    if (name) _this.name = name;
-    _this.progress = {
+  initialize(name) {
+    if (name) this.name = name;
+    this.progress = {
       finished: 0,
       total: 0,
     };
-    _this.config = new ServiceConfig(_this.name);
-    _this.authState = serviceState([
+    this.config = serviceConfig(this.name);
+    this.authState = serviceState([
       'idle',
       'initializing',
       'authorizing',  // in case some services require asynchronous requests to get access_tokens
       'authorized',
       'unauthorized',
       'error',
-    ], null, _this.onStateChange);
-    _this.syncState = serviceState([
+    ], null, onStateChange);
+    this.syncState = serviceState([
       'idle',
       'ready',
       'syncing',
       'error',
-    ], null, _this.onStateChange);
-    // _this.initToken();
-    _this.events = events.getEventEmitter();
-    _this.lastFetch = Promise.resolve();
-    _this.startSync = _this.syncFactory();
-  },
-  on: function () {
-    return this.events.on.apply(null, arguments);
-  },
-  off: function () {
-    return this.events.off.apply(null, arguments);
-  },
-  fire: function () {
-    return this.events.fire.apply(null, arguments);
-  },
-  onStateChange: function () {
-    browser.runtime.sendMessage({
-      cmd: 'UpdateSync',
-      data: getStates(),
+    ], null, onStateChange);
+    // this.initToken();
+    this.lastFetch = Promise.resolve();
+    this.startSync = this.syncFactory();
+    const events = getEventEmitter();
+    ['on', 'off', 'fire']
+    .forEach(key => {
+      this[key] = (...args) => { events[key](...args); };
     });
   },
-  log: function () {
-    console.log.apply(console, arguments);  // eslint-disable-line no-console
+  log(...args) {
+    console.log(...args);  // eslint-disable-line no-console
   },
-  syncFactory: function () {
-    var _this = this;
-    var promise, debouncedResolve;
-    function shouldSync() {
-      return _this.authState.is('authorized') && getCurrent() === _this.name;
-    }
-    function init() {
+  syncFactory() {
+    let promise;
+    let debouncedResolve;
+    const shouldSync = () => this.authState.is('authorized') && getCurrent() === this.name;
+    const getReady = () => {
       if (!shouldSync()) return Promise.resolve();
-      _this.log('Ready to sync:', _this.displayName);
-      _this.syncState.set('ready');
-      promise = working = working.then(function () {
-        return new Promise(function (resolve, _reject) {
-          debouncedResolve = _.debounce(resolve, 10 * 1000);
-          debouncedResolve();
-        });
+      this.log('Ready to sync:', this.displayName);
+      this.syncState.set('ready');
+      working = working.then(() => new Promise(resolve => {
+        debouncedResolve = debounce(resolve, 10 * 1000);
+        debouncedResolve();
+      }))
+      .then(() => {
+        if (shouldSync()) return this.sync();
+        this.syncState.set('idle');
       })
-      .then(function () {
-        if (shouldSync()) {
-          return _this.sync();
-        }
-        _this.syncState.set('idle');
-      })
-      .catch(function (err) {
-        console.error(err);
-      })
-      .then(function () {
-        promise = debouncedResolve = null;
+      .catch(err => { console.error(err); })
+      .then(() => {
+        promise = null;
+        debouncedResolve = null;
       });
-    }
-    return function () {
-      if (!promise) init();
-      debouncedResolve && debouncedResolve();
-      return promise;
+      promise = working;
     };
+    function startSync() {
+      if (!promise) getReady();
+      if (debouncedResolve) debouncedResolve();
+      return promise;
+    }
+    return startSync;
   },
-  prepareHeaders: function () {
+  prepareHeaders() {
     this.headers = {};
   },
-  prepare: function () {
-    var _this = this;
-    _this.authState.set('initializing');
-    return (_this.initToken() ? Promise.resolve(_this.user()) : Promise.reject({
+  prepare() {
+    this.authState.set('initializing');
+    return (this.initToken() ? Promise.resolve(this.user()) : Promise.reject({
       type: 'unauthorized',
     }))
-    .then(function () {
-      _this.authState.set('authorized');
-    }, function (err) {
-      if (err.type === 'unauthorized') {
+    .then(() => {
+      this.authState.set('authorized');
+    }, err => {
+      if (err && err.type === 'unauthorized') {
         // _this.config.clear();
-        _this.authState.set('unauthorized');
+        this.authState.set('unauthorized');
       } else {
         console.error(err);
-        _this.authState.set('error');
+        this.authState.set('error');
       }
-      _this.syncState.set('idle');
+      this.syncState.set('idle');
       throw err;
     });
   },
-  checkSync: function () {
-    var _this = this;
-    return _this.prepare()
-    .then(function () {
-      return _this.startSync();
-    });
+  checkSync() {
+    return this.prepare()
+    .then(() => this.startSync());
   },
-  user: _.noop,
-  getMeta: function () {
-    var _this = this;
-    return _this.get(_this.metaFile)
-    .then(function (data) {
-      return JSON.parse(data);
-    });
+  user: noop,
+  getMeta() {
+    return this.get(this.metaFile)
+    .then(data => JSON.parse(data));
   },
-  initToken: function () {
-    var _this = this;
-    _this.prepareHeaders();
-    var token = _this.config.get('token');
-    if (token) {
-      _this.headers.Authorization = 'Bearer ' + token;
-      return true;
-    }
+  initToken() {
+    this.prepareHeaders();
+    const token = this.config.get('token');
+    this.headers.Authorization = token ? `Bearer ${token}` : null;
+    return !!token;
   },
-  request: function (options) {
-    var _this = this;
-    var progress = _this.progress;
-    var lastFetch;
-    if (options.noDelay) {
-      lastFetch = Promise.resolve();
+  loadData(options) {
+    const { progress } = this;
+    let lastFetch;
+    if (options.delay == null) {
+      lastFetch = Promise.resolve(Date.now());
     } else {
-      lastFetch = _this.lastFetch;
-      _this.lastFetch = lastFetch.then(function () {
-        return _this.delay();
-      });
+      lastFetch = this.lastFetch
+      .then(ts => new Promise(resolve => {
+        let delay = options.delay;
+        if (!isNaN(delay)) delay = this.delayTime;
+        const delta = delay - (Date.now() - ts);
+        if (delta > 0) {
+          setTimeout(resolve, delta);
+        } else {
+          resolve();
+        }
+      }))
+      .then(() => Date.now());
     }
-    progress.total ++;
-    _this.onStateChange();
-    return lastFetch.then(function () {
-      return new Promise(function (resolve, reject) {
-        var xhr = new XMLHttpRequest;
-        var prefix = options.prefix;
-        if (prefix == null) prefix = _this.urlPrefix;
-        xhr.open(options.method || 'GET', prefix + options.url, true);
-        var headers = Object.assign({}, _this.headers, options.headers);
-        if (options.body && typeof options.body === 'object') {
-          headers['Content-Type'] = 'application/json';
-          options.body = JSON.stringify(options.body);
-        }
-        Object.keys(headers).forEach(function (key) {
-          var v = headers[key];
-          v && xhr.setRequestHeader(key, v);
-        });
-        xhr.onloadend = function () {
-          progress.finished ++;
-          var data = xhr.responseText;
-          if (options.responseType === 'json') {
-            try {
-              data = JSON.parse(data);
-            } catch (e) {
-              // Invalid JSON data
-            }
-          }
-          _this.onStateChange();
-          if (xhr.status === 503) {
-            // TODO Too Many Requests
-          }
-          // net error: xhr.status === 0
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve(data);
-          } else {
-            requestError(data);
-          }
-        };
-        xhr.send(options.body);
-
-        function requestError(data) {
-          reject({
-            url: options.url,
-            status: xhr.status,
-            xhr: xhr,
-            data: data,
-          });
-        }
+    this.lastFetch = lastFetch;
+    progress.total += 1;
+    onStateChange();
+    return lastFetch.then(() => {
+      let { prefix } = options;
+      if (prefix == null) prefix = this.urlPrefix;
+      const headers = Object.assign({}, this.headers, options.headers);
+      let { url } = options;
+      if (url.startsWith('/')) url = prefix + url;
+      return request(url, {
+        headers,
+        method: options.method,
+        body: options.body,
+        responseType: options.responseType,
       });
+    })
+    .then(({ data }) => ({ data }), error => ({ error }))
+    .then(({ data, error }) => {
+      progress.finished += 1;
+      onStateChange();
+      if (error) return Promise.reject(error);
+      return data;
     });
   },
-  sync: function () {
-    var _this = this;
-    _this.progress = {
+  sync() {
+    this.progress = {
       finished: 0,
       total: 0,
     };
-    _this.syncState.set('syncing');
-    return _this.getMeta()
-    .then(function (meta) {
-      return Promise.all([
-        meta,
-        _this.list(),
-        app.vmdb.getScriptsByIndex('position'),
-      ]);
-    }).then(function (res) {
-      var remote = {
-        meta: res[0],
-        data: res[1],
-      };
-      var local = {
-        meta: _this.config.get('meta', {}),
-        data: res[2],
-      };
-      var firstSync = !local.meta.timestamp;
-      var outdated = !local.meta.timestamp || remote.meta.timestamp > local.meta.timestamp;
-      _this.log('First sync:', firstSync);
-      _this.log('Outdated:', outdated, '(', 'local:', local.meta.timestamp, 'remote:', remote.meta.timestamp, ')');
-      var map = {};
-      var getRemote = [];
-      var putRemote = [];
-      var delRemote = [];
-      var delLocal = [];
-      remote.data.forEach(function (item) {
-        map[item.uri] = item;
-      });
-      local.data.forEach(function (item) {
-        var remoteItem = map[item.uri];
-        if (remoteItem) {
-          if (firstSync || !item.custom.modified || remoteItem.modified > item.custom.modified) {
+    this.syncState.set('syncing');
+    // Avoid simultaneous requests
+    return this.getMeta()
+    .then(remoteMeta => Promise.all([
+      remoteMeta,
+      this.list(),
+      getScriptsByIndex('position'),
+    ]))
+    .then(([remoteMeta, remoteData, localData]) => {
+      const remoteMetaInfo = remoteMeta.info || {};
+      let remoteChanged = !remoteMeta.timestamp
+        || Object.keys(remoteMetaInfo).length !== remoteData.length;
+      const now = Date.now();
+      const remoteItemMap = {};
+      const localMeta = this.config.get('meta', {});
+      const firstSync = !localMeta.timestamp;
+      const outdated = !localMeta.timestamp || remoteMeta.timestamp > localMeta.timestamp;
+      this.log('First sync:', firstSync);
+      this.log('Outdated:', outdated, '(', 'local:', localMeta.timestamp, 'remote:', remoteMeta.timestamp, ')');
+      const getRemote = [];
+      const putRemote = [];
+      const delRemote = [];
+      const delLocal = [];
+      remoteMeta.info = remoteData.reduce((info, item) => {
+        remoteItemMap[item.uri] = item;
+        let itemInfo = remoteMetaInfo[item.uri];
+        if (!itemInfo) {
+          itemInfo = {};
+          remoteChanged = true;
+        }
+        info[item.uri] = itemInfo;
+        if (!itemInfo.modified) {
+          itemInfo.modified = now;
+          remoteChanged = true;
+        }
+        return info;
+      }, {});
+      localData.forEach(item => {
+        const remoteInfo = remoteMeta.info[item.uri];
+        if (remoteInfo) {
+          if (firstSync || !item.custom.modified || remoteInfo.modified > item.custom.modified) {
+            const remoteItem = remoteItemMap[item.uri];
             getRemote.push(remoteItem);
-          } else if (remoteItem.modified < item.custom.modified) {
+          } else if (remoteInfo.modified < item.custom.modified) {
             putRemote.push(item);
+          } else if (remoteInfo.position !== item.position) {
+            remoteInfo.position = item.position;
+            remoteChanged = true;
           }
-          delete map[item.uri];
+          delete remoteItemMap[item.uri];
         } else if (firstSync || !outdated) {
           putRemote.push(item);
         } else {
           delLocal.push(item);
         }
       });
-      Object.keys(map).forEach(function (uri) {
-        var item = map[uri];
+      Object.keys(remoteItemMap).forEach(uri => {
+        const item = remoteItemMap[uri];
         if (outdated) {
           getRemote.push(item);
         } else {
           delRemote.push(item);
         }
       });
-      var promises = [].concat(
-        getRemote.map(function (item) {
-          _this.log('Download script:', item.uri);
-          return _this.get(getFilename(item.uri)).then(function (raw) {
-            var data = {};
+      const promiseQueue = [].concat(
+        getRemote.map(item => {
+          this.log('Download script:', item.uri);
+          return this.get(getFilename(item.uri))
+          .then(raw => {
+            const data = { more: {} };
             try {
-              var obj = JSON.parse(raw);
+              const obj = JSON.parse(raw);
               if (obj.version === 1) {
                 data.code = obj.code;
-                data.more = obj.more;
+                if (obj.more) data.more = obj.more;
               }
             } catch (e) {
               data.code = raw;
             }
-            data.modified = item.modified;
-            if (!options.get('syncScriptStatus') && data.more) {
+            const remoteInfo = remoteMeta.info[item.uri];
+            const { modified, position } = remoteInfo;
+            data.modified = modified;
+            if (position) data.more.position = position;
+            if (!getOption('syncScriptStatus') && data.more) {
               delete data.more.enabled;
             }
-            return app.vmdb.parseScript(data)
-            .then(function (res) {
-              browser.runtime.sendMessage(res);
-            });
+            return parseScript(data)
+            .then(res => { browser.runtime.sendMessage(res); });
           });
         }),
-        putRemote.map(function (item) {
-          _this.log('Upload script:', item.uri);
-          var data = JSON.stringify({
+        putRemote.map(item => {
+          this.log('Upload script:', item.uri);
+          const data = JSON.stringify({
             version: 1,
             code: item.code,
             more: {
@@ -421,76 +382,73 @@ var BaseService = serviceFactory({
               update: item.update,
             },
           });
-          return _this.put(getFilename(item.uri), data)
-          .then(function (data) {
-            if (item.custom.modified !== data.modified) {
-              item.custom.modified = data.modified;
-              return app.vmdb.saveScript(item);
-            }
-          });
-        }),
-        delRemote.map(function (item) {
-          _this.log('Remove remote script:', item.uri);
-          return _this.remove(getFilename(item.uri));
-        }),
-        delLocal.map(function (item) {
-          _this.log('Remove local script:', item.uri);
-          return app.vmdb.removeScript(item.id);
-        })
-      );
-      promises.push(Promise.all(promises).then(function () {
-        var promises = [];
-        var remoteChanged;
-        if (!remote.meta.timestamp || putRemote.length || delRemote.length) {
+          remoteMeta.info[item.uri] = {
+            modified: item.custom.modified,
+            position: item.position,
+          };
           remoteChanged = true;
-          remote.meta.timestamp = Date.now();
-          promises.push(_this.put(_this.metaFile, JSON.stringify(remote.meta)));
+          return this.put(getFilename(item.uri), data);
+        }),
+        delRemote.map(item => {
+          this.log('Remove remote script:', item.uri);
+          delete remoteMeta.info[item.uri];
+          remoteChanged = true;
+          return this.remove(getFilename(item.uri));
+        }),
+        delLocal.map(item => {
+          this.log('Remove local script:', item.uri);
+          return removeScript(item.id);
+        }),
+      );
+      promiseQueue.push(Promise.all(promiseQueue).then(() => checkPosition()).then(changed => {
+        if (!changed) return;
+        remoteChanged = true;
+        return getScriptsByIndex('position', null, null, item => {
+          const remoteInfo = remoteMeta.info[item.uri];
+          if (remoteInfo) remoteInfo.position = item.position;
+        });
+      }));
+      promiseQueue.push(Promise.all(promiseQueue).then(() => {
+        const promises = [];
+        if (remoteChanged) {
+          remoteMeta.timestamp = Date.now();
+          promises.push(this.put(this.metaFile, JSON.stringify(remoteMeta)));
         }
-        if (!local.meta.timestamp || getRemote.length || delLocal.length || remoteChanged || outdated) {
-          local.meta.timestamp = remote.meta.timestamp;
-        }
-        local.meta.lastSync = Date.now();
-        _this.config.set('meta', local.meta);
+        localMeta.timestamp = remoteMeta.timestamp;
+        localMeta.lastSync = Date.now();
+        this.config.set('meta', localMeta);
         return Promise.all(promises);
       }));
-      return Promise.all(promises.map(function (promise) {
-        // ignore errors to ensure all promises are fulfilled
-        return promise.then(_.noop, function (err) {
-          return err || true;
-        });
-      }))
-      .then(function (errors) {
-        errors = errors.filter(function (err) {return err;});
-        if (errors.length) throw errors;
-      });
+      // ignore errors to ensure all promises are fulfilled
+      return Promise.all(promiseQueue.map(promise => promise.then(noop, err => err || true)))
+      .then(errors => errors.filter(Boolean))
+      .then(errors => { if (errors.length) throw errors; });
     })
-    .then(function () {
-      _this.syncState.set('idle');
-    }, function (err) {
-      _this.syncState.set('error');
-      _this.log('Failed syncing:', _this.name);
-      _this.log(err);
+    .then(() => {
+      this.syncState.set('idle');
+    }, err => {
+      this.syncState.set('error');
+      this.log('Failed syncing:', this.name);
+      this.log(err);
     });
   },
 });
 
-function register(Service) {
-  var name = Service.prototype.name || Service.name;
-  var service = new Service(name);
-  serviceNames.push(name);
-  services[name] = service;
+export function register(factory) {
+  const service = typeof factory === 'function' ? factory() : factory;
+  serviceNames.push(service.name);
+  services[service.name] = service;
   return service;
 }
 function getCurrent() {
   return syncConfig.get('current');
 }
 function getService(name) {
-  name = name || getCurrent();
-  return services[name];
+  return services[name || getCurrent()];
 }
-function initialize() {
-  var service = getService();
-  service && service.checkSync();
+export function initialize() {
+  const service = getService();
+  if (service) service.checkSync();
 }
 
 function syncOne(service) {
@@ -498,42 +456,27 @@ function syncOne(service) {
   if (service.authState.is(['idle', 'error'])) return service.checkSync();
   if (service.authState.is('authorized')) return service.startSync();
 }
-function sync() {
-  var service = getService();
+export function sync() {
+  const service = getService();
   return service && Promise.resolve(syncOne(service)).then(autoSync);
 }
 
-function checkAuthUrl(url) {
-  return serviceNames.some(function (name) {
-    var service = services[name];
+export function checkAuthUrl(url) {
+  return serviceNames.some(name => {
+    const service = services[name];
     return service.checkAuth && service.checkAuth(url);
   });
 }
 
-function authorize() {
-  var service = getService();
-  service && service.authorize();
+export function authorize() {
+  const service = getService();
+  if (service) service.authorize();
 }
-function revoke() {
-  var service = getService();
-  service && service.revoke();
+export function revoke() {
+  const service = getService();
+  if (service) service.revoke();
 }
 
-options.hook(function (data) {
-  ('sync.current' in data) && initialize();
+hookOptions(data => {
+  if ('sync.current' in data) initialize();
 });
-
-exports.utils = {
-  getFilename: getFilename,
-  isScriptFile: isScriptFile,
-  getURI: getURI,
-};
-exports.initialize = initialize;
-exports.sync = sync;
-exports.getStates = getStates;
-exports.checkAuthUrl = checkAuthUrl;
-exports.BaseService = BaseService;
-exports.register = register;
-exports.service = getService;
-exports.authorize = authorize;
-exports.revoke = revoke;

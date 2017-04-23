@@ -1,104 +1,139 @@
-var options = require('../options');
+import cache from './cache';
+import { getOption, hookOptions } from './options';
 
-function testScript(url, script) {
-  var custom = script.custom;
-  var meta = script.meta;
-  var inc = [], exc = [], mat = [];
-  if (custom._match !== false && meta.match) mat = mat.concat(meta.match);
-  if (custom.match) mat = mat.concat(custom.match);
-  if (custom._include !== false && meta.include) inc = inc.concat(meta.include);
-  if (custom.include) inc = inc.concat(custom.include);
-  if (custom._exclude !== false && meta.exclude) exc = exc.concat(meta.exclude);
-  if (custom.exclude) exc = exc.concat(custom.exclude);
-  var ok = !mat.length && !inc.length;
+/**
+ * Test glob rules like `@include` and `@exclude`.
+ */
+export function testGlob(url, rules) {
+  const lifetime = 60 * 1000;
+  return rules.some(rule => {
+    const key = `re:${rule}`;
+    let re = cache.get(key);
+    if (re) {
+      cache.hit(key, lifetime);
+    } else {
+      re = autoReg(rule);
+      cache.put(key, re, lifetime);
+    }
+    return re.test(url);
+  });
+}
+
+/**
+ * Test match rules like `@match` and `@exclude_match`.
+ */
+export function testMatch(url, rules) {
+  const lifetime = 60 * 1000;
+  return rules.some(rule => {
+    const key = `match:${rule}`;
+    let matcher = cache.get(key);
+    if (matcher) {
+      cache.hit(key, lifetime);
+    } else {
+      matcher = matchTester(rule);
+      cache.put(key, matcher, lifetime);
+    }
+    return matcher.test(url);
+  });
+}
+
+export function testScript(url, script) {
+  const { custom, meta } = script;
+  const mat = mergeLists(custom.origMatch && meta.match, custom.match);
+  const inc = mergeLists(custom.origInclude && meta.include, custom.include);
+  const exc = mergeLists(custom.origExclude && meta.exclude, custom.exclude);
+  const excMat = mergeLists(custom.origExcludeMatch && meta.excludeMatch, custom.excludeMatch);
+  // match all if no @match or @include rule
+  let ok = !mat.length && !inc.length;
   // @match
-  ok = ok || testMatches(url, mat);
+  ok = ok || testMatch(url, mat);
   // @include
-  ok = ok || testRules(url, inc);
+  ok = ok || testGlob(url, inc);
+  // @exclude-match
+  ok = ok && !testMatch(url, excMat);
   // @exclude
-  ok = ok && !testRules(url, exc);
+  ok = ok && !testGlob(url, exc);
   return ok;
 }
 
-function testRules(url, rules) {
-  return rules.some(function (rule) {
-    return autoReg(rule).test(url);
-  });
-}
-function testMatches(url, rules) {
-  if (rules.length) {
-    var test = matchTester(url);
-    return rules.some(test);
-  }
-  return false;
+function mergeLists(...args) {
+  return args.reduce((res, item) => (item ? res.concat(item) : res), []);
 }
 
 function str2RE(str) {
-  return RegExp('^' + str.replace(/([.?\/])/g, '\\$1').replace(/\*/g, '.*?') + '$');
+  const re = str.replace(/([.?/])/g, '\\$1').replace(/\*/g, '.*?');
+  return RegExp(`^${re}$`);
 }
 
 function autoReg(str) {
-  return str.length > 1 && str.charAt(0) === '/' && str.charAt(str.length - 1) === '/'
-    ? RegExp(str.slice(1, -1))  // Regular-expression
-    : str2RE(str);              // String with wildcards
+  if (str.length > 1 && str[0] === '/' && str[str.length - 1] === '/') {
+    return RegExp(str.slice(1, -1));  // Regular-expression
+  }
+  return str2RE(str);              // String with wildcards
 }
 
-function matchTester(url) {
-  function matchScheme(rule, data) {
-    // exact match
-    if (rule == data) return 1;
-    // * = http | https
-    if (rule == '*' && /^https?$/i.test(data)) return 1;
-    return 0;
+function matchScheme(rule, data) {
+  // exact match
+  if (rule === data) return 1;
+  // * = http | https
+  if (rule === '*' && /^https?$/i.test(data)) return 1;
+  return 0;
+}
+function matchHost(rule, data) {
+  // * matches all
+  if (rule === '*') return 1;
+  // exact match
+  if (rule === data) return 1;
+  // *.example.com
+  if (/^\*\.[^*]*$/.test(rule)) {
+    // matches the specified domain
+    if (rule.slice(2) === data) return 1;
+    // matches subdomains
+    if (str2RE(rule).test(data)) return 1;
   }
-  function matchHost(rule, data) {
-    // * matches all
-    if (rule == '*') return 1;
-    // exact match
-    if (rule == data) return 1;
-    // *.example.com
-    if (/^\*\.[^*]*$/.test(rule)) {
-      // matches the specified domain
-      if (rule.slice(2) == data) return 1;
-      // matches subdomains
-      if (str2RE(rule).test(data)) return 1;
-    }
-    return 0;
+  return 0;
+}
+function matchPath(rule, data) {
+  return str2RE(rule).test(data);
+}
+function matchTester(rule) {
+  let test;
+  if (rule === '<all_urls>') test = () => true;
+  else {
+    const RE = /(.*?):\/\/([^/]*)\/(.*)/;
+    const ruleParts = rule.match(RE);
+    test = url => {
+      const parts = url.match(RE);
+      return !!ruleParts && !!parts
+      && matchScheme(ruleParts[1], parts[1])
+      && matchHost(ruleParts[2], parts[2])
+      && matchPath(ruleParts[3], parts[3]);
+    };
   }
-  function matchPath(rule, data) {
-    return str2RE(rule).test(data);
-  }
-  var RE = /(.*?):\/\/([^\/]*)\/(.*)/;
-  var urlParts = url.match(RE);
-  return function (str) {
-    if (str == '<all_urls>') return true;
-    var parts = str.match(RE);
-    return !!parts
-      && matchScheme(parts[1], urlParts[1])
-      && matchHost(parts[2], urlParts[2])
-      && matchPath(parts[3], urlParts[3]);
-  };
+  return { test };
 }
 
-var testBlacklist = function () {
-  function testBlacklist(url) {
-    return blacklistRE.some(function (re) {
-      return re.test(url);
-    });
-  }
-  function reset(list) {
-    blacklistRE = (list || []).map(function (rule) {
-      return autoReg(rule);
-    });
-  }
-  var blacklistRE = [];
-  reset(options.get('blacklist'));
-  options.hook(function (changes) {
-    var blacklist = changes.blacklist;
-    blacklist && reset(blacklist);
-  });
-  return testBlacklist;
-}();
-
-exports.testScript = testScript;
-exports.testBlacklist = testBlacklist;
+let blacklistRules = [];
+resetBlacklist(getOption('blacklist'));
+hookOptions(changes => {
+  const { blacklist } = changes;
+  if (blacklist) resetBlacklist(blacklist);
+});
+export function testBlacklist(url) {
+  return blacklistRules.some(re => re.test(url));
+}
+export function resetBlacklist(list) {
+  // XXX compatible with {Array} list in v2.6.1-
+  blacklistRules = (Array.isArray(list) ? list : (list || '').split('\n'))
+  .map(line => {
+    const item = line.trim();
+    if (!item || item.startsWith('#')) return;
+    // @exclude
+    if (item.startsWith('@exclude ')) return autoReg(item.slice(9).trim());
+    // domains
+    if (item.indexOf('/') < 0) return matchTester(`*://${item}/*`);
+    // @exclude-match
+    return matchTester(item);
+  })
+  .filter(Boolean);
+}

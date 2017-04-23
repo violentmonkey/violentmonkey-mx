@@ -1,183 +1,96 @@
 const del = require('del');
 const gulp = require('gulp');
-const concat = require('gulp-concat');
-const merge2 = require('merge2');
-const postcss = require('gulp-postcss');
 const gulpFilter = require('gulp-filter');
-const eslint = require('gulp-eslint');
+const gutil = require('gulp-util');
 const uglify = require('gulp-uglify');
 const svgSprite = require('gulp-svg-sprite');
 const replace = require('gulp-replace');
-const definePack = require('define-commonjs/pack/gulp');
+const webpack = require('webpack');
+const webpackConfig = require('./scripts/webpack.conf');
 const i18n = require('./scripts/i18n');
-const wrap = require('./scripts/wrap');
-const templateCache = require('./scripts/templateCache');
 const json = require('./scripts/json');
 const bom = require('./scripts/bom');
 const pkg = require('./package.json');
+const { definitions } = require('./scripts/utils');
+
 const isProd = process.env.NODE_ENV === 'production';
 
 const paths = {
-  cache: 'src/cache.js',
   def: 'src/def.yml',
-  templates: [
-    'src/**/*.html',
-    '!src/*/index.html',
-  ],
-  jsCollect: [
-    'src/**/*.js',
-    '!src/public/**',
-    '!src/injected.js',
-  ],
-  jsCommon: 'src/common.js',
-  jsBg: 'src/background/**/*.js',
-  jsOptions: 'src/options/**/*.js',
-  jsPopup: 'src/popup/**/*.js',
-  locales: [
-    'src/**/*.js',
-    'src/**/*.html',
-  ],
   copy: [
-    'src/injected.js',
     'src/public/**',
-    'src/icons/**',
-    'src/*/*.html',
-    'src/*/*.css',
+    'src/icons',
+  ],
+  locales: [
+    'src/locale/**',
+  ],
+  templates: [
+    'src/**/*.@(js|html|json|yml|vue)',
   ],
 };
-const values = {};
+
+function webpackCallback(err, stats) {
+  if (err) {
+    gutil.log('[FATAL]', err);
+    return;
+  }
+  if (stats.hasErrors()) {
+    gutil.log('[ERROR] webpack compilation failed\n', stats.toJson().errors.join('\n'));
+    return;
+  }
+  if (stats.hasWarnings()) {
+    gutil.log('[WARNING] webpack compilation has warnings\n', stats.toJson().warnings.join('\n'));
+  }
+  stats.stats.forEach(stat => {
+    const timeCost = (stat.endTime - stat.startTime) / 1000;
+    const chunks = Object.keys(stat.compilation.namedChunks).join(' ');
+    gutil.log(`Webpack built: [${timeCost.toFixed(3)}s] ${chunks}`);
+  });
+}
 
 gulp.task('clean', () => del(['dist']));
 
-gulp.task('watch', ['build'], () => {
-  gulp.watch([].concat(paths.cache, paths.templates), ['templates']);
-  gulp.watch(paths.jsCollect, ['js']);
+gulp.task('pack', ['manifest', 'copy-files', 'copy-i18n']);
+
+gulp.task('watch', ['pack', 'js-dev', 'svg'], () => {
+  gulp.watch(paths.manifest, ['manifest']);
   gulp.watch(paths.copy, ['copy-files']);
-  gulp.watch(paths.locales, ['copy-i18n']);
-  gulp.watch(paths.def, ['manifest']);
+  gulp.watch(paths.locales.concat(paths.templates), ['copy-i18n']);
 });
 
-gulp.task('lint', () => (
-  gulp.src([
-    'src/**/*.js',
-    '!src/public/**',
-  ])
-  .pipe(eslint())
-  .pipe(eslint.format())
-));
+gulp.task('build', ['pack', 'js-prd', 'svg']);
 
-var cacheObj;
-var collect;
-
-gulp.task('collect-js', () => {
-  collect = definePack();
-  return gulp.src(paths.jsCollect)
-  .pipe(collect);
-});
-
-gulp.task('templates', ['collect-js'], () => {
-  cacheObj = templateCache('cache');
-  var stream = merge2([
-    gulp.src(paths.cache),
-    gulp.src(paths.templates).pipe(cacheObj),
-  ])
-  .pipe(concat('cache.js'))
-  .pipe(collect.pack({
-    getPath(file) {
-      return 'src/cache.js';
-    },
-  }));
-  if (isProd) stream = stream.pipe(uglify());
-	return stream.pipe(gulp.dest('dist'));
-});
-
-gulp.task('js-common', ['collect-js'], () => {
-  var stream = gulp.src(paths.jsCommon)
-  .pipe(collect.pack());
-  if (isProd) stream = stream.pipe(uglify());
-  return stream.pipe(gulp.dest('dist'));
-});
-
-gulp.task('js-bg', ['collect-js'], () => {
-  var stream = gulp.src(paths.jsBg)
-  .pipe(collect.pack({main: 'src/background/app.js'}))
-  .pipe(concat('background/app.js'));
-  if (isProd) stream = stream.pipe(uglify());
-  return stream.pipe(gulp.dest('dist'));
-});
-
-gulp.task('js-options', ['templates', 'collect-js'], () => {
-  var stream = gulp.src(paths.jsOptions)
-  .pipe(cacheObj.replace())
-  .pipe(collect.pack({main: 'src/options/app.js'}))
-  .pipe(concat('options/app.js'));
-  if (isProd) stream = stream.pipe(uglify());
-	return stream.pipe(gulp.dest('dist'));
-});
-
-gulp.task('js-popup', ['templates', 'collect-js'], () => {
-  var stream = gulp.src(paths.jsPopup)
-  .pipe(cacheObj.replace())
-  .pipe(collect.pack({main: 'src/popup/app.js'}))
-  .pipe(concat('popup/app.js'));
-  if (isProd) stream = stream.pipe(uglify());
-	return stream.pipe(gulp.dest('dist'));
-})
-
-gulp.task('js', [
-  'js-common',
-  'js-bg',
-  'js-options',
-  'js-popup',
-]);
+gulp.task('js-dev', () => webpack(webpackConfig).watch({}, webpackCallback));
+gulp.task('js-prd', () => webpack(webpackConfig, webpackCallback));
 
 gulp.task('manifest', () => (
-	gulp.src(paths.def)
-	.pipe(bom.strip())
+  gulp.src(paths.def)
+  .pipe(bom.strip())
   .pipe(json(data => {
     data[0].version = pkg.version;
     data[0].service.debug = !isProd;
-    values.manifest = data[0];
+    definitions['process.env'].manifest = JSON.stringify(data[0]);
     return data;
   }))
-	.pipe(bom.add())
-	.pipe(gulp.dest('dist'))
+  .pipe(bom.add())
+  .pipe(gulp.dest('dist'))
 ));
 
 gulp.task('copy-files', ['manifest'], () => {
-  const injectedFilter = gulpFilter(['**/injected.js'], {restore: true});
-	const cssFilter = gulpFilter(['**/*.css'], {restore: true});
-	const jsFilter = gulpFilter(['**/*.js'], {restore: true});
-	var stream = gulp.src(paths.copy, {base: 'src'})
-  .pipe(injectedFilter)
-  .pipe(wrap({
-    header: '!function(){\n',
-    footer: '\n}();',
-  }))
-  .pipe(injectedFilter.restore)
-  .pipe(jsFilter)
-  .pipe(replace(/\{\/\*=(.*?)\*\/\}/g, (m, g) => JSON.stringify(values[g.trim()]) || m));
+  const jsFilter = gulpFilter(['**/*.js'], { restore: true });
+  let stream = gulp.src(paths.copy, { base: 'src' });
   if (isProd) stream = stream
-  .pipe(uglify());
-  stream = stream
-  .pipe(jsFilter.restore)
-	.pipe(cssFilter)
-  .pipe(postcss([
-    require('precss')(),
-    isProd && require('cssnano')(),
-  ].filter(Boolean)))
-  // Fix: Maxthon does not support internal links with query string
-  // Remove hashstring in font-awesome URLs
-  // Fixed in v4.9.3.200
-  // .pipe(replace(/url\(([^)]*)\?[^)]*\)/g, 'url($1)'))
-	.pipe(cssFilter.restore)
-	.pipe(gulp.dest('dist/'));
+  .pipe(jsFilter)
+  .pipe(uglify())
+  .pipe(jsFilter.restore);
+  return stream
+  .pipe(gulp.dest('dist/'));
 });
 
 gulp.task('copy-i18n', () => (
-  gulp.src(paths.locales)
-	.pipe(bom.strip())
-	.pipe(i18n.extract({
+  gulp.src(paths.templates)
+  .pipe(bom.strip())
+  .pipe(i18n.extract({
     base: 'src',
     prefix: 'locale',
     touchedOnly: true,
@@ -185,7 +98,7 @@ gulp.task('copy-i18n', () => (
     markUntouched: false,
     extension: '.ini',
   }))
-	.pipe(bom.add())
+  .pipe(bom.add())
   .pipe(gulp.dest('dist'))
 ));
 
@@ -202,18 +115,10 @@ gulp.task('svg', () => (
   .pipe(gulp.dest('dist/public'))
 ));
 
-gulp.task('build', [
-  'js',
-  'manifest',
-  'copy-files',
-  'copy-i18n',
-  'svg',
-]);
-
 gulp.task('i18n', () => (
-  gulp.src(paths.locales)
-	.pipe(bom.strip())
-	.pipe(i18n.extract({
+  gulp.src(paths.templates)
+  .pipe(bom.strip())
+  .pipe(i18n.extract({
     base: 'src',
     prefix: 'locale',
     touchedOnly: false,
@@ -221,8 +126,6 @@ gulp.task('i18n', () => (
     markUntouched: true,
     extension: '.yml',
   }))
-	.pipe(bom.add())
+  .pipe(bom.add())
   .pipe(gulp.dest('src'))
 ));
-
-gulp.task('default', ['build']);
