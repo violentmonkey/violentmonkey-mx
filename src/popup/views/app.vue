@@ -113,7 +113,7 @@ export default {
       options.set('isApplied', !this.options.isApplied);
     },
     onManage() {
-      const url = browser.runtime.getURL(browser.runtime.getManifest().options_page);
+      const url = browser.runtime.getURL(browser.runtime.getManifest().config);
       // Firefox: browser.tabs.query cannot filter tabs by URLs with custom
       // schemes like `moz-extension:`
       browser.tabs.query({

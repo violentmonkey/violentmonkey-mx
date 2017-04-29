@@ -19,7 +19,7 @@ if (typeof browser === 'undefined') {
         const text = data[currentTabId] || '';
         rt.icon.showBadge(text);
       };
-      const set = ({ tabId, text }) => {
+      badges.set = ({ tabId, text }) => {
         data[tabId] = text;
         update();
       };
@@ -28,7 +28,6 @@ if (typeof browser === 'undefined') {
         currentTabId = tabId;
         update();
       });
-      return set;
     },
     set(data) {
       badges.init();
@@ -73,7 +72,7 @@ if (typeof browser === 'undefined') {
   const messenger = {
     initListen() {
       const onMessageListeners = [];
-      messenger.listen = data => { onMessageListeners.push(data); };
+      messenger.listen = listener => { onMessageListeners.push(listener); };
       rt.listen(EXTENSION, res => {
         const { source } = res;
         let { callback } = res;
@@ -103,18 +102,28 @@ if (typeof browser === 'undefined') {
     },
     initSend() {
       const promises = {};
-      messenger.send = data => new Promise((resolve, reject) => {
-        const callback = `CALLBACK_${getUniqId()}`;
-        promises[callback] = { resolve, reject };
-        rt.post(EXTENSION, {
-          source: {
-            id: sourceId,
-            url: location.href,
-          },
-          callback,
-          data,
+      messenger.send = data => {
+        const promise = new Promise((resolve, reject) => {
+          const callback = `CALLBACK_${getUniqId()}`;
+          promises[callback] = { resolve, reject };
+          rt.post(EXTENSION, {
+            source: {
+              id: sourceId,
+              url: location.href,
+            },
+            callback,
+            data,
+          });
+        })
+        .then(res => {
+          if (res && res.error) throw res.error;
+          return res && res.data;
         });
-      });
+        promise.catch(err => {
+          if (process.env.DEBUG) console.warn(err);
+        });
+        return promise;
+      };
       rt.listen(sourceId, res => {
         if (res && res.callback) {
           const promise = promises[res.callback];

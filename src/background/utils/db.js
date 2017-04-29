@@ -165,7 +165,7 @@ export function getValues(uris, cTx) {
   return getTransaction(false, cTx)
   .then(tx => new Promise((resolve, reject) => {
     tx.executeSql(
-      `SELECT uri,data FROM "values" WHERE uri=${placeholders(uris.length)}`,
+      `SELECT uri,data FROM "values" WHERE uri in (${placeholders(uris.length)})`,
       uris,
       (t, res) => {
         const items = readSQLResult(res);
@@ -230,7 +230,7 @@ export function getScriptsByURL(url) {
   function loadRequires(tx, uris) {
     return new Promise((resolve, reject) => {
       tx.executeSql(
-        `SELECT uri,data FROM require WHERE uri=${placeholders(uris.length)}`,
+        `SELECT uri,data FROM require WHERE uri in (${placeholders(uris.length)})`,
         uris,
         (t, res) => {
           const items = readSQLResult(res);
@@ -334,12 +334,13 @@ function getCacheB64(urls, cTx) {
   return getTransaction(false, cTx)
   .then(tx => new Promise((resolve, reject) => {
     tx.executeSql(
-      `SELECT uri,data FROM cache WHERE uri=${placeholders(urls.length)}`,
+      `SELECT uri,data FROM cache WHERE uri in (${placeholders(urls.length)})`,
       urls,
       (t, res) => {
         const items = readSQLResult(res);
         const result = items.reduce((map, item) => {
           map[item.uri] = item.data;
+          return map;
         }, {});
         resolve(result);
       },
