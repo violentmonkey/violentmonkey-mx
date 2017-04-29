@@ -1,101 +1,87 @@
-var VMDB = require('./db');
-var sync = require('./sync');
-var requests = require('./requests');
-var badges = require('./badges');
-var cache = require('./utils/cache');
-var tabsUtils = require('./utils/tabs');
-var scriptUtils = require('./utils/script');
-var clipboard = require('./utils/clipboard');
-var _ = require('../common');
+import { i18n, defaultImage, injectContent, debounce } from 'src/common';
+import * as sync from './sync';
+import { getRequestId, httpRequest, abortRequest, confirmInstall } from './utils/requests';
+import cache from './utils/cache';
+import { newScript, parseMeta } from './utils/script';
+import { setClipboard } from './utils/clipboard';
+import { getOption, setOption, hookOptions, getAllOptions } from './utils/options';
+import * as vmdb from './utils/db';
+import checkUpdate from './utils/update';
 
-var vmdb = exports.vmdb = new VMDB;
-var APP = {};
-scriptUtils.fetch(_.mx.rt.getPrivateUrl() + 'def.json')
-.then(function (xhr) {
-  APP = JSON.parse(xhr.responseText)[0];
+const VM_VER = browser.runtime.getManifest().version;
+
+hookOptions(changes => {
+  if ('isApplied' in changes) setIcon(changes.isApplied);
+  browser.runtime.sendMessage({
+    cmd: 'UpdateOptions',
+    data: changes,
+  });
 });
 
-function notify(data) {
-  function show() {
-    var n = new Notification(data.title + ' - ' + _.i18n('extName'), {
-      body: data.body,
-    });
-    n.onclick = data.onClicked;
-  }
-  if (Notification.permission == 'granted') show();
-  else Notification.requestPermission(function (e) {
-    if (e == 'granted') show();
-    else console.warn('Notification: ' + data.body);
-  });
+function broadcast(data) {
+  browser.tabs.sendMessage('CONTENT', data);
 }
 
-var autoUpdate = function () {
+function checkUpdateAll() {
+  setOption('lastUpdate', Date.now());
+  vmdb.getScriptsByIndex('update', 1)
+  .then(scripts => Promise.all(scripts.map(checkUpdate)));
+}
+
+let autoUpdating;
+function autoUpdate() {
+  if (autoUpdating) return;
+  autoUpdating = true;
+  check();
   function check() {
-    checking = true;
-    return new Promise(function (resolve, reject) {
-      if (!_.options.get('autoUpdate')) return reject();
-      if (Date.now() - _.options.get('lastUpdate') >= 864e5) {
-        resolve(commands.CheckUpdateAll());
-      }
-    }).then(function () {
-      setTimeout(check, 36e5);
-    }, function () {
-      checking = false;
-    });
+    new Promise((resolve, reject) => {
+      if (!getOption('autoUpdate')) return reject();
+      if (Date.now() - getOption('lastUpdate') >= 864e5) resolve(checkUpdateAll());
+    })
+    .then(() => setTimeout(check, 36e5), () => { autoUpdating = false; });
   }
-  var checking;
-  return function () {
-    checking || check();
-  };
-}();
-var commands = {
-  NewScript: function (_data, _src) {
-    return scriptUtils.newScript();
+}
+
+const commands = {
+  NewScript() {
+    return newScript();
   },
-  RemoveScript: function (id, _src) {
+  RemoveScript(id) {
     return vmdb.removeScript(id)
-    .then(function () {
-      sync.sync();
-      _.messenger.post({
-        cmd: 'del',
-        data: id,
-      });
-    });
+    .then(() => { sync.sync(); });
   },
-  GetData: function (_data, _src) {
-    return vmdb.getData().then(function (data) {
-      data.sync = sync.states();
-      data.app = ['version', 'config'].reduce(function (app, key) {
-        app[key] = APP[key];
-        return app;
-      }, {});
+  GetData() {
+    return vmdb.getData().then(data => {
+      data.sync = sync.getStates();
+      data.version = VM_VER;
       return data;
     });
   },
-  GetInjected: function (data, src) {
-    data = {
-      isApplied: _.options.get('isApplied'),
-      injectMode: _.options.get('injectMode'),
-      version: APP.version,
+  GetInjected(url) {
+    const data = {
+      isApplied: getOption('isApplied'),
+      version: VM_VER,
     };
     return data.isApplied
-      ? vmdb.getScriptsByURL(src.url).then(function (res) {
-        return Object.assign(data, res);
-      }) : data;
+    ? vmdb.getScriptsByURL(url).then(res => Object.assign(data, res))
+    : data;
   },
-  UpdateScriptInfo: function (data, _src) {
-    return vmdb.updateScriptInfo(data.id, data)
-    .then(function (script) {
-      _.messenger.post({
-        cmd: 'update',
+  UpdateScriptInfo(data) {
+    return vmdb.updateScriptInfo(data.id, data, {
+      modified: Date.now(),
+    })
+    .then(script => {
+      sync.sync();
+      browser.runtime.sendMessage({
+        cmd: 'UpdateScript',
         data: script,
       });
     });
   },
-  SetValue: function (data, _src) {
+  SetValue(data) {
     return vmdb.setValue(data.uri, data.values)
-    .then(function () {
-      tabsUtils.broadcast({
+    .then(() => {
+      broadcast({
         cmd: 'UpdateValues',
         data: {
           uri: data.uri,
@@ -104,222 +90,230 @@ var commands = {
       });
     });
   },
-  GetOptions: function (_data, _src) {
-    return _.options.getAll();
-  },
-  GetOption: function (data, _src) {
-    return _.options.get(data.key, data.def);
-  },
-  SetOption: function (data, _src) {
-    _.options.set(data.key, data.value);
-  },
-  ExportZip: function (data, _src) {
+  ExportZip(data) {
     return vmdb.getExportData(data.ids, data.values);
   },
-  GetScript: function (id, _src) {
+  GetScript(id) {
     return vmdb.getScriptData(id);
   },
-  GetMetas: function (ids, _src) {
+  GetMetas(ids) {
     return vmdb.getScriptInfos(ids);
   },
-  Move: function (data, _src) {
-    return vmdb.moveScript(data.id, data.offset);
+  Move(data) {
+    return vmdb.moveScript(data.id, data.offset)
+    .then(() => { sync.sync(); });
   },
-  Vacuum: function (_data, _src) {
-    return vmdb.vacuum();
-  },
-  ParseScript: function (data, _src) {
-    return vmdb.parseScript(data).then(function (res) {
-      var meta = res.data.meta;
-      if (!meta.grant.length && !_.options.get('ignoreGrant'))
+  Vacuum: vmdb.vacuum,
+  ParseScript(data) {
+    return vmdb.parseScript(data).then(res => {
+      const { meta } = res.data;
+      if (!meta.grant.length && !getOption('ignoreGrant')) {
         notify({
           id: 'VM-NoGrantWarning',
-          title: _.i18n('Warning'),
-          body: _.i18n('msgWarnGrant', [meta.name||_.i18n('labelNoName')]),
-          onClicked: function () {
-            tabsUtils.create('http://wiki.greasespot.net/@grant');
-            this.close();
-          },
+          title: i18n('Warning'),
+          body: i18n('msgWarnGrant', [meta.name || i18n('labelNoName')]),
+          isClickable: true,
         });
-      _.messenger.post(res);
+      }
+      browser.runtime.sendMessage(res);
       sync.sync();
       return res.data;
     });
   },
-  CheckUpdate: function (id, _src) {
-    vmdb.getScript(id).then(vmdb.checkUpdate);
+  CheckUpdate(id) {
+    vmdb.getScript(id).then(checkUpdate);
   },
-  CheckUpdateAll: function (_data, _src) {
-    _.options.set('lastUpdate', Date.now());
-    vmdb.getScriptsByIndex('update', '"update"=1').then(function (scripts) {
-      return Promise.all(scripts.map(vmdb.checkUpdate));
-    });
-  },
-  ParseMeta: function (code, _src) {
-    return scriptUtils.parseMeta(code);
+  CheckUpdateAll: checkUpdateAll,
+  ParseMeta(code) {
+    return parseMeta(code);
   },
   AutoUpdate: autoUpdate,
-  GetRequestId: function (_data, _src) {
-    return requests.getRequestId();
-  },
-  HttpRequest: function (details, src) {
-    requests.httpRequest(details, function (res) {
-      _.messenger.send(src.id, {
+  GetRequestId: getRequestId,
+  HttpRequest(details, src) {
+    httpRequest(details, res => {
+      browser.tabs.sendMessage(src.id, {
         cmd: 'HttpRequested',
         data: res,
       });
     });
-    return false;
   },
-  AbortRequest: function (id, _src) {
-    return requests.abortRequest(id);
-  },
-  GetBadge: badges.get,
-  SetBadge: badges.set,
-  InstallScript: function (data, _src) {
-    var params = encodeURIComponent(data.url);
-    if (data.from) params += '/' + encodeURIComponent(data.from);
-    if (data.text) cache.set(data.url, data.text);
-    tabsUtils.create(_.mx.rt.getPrivateUrl() + APP.config + '#confirm/' + params);
-  },
-  Authenticate: function (data, _src) {
-    var service = sync.service(data);
-    service && service.authenticate && service.authenticate();
-    return false;
-  },
-  SyncStart: function (data, _src) {
-    sync.sync(data && sync.service(data));
-    return false;
-  },
-  GetFromCache: function (data, _src) {
+  AbortRequest: abortRequest,
+  SyncAuthorize: sync.authorize,
+  SyncRevoke: sync.revoke,
+  SyncStart: sync.sync,
+  CacheLoad(data) {
     return cache.get(data) || null;
   },
-  Notification: function (data, _src) {
-    return notification(data);
+  CacheHit(data) {
+    cache.hit(data.key, data.lifetime);
   },
-  SetClipboard: function (data, _src) {
-    clipboard.set(data);
+  Notification(data) {
+    return browser.notifications.create({
+      title: data.title || i18n('extName'),
+      message: data.text,
+      iconUrl: data.image || defaultImage,
+    });
   },
+  SetClipboard: setClipboard,
+  TabOpen(data) {
+    return browser.tabs.create({
+      url: data.url,
+      active: data.active,
+    })
+    .then(tab => ({ id: tab.id }));
+  },
+  TabClose(data, src) {
+    const tabId = data && (data.id || (src.tab && src.tab.id));
+    if (tabId) browser.tabs.remove(tabId);
+  },
+  GetAllOptions: getAllOptions,
+  GetOptions(data) {
+    return data.reduce((res, key) => {
+      res[key] = getOption(key);
+      return res;
+    }, {});
+  },
+  SetOptions(data) {
+    const items = Array.isArray(data) ? data : [data];
+    items.forEach(item => { setOption(item.key, item.value); });
+  },
+  CheckPosition: vmdb.checkPosition,
+  ConfirmInstall: confirmInstall,
 };
 
-var notification = function () {
-  function notification(data) {
-    var n = new Notification(data.title || _.i18n('extName'), {
-      body: data.text,
-      icon: data.image,
-    });
-    var nid = ++ id;
-    n.onclick = wrapEvent(nid, 'NotificationClick');
-    n.onclose = wrapEvent(nid, 'NotificationClose');
-    return nid;
-  }
-  function wrapEvent(nid, evt) {
-    return function () {
-      tabsUtils.broadcast({
-        cmd: evt,
-        data: nid,
-      });
-    };
-  }
-  var id = 0;
-  return notification;
-}();
-
 function reinit() {
-  var func = function (f) {
-    var c = 0;
-    if (!f) f = window.delayedReload = function () {
-      c ++;
-      setTimeout(function () {
-        if (!-- c) location.reload();
-      }, 1000);
-    };
-    f();
+  const inject = () => {
+    let count = 0;
+    let reload = window.debouncedReload;
+    if (!reload) {
+      reload = () => {
+        count += 1;
+        setTimeout(() => {
+          count -= 1;
+          if (!count) location.reload();
+        }, 1000);
+      };
+      window.debouncedReload = reload;
+    }
+    reload();
   };
-  var injectScript = function (script) {
-    var el = document.createElement('script');
-    el.innerHTML = script;
+  const injectScript = script => {
+    const el = document.createElement('script');
+    el.textContent = script;
     document.body.appendChild(el);
     document.body.removeChild(el);
   };
-  var str = '!' + func.toString() + '(window.delayedReload)';
-  var wrapped = '!' + injectScript.toString() + '(' + JSON.stringify(str) + ')';
-  var reloadHTTPS = _.options.get('reloadHTTPS');
-  for (var length = _.mx.br.tabs.length; length --;) {
-    var tab = _.mx.br.tabs.getTab(length);
-    var protocol = tab.url.match(/^http(s?):/);
-    if (protocol && (!protocol[1] || reloadHTTPS))
-      _.mx.br.executeScript(wrapped, tab.id);
+  const str = `(${inject.toString()}())`;
+  const wrapped = `!${injectScript.toString()}(${JSON.stringify(str)})`;
+  const reloadHTTPS = getOption('reloadHTTPS');
+  const br = window.external.mxGetRuntime().create('mx.browser');
+  browser.tabs.query({})
+  .then(tabs => {
+    tabs.forEach(tab => {
+      const protocol = tab.url.match(/^http(s?):/);
+      if (protocol && (!protocol[1] || reloadHTTPS)) {
+        br.executeScript(wrapped, tab.id);
+      }
+    });
+  });
+}
+
+vmdb.initialized.then(() => {
+  browser.runtime.onMessage.addListener((req, src) => {
+    const func = commands[req.cmd];
+    let res;
+    if (func) {
+      res = func(req.data, src);
+      if (typeof res !== 'undefined') {
+        // If res is not instance of native Promise, browser APIs will not wait for it.
+        res = Promise.resolve(res)
+        .then(data => ({ data }), error => ({ error }));
+      }
+    }
+    return res;
+  });
+  setTimeout(autoUpdate, 2e4);
+  sync.initialize();
+  if (getOption('startReload')) reinit();
+});
+
+function notify(options) {
+  browser.notifications.create(options.id || 'Violentmonkey', {
+    title: `${options.title} - ${i18n('extName')}`,
+    message: options.body,
+    isClickable: options.isClickable,
+  });
+}
+
+{
+  const badges = {};
+  const debouncedGetBadge = debounce(getBadge, 100);
+  browser.tabs.onActivated.addListener(debouncedGetBadge);
+  commands.GetBadge = debouncedGetBadge;
+  commands.SetBadge = setBadge;
+  function clear(tabId) {
+    browser.browserAction.setBadgeText({
+      text: '',
+      tabId,
+    });
+  }
+  function getBadge() {
+    browser.tabs.query({ active: true })
+    .then(tabs => {
+      const currentTab = tabs[0];
+      clear(currentTab.id);
+      injectContent(`setBadge(${JSON.stringify(currentTab.id)})`);
+    });
+  }
+  function setBadge(data, src) {
+    let item = badges[src.id];
+    if (!item) {
+      item = { num: 0 };
+      badges[src.id] = item;
+    }
+    item.num += data.number;
+    if (getOption('showBadge')) {
+      browser.browserAction.setBadgeText({
+        tabId: data.tabId,
+        text: item.num || '',
+      });
+    }
+    if (item.timer) clearTimeout(item.timer);
+    item.timer = setTimeout(() => { delete badges[src.id]; });
   }
 }
 
-_.messenger = function () {
-  function send(id, data) {
-    _.mx.rt.post(id, data);
-  }
-  function post(data) {
-    send('UpdateItem', data);
-  }
-  return {
-    send: send,
-    post: post,
-  };
-}();
+function setIcon(isApplied) {
+  browser.browserAction.setIcon(`icon${isApplied ? '' : 'w'}`);
+}
+setIcon(getOption('isApplied'));
 
-vmdb.initialized.then(function () {
-  _.mx.rt.listen('Background', function (req) {
-    /*
-     * o={
-     * 	cmd: String,
-     * 	src: {
-     * 		id: String,
-     * 		url: String,
-     * 	},
-     * 	callback: String,
-     * 	data: Object
-     * }
-     */
-    function finish(res) {
-      _.messenger.send(req.src.id, {
-        cmd: 'Callback',
-        data: {
-          id: req.callback,
-          data: res,
-        },
-      });
-    }
-    var func = commands[req.cmd];
-    if (func) {
-      var res = func(req.data, req.src);
-      if (res === false) return;
-      return Promise.resolve(res).then(function (data) {
-        finish({
-          data: data,
-          error: null,
-        });
-      }, function (err) {
-        if (err && err.stack) console.error(err.message, err.stack);
-        finish({
-          error: err || 'Unknown error!',
-        });
-      });
-    }
-    finish();
-  });
-  setTimeout(autoUpdate, 2e4);
-  _.options.get('startReload') && reinit();
-  sync.init();
+browser.notifications.onClicked.addListener(id => {
+  if (id === 'VM-NoGrantWarning') {
+    browser.tabs.create({
+      url: 'http://wiki.greasespot.net/@grant',
+    });
+  } else {
+    broadcast({
+      cmd: 'NotificationClick',
+      data: id,
+    });
+  }
 });
 
-_.setIcon('icon' + (_.options.get('isApplied') ? '' : 'w'));
+browser.notifications.onClosed.addListener(id => {
+  broadcast({
+    cmd: 'NotificationClose',
+    data: id,
+  });
+});
 
-tabsUtils.on('TAB_SWITCH', badges.get);
-tabsUtils.on('ON_NAVIGATE', function (tab) {
+browser.tabs.onUpdated.addListener((tabId, changes) => {
   // file:/// URLs will not be injected on Maxthon 5
-  if (/^file:\/\/\/.*?\.user\.js$/.test(tab.url)) {
+  if (/^file:\/\/\/.*?\.user\.js$/.test(changes.url)) {
     commands.InstallScript({
-      url: tab.url,
+      url: changes.url,
     });
-    _.tabs.remove(tab.id);
+    browser.tabs.remove(tabId);
   }
 });

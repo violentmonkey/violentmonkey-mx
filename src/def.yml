@@ -22,6 +22,7 @@
       entryPoints:
         - doc_start
       js:
+        - browser.js
         - injected.js
       includeFrames: true
     - name: icon

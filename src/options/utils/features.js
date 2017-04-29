@@ -1,59 +1,79 @@
-var _ = require('../../common');
+import Vue from 'vue';
+import { initHooks } from 'src/common';
+import options from 'src/common/options';
 
-function init(data, version) {
-  features = data;
-  if (!features || !features.data || features.version !== version) {
-    features = {
-      version: version,
+const FEATURES = 'features';
+let features = options.get(FEATURES);
+let hooks = initHooks();
+let revoke = options.hook((data) => {
+  if (data[FEATURES]) {
+    features = data[FEATURES];
+    revoke();
+    revoke = null;
+    hooks.fire();
+    hooks = null;
+  }
+});
+if (!features || !features.data) {
+  features = {
+    data: {},
+  };
+}
+const items = {};
+
+export default function resetFeatures(version) {
+  if (features.version !== version) {
+    options.set(FEATURES, features = {
+      version,
       data: {},
-    };
-    return true;
+    });
   }
 }
-function initItem(el, value) {
-  function clear() {
+
+function getContext(el, value) {
+  function onFeatureClick() {
+    features.data[value] = 1;
+    options.set(FEATURES, features);
     el.classList.remove('feature');
     el.removeEventListener('click', onFeatureClick, false);
   }
-  function onFeatureClick(_e) {
-    features.data[value] = 1;
-    _.options.set(key, features);
-    clear();
+  function clear() {
+    el.removeEventListener('click', onFeatureClick, false);
   }
   function reset() {
     clear();
-    if (!features.data[value]) {
-      el.classList.add('feature');
-      el.addEventListener('click', onFeatureClick, false);
-    }
+    if (!features.version || features.data[value]) return;
+    el.classList.add('feature');
+    el.addEventListener('click', onFeatureClick, false);
   }
-  reset();
   return {
-    el: el,
-    reset: reset,
+    el,
+    clear,
+    reset,
   };
 }
 
-var key = 'features';
-var features = _.options.get(key);
-var items = [];
-init();
-
-exports.reset = function (version, data) {
-  init(data, version) && _.options.set(key, features);
-  items.forEach(function (item) {
-    item.reset();
-  });
-};
-
 Vue.directive('feature', {
-  bind: function (el, binding) {
-    items.push(initItem(el, binding.value));
+  bind(el, binding) {
+    const { value } = binding;
+    const item = getContext(el, value);
+    let list = items[value];
+    if (!list) {
+      list = [];
+      items[value] = list;
+    }
+    list.push(item);
+    item.reset();
+    if (hooks) hooks.hook(item.reset);
   },
-  unbind: function (el) {
-    var i = items.findIndex(function (item) {
-      return item.el === el;
-    });
-    ~i && items.splice(i, 1);
+  unbind(el, binding) {
+    const list = items[binding.value];
+    if (list) {
+      const index = list.findIndex(item => item.el === el);
+      if (index >= 0) {
+        list[index].clear();
+        list.splice(index, 1);
+      }
+    }
   },
 });

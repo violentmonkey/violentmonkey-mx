@@ -1,103 +1,130 @@
-function initMain() {
-  store.loading = true;
-  _.sendMessage({cmd: 'GetData'})
-  .then(function (data) {
-    [
-      'cache',
-      'scripts',
-      'sync',
-      'app',
-    ].forEach(function (key) {
-      Vue.set(store, key, data[key]);
-    });
-    store.loading = false;
-  });
-  var handlers = {
-    sync: function (data) {
-      store.sync = data;
-    },
-    add: function (data) {
-      data.message = '';
-      store.scripts.push(data);
-    },
-    update: function (data) {
-      if (!data) return;
-      var script = store.scripts.find(function (script) {
-        return script.id === data.id;
-      });
-      script && Object.keys(data).forEach(function (key) {
-        Vue.set(script, key, data[key]);
-      });
-    },
-    del: function (data) {
-      var i = store.scripts.findIndex(function (script) {
-        return script.id === data;
-      });
-      ~i && store.scripts.splice(i, 1);
-    },
-  };
-  _.mx.rt.listen('UpdateItem', function (res) {
-    var handle = handlers[res.cmd];
-    handle && handle(res.data);
-  });
-}
-function loadHash() {
-  var hash = location.hash.slice(1);
-  Object.keys(routes).find(function (key) {
-    var test = routes[key];
-    var params = test(hash);
-    if (params) {
-      hashData.type = key;
-      hashData.params = params;
-      if (init[key]) {
-        init[key]();
-        init[key] = null;
-      }
-      return true;
-    }
-  });
-}
+import Vue from 'vue';
+import 'src/common/sprite';
+import { sendMessage, i18n } from 'src/common';
+import options from 'src/common/options';
+import { store, features } from './utils';
+import App from './views/app';
 
-var utils = require('./utils');
-var _ = require('../common');
-var Main = require('./views/main');
-var Confirm = require('./views/confirm');
+Vue.prototype.i18n = i18n;
 
-var store = Object.assign(utils.store, {
+Object.assign(store, {
   loading: false,
   cache: {},
   scripts: [],
   sync: [],
-  app: {},
+  route: null,
 });
-var init = {
-  Main: initMain,
+const handlers = {
+  UpdateOptions(data) {
+    options.update(data);
+  },
 };
-var routes = {
-  Main: utils.routeTester([
-    '',
-    'main/:tab',
-  ]),
-  Confirm: utils.routeTester([
-    'confirm/:url',
-    'confirm/:url/:referer',
-  ]),
-};
-var hashData = {
-  type: null,
-  params: null,
+browser.runtime.onMessage.addListener(res => {
+  const handle = handlers[res.cmd];
+  if (handle) handle(res.data);
+});
+zip.workerScriptsPath = '/public/lib/zip.js/';
+document.title = i18n('extName');
+initCustomCSS();
+
+const routes = {
+  '': {
+    comp: 'Main',
+    init: initMain,
+  },
+  confirm: {
+    comp: 'Confirm',
+  },
 };
 window.addEventListener('hashchange', loadHash, false);
 loadHash();
-zip.workerScriptsPath = '/lib/zip.js/';
-document.title = _.i18n('extName');
 
-new Vue({
-  el: '#app',
-  template: '<component :is=type :params=params></component>',
-  components: {
-    Main: Main,
-    Confirm: Confirm,
-  },
-  data: hashData,
+options.ready(() => {
+  new Vue({
+    render: h => h(App),
+  }).$mount('#app');
 });
+
+function parseLocation(pathInfo) {
+  const [path, qs] = pathInfo.split('?');
+  const query = (qs || '').split('&').reduce((res, seq) => {
+    if (seq) {
+      const [key, val] = seq.split('=');
+      res[decodeURIComponent(key)] = decodeURIComponent(val);
+    }
+    return res;
+  }, {});
+  return { path, query };
+}
+function loadHash() {
+  const loc = parseLocation(location.hash.slice(1));
+  const route = routes[loc.path];
+  if (route) {
+    store.route = {
+      comp: route.comp,
+      query: loc.query,
+    };
+    if (route.init) {
+      route.init();
+      route.init = null;
+    }
+  } else {
+    location.hash = '';
+  }
+}
+
+function loadData() {
+  sendMessage({ cmd: 'GetData' })
+  .then(data => {
+    [
+      'cache',
+      'scripts',
+      'sync',
+    ].forEach(key => {
+      Vue.set(store, key, data[key]);
+    });
+    store.loading = false;
+    features.reset('sync');
+  });
+}
+
+function initMain() {
+  store.loading = true;
+  loadData();
+  Object.assign(handlers, {
+    ScriptsUpdated: loadData,
+    UpdateSync(data) {
+      store.sync = data;
+    },
+    AddScript(data) {
+      data.message = '';
+      store.scripts.push(data);
+    },
+    UpdateScript(data) {
+      if (!data) return;
+      const script = store.scripts.find(item => item.id === data.id);
+      if (script) {
+        Object.keys(data).forEach((key) => {
+          Vue.set(script, key, data[key]);
+        });
+      }
+    },
+    RemoveScript(data) {
+      const i = store.scripts.findIndex(script => script.id === data);
+      if (i >= 0) store.scripts.splice(i, 1);
+    },
+  });
+}
+function initCustomCSS() {
+  let style;
+  options.hook((changes) => {
+    const customCSS = changes.customCSS || '';
+    if (customCSS && !style) {
+      style = document.createElement('style');
+      document.head.appendChild(style);
+    }
+    if (customCSS || style) {
+      style.textContent = customCSS;
+    }
+  });
+}

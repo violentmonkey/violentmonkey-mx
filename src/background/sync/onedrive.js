@@ -1,177 +1,167 @@
-var sync = require('.');
-var tabsUtils = require('../utils/tabs');
-var searchUtils = require('../utils/search');
-var _ = require('../../common');
+// Reference: https://dev.onedrive.com/README.htm
+import { object, noop } from 'src/common';
+import { dumpQuery } from '../utils/search';
+import { BaseService, isScriptFile, register, getURI } from './base';
 
-var config = Object.assign({
+const config = Object.assign({
   client_id: '000000004418358A',
   redirect_uri: 'https://violentmonkey.github.io/auth_onedrive.html',
 }, JSON.parse(
   // assume this is secret
-  window.atob('eyJjbGllbnRfc2VjcmV0Ijoiajl4M09WRXRIdmhpSEtEV09HcXV5TWZaS2s5NjA0MEgifQ==')
+  window.atob('eyJjbGllbnRfc2VjcmV0Ijoiajl4M09WRXRIdmhpSEtEV09HcXV5TWZaS2s5NjA0MEgifQ=='),
 ));
 
-function authenticate() {
-  var params = {
-    response_type: 'code',
-    client_id: config.client_id,
-    redirect_uri: config.redirect_uri,
-    scope: 'onedrive.appfolder wl.offline_access',
-  };
-  var url = 'https://login.live.com/oauth20_authorize.srf';
-  var qs = searchUtils.dump(params);
-  url += '?' + qs;
-  tabsUtils.create(url);
-}
-function checkAuthenticate(url) {
-  var redirect_uri = config.redirect_uri + '?code=';
-  if (url.slice(0, redirect_uri.length) === redirect_uri) {
-    onedrive.authState.set('authorizing');
-    authorized({
-      code: url.slice(redirect_uri.length),
-    }).then(function () {
-      onedrive.checkSync();
-    });
-    return true;
-  }
-}
-function authorized(params) {
-  return onedrive.request({
-    method: 'POST',
-    url: 'https://login.live.com/oauth20_token.srf',
-    prefix: '',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: searchUtils.dump(Object.assign({}, {
-      client_id: config.client_id,
-      client_secret: config.client_secret,
-      redirect_uri: config.redirect_uri,
-      grant_type: 'authorization_code',
-    }, params)),
-  }).then(function (text) {
-    var data = JSON.parse(text);
-    if (data.access_token) {
-      onedrive.config.set({
-        uid: data.user_id,
-        token: data.access_token,
-        refresh_token: data.refresh_token,
-      });
-    } else {
-      throw data;
-    }
-  });
-}
-function normalize(item) {
-  return {
-    size: item.size,
-    uri: sync.utils.getURI(item.name),
-    modified: new Date(item.lastModifiedDateTime).getTime(),
-  };
-}
-
-var OneDrive = sync.BaseService.extend({
+const OneDrive = BaseService.extend({
   name: 'onedrive',
   displayName: 'OneDrive',
   urlPrefix: 'https://api.onedrive.com/v1.0',
-  refreshToken: function () {
-    var _this = this;
-    var refresh_token = _this.config.get('refresh_token');
-    return authorized({
-      refresh_token: refresh_token,
+  refreshToken() {
+    const refreshToken = this.config.get('refresh_token');
+    return this.authorized({
+      refresh_token: refreshToken,
       grant_type: 'refresh_token',
-    }).then(function () {
-      return _this.prepare();
-    });
+    })
+    .then(() => this.prepare());
   },
-  user: function () {
-    var _this = this;
+  user() {
+    const requestUser = () => this.loadData({
+      url: '/drive',
+      responseType: 'json',
+    });
     return requestUser()
-    .catch(function (res) {
+    .catch(res => {
       if (res.status === 401) {
-        return _this.refreshToken().then(requestUser);
+        return this.refreshToken().then(requestUser);
       }
       throw res;
-    });
-    function requestUser() {
-      return _this.request({
-        url: '/drive',
+    })
+    .catch(res => {
+      if (res.status === 400 && object.get(res, ['data', 'error']) === 'invalid_grant') {
+        return Promise.reject({
+          type: 'unauthorized',
+        });
+      }
+      return Promise.reject({
+        type: 'error',
+        data: res,
       });
-    }
+    });
   },
-  getMeta: function () {
-    function getMeta() {
-      return sync.BaseService.prototype.getMeta.call(_this);
-    }
-    var _this = this;
+  getMeta() {
+    const getMeta = () => BaseService.prototype.getMeta.call(this);
     return getMeta()
-    .catch(function (res) {
+    .catch(res => {
       if (res.status === 404) {
-        var header = res.xhr.getResponseHeader('WWW-Authenticate') || '';
+        const header = res.xhr.getResponseHeader('WWW-Authenticate') || '';
         if (/^Bearer realm="OneDriveAPI"/.test(header)) {
-          return _this.refreshToken().then(getMeta);
-        } else {
-          return {};
+          return this.refreshToken().then(getMeta);
         }
+        return {};
       }
       throw res;
     });
   },
-  list: function () {
-    var _this = this;
-    return _this.request({
+  list() {
+    return this.loadData({
       url: '/drive/special/approot/children',
-    }).then(function (text) {
-      return JSON.parse(text);
-    }).then(function (data) {
-      return data.value.filter(function (item) {
-        return item.file && sync.utils.isScriptFile(item.name);
-      }).map(normalize);
-    });
+      responseType: 'json',
+    })
+    .then(data => data.value.filter(item => item.file && isScriptFile(item.name)).map(normalize));
   },
-  get: function (path) {
-    return this.request({
-      url: '/drive/special/approot:/' + encodeURIComponent(path),
-    }).then(function (text) {
-      return JSON.parse(text);
-    }).then(function (data) {
-      var url = data['@content.downloadUrl'];
-      return new Promise(function (resolve, reject) {
-        var xhr = new XMLHttpRequest;
-        xhr.open('GET', url, true);
-        xhr.onload = function () {
-          resolve(xhr.responseText);
-        };
-        xhr.onerror = function () {
-          reject();
-        };
-        xhr.ontimeout = function () {
-          reject();
-        };
-        xhr.send();
-      });
-    });
+  get(path) {
+    return this.loadData({
+      url: `/drive/special/approot:/${encodeURIComponent(path)}`,
+      responseType: 'json',
+    })
+    .then(data => this.loadData({
+      url: data['@content.downloadUrl'],
+      delay: 0,
+    }));
   },
-  put: function (path, data) {
-    return this.request({
+  put(path, data) {
+    return this.loadData({
       method: 'PUT',
-      url: '/drive/special/approot:/' + encodeURIComponent(path) + ':/content',
+      url: `/drive/special/approot:/${encodeURIComponent(path)}:/content`,
       headers: {
         'Content-Type': 'application/octet-stream',
       },
       body: data,
-    }).then(function (text) {
-      return JSON.parse(text);
-    }).then(normalize);
+      responseType: 'json',
+    })
+    .then(normalize);
   },
-  remove: function (path) {
+  remove(path) {
     // return 204
-    return this.request({
+    return this.loadData({
       method: 'DELETE',
-      url: '/drive/special/approot:/' + encodeURIComponent(path),
-    }).catch(_.noop);
+      url: `/drive/special/approot:/${encodeURIComponent(path)}`,
+    })
+    .catch(noop);
   },
-  authenticate: authenticate,
-  checkAuthenticate: checkAuthenticate,
+  authorize() {
+    const params = {
+      client_id: config.client_id,
+      scope: 'onedrive.appfolder wl.offline_access',
+      response_type: 'code',
+      redirect_uri: config.redirect_uri,
+    };
+    const url = `https://login.live.com/oauth20_authorize.srf?${dumpQuery(params)}`;
+    browser.tabs.create({ url });
+  },
+  checkAuth(url) {
+    const redirectUri = `${config.redirect_uri}?code=`;
+    if (url.startsWith(redirectUri)) {
+      this.authState.set('authorizing');
+      this.authorized({
+        code: url.slice(redirectUri.length),
+      })
+      .then(() => this.checkSync());
+      return true;
+    }
+  },
+  revoke() {
+    this.config.set({
+      uid: null,
+      token: null,
+      refresh_token: null,
+    });
+    return this.prepare();
+  },
+  authorized(params) {
+    return this.loadData({
+      method: 'POST',
+      url: 'https://login.live.com/oauth20_token.srf',
+      prefix: '',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: dumpQuery(Object.assign({}, {
+        client_id: config.client_id,
+        client_secret: config.client_secret,
+        redirect_uri: config.redirect_uri,
+        grant_type: 'authorization_code',
+      }, params)),
+      responseType: 'json',
+    })
+    .then(data => {
+      if (data.access_token) {
+        this.config.set({
+          uid: data.user_id,
+          token: data.access_token,
+          refresh_token: data.refresh_token,
+        });
+      } else {
+        throw data;
+      }
+    });
+  },
 });
-var onedrive = sync.service('onedrive', OneDrive);
+register(OneDrive);
+
+function normalize(item) {
+  return {
+    size: item.size,
+    uri: getURI(item.name),
+    // modified: new Date(item.lastModifiedDateTime).getTime(),
+  };
+}

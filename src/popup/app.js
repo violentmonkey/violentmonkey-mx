@@ -1,87 +1,73 @@
-var Menu = require('./views/menu');
-var Commands = require('./views/command');
-var Domains = require('./views/domain');
-var utils = require('./utils');
-var _ = require('../common');
+import Vue from 'vue';
+import 'src/common/sprite';
+import options from 'src/common/options';
+import { i18n, sendMessage, injectContent, debounce } from 'src/common';
+import App from './views/app';
+import { store } from './utils';
 
-var app = new Vue({
-  el: '#app',
-  template: '<component :is=type></component>',
-  components: {
-    Menu: Menu,
-    Commands: Commands,
-    Domains: Domains,
+Vue.prototype.i18n = i18n;
+
+new Vue({
+  render: h => h(App),
+}).$mount('#app');
+
+const handlers = {
+  UpdateOptions(data) {
+    options.update(data);
   },
-  data: {
-    type: 'Menu',
-  },
-  methods: {
-    navigate: function (type) {
-      this.type = type || 'Menu';
-    },
-  },
+};
+browser.runtime.onMessage.addListener((req, src) => {
+  const func = handlers[req.cmd];
+  if (func) return func(req.data, src);
 });
 
-exports.navigate = app.navigate.bind(app);
+{
+  const init = debounce(() => {
+    injectContent('setPopup()');
+    delayClear();
+  }, 100);
+  let delayedClear;
 
-!function () {
+  Object.assign(handlers, {
+    GetPopup: init,
+    SetPopup(data, currentTab) {
+      cancelClear();
+      store.currentTab = currentTab;
+      if (currentTab && /^https?:\/\//i.test(currentTab.url)) {
+        const matches = currentTab.url.match(/:\/\/(?:www\.)?([^/]*)/);
+        const domain = matches[1];
+        const domains = domain.split('.').reduceRight((res, part) => {
+          const last = res[0];
+          const subdomain = last ? `${part}.${last}` : part;
+          res.unshift(subdomain);
+          return res;
+        }, []);
+        if (domains.length > 1) domains.pop();
+        store.domains = domains;
+      }
+      store.commands = data.menus;
+      sendMessage({
+        cmd: 'GetMetas',
+        data: data.ids,
+      })
+      .then(scripts => { store.scripts = scripts; });
+    },
+  });
+  browser.tabs.onActivated.addListener(init);
+  browser.tabs.onUpdated.addListener(init);
+  init();
+
   function clear() {
-    utils.store.scripts = [];
-    utils.store.commands = [];
-    utils.store.domains = [];
+    store.scripts = [];
+    store.commands = [];
+    store.domains = [];
     delayedClear = null;
   }
   function cancelClear() {
-    delayedClear && clearTimeout(delayedClear);
+    if (delayedClear) clearTimeout(delayedClear);
   }
   function delayClear() {
     cancelClear();
     delayedClear = setTimeout(clear, 200);
   }
-  var init = _.debounce(function () {
-    _.injectContent('setPopup()');
-    delayClear();
-  }, 100);
-  var delayedClear;
-
-  var commands = {
-    GetPopup: init,
-    SetPopup: function (data, currentTab) {
-      cancelClear();
-      utils.store.currentTab = currentTab;
-      if (currentTab && /^https?:\/\//i.test(currentTab.url)) {
-        var matches = currentTab.url.match(/:\/\/(?:www\.)?([^\/]*)/);
-        var domain = matches[1];
-        var domains = domain.split('.').reduceRight(function (res, part) {
-          var last = res[0];
-          if (last) part += '.' + last;
-          res.unshift(part);
-          return res;
-        }, []);
-        domains.length > 1 && domains.pop();
-        utils.store.domains = domains;
-      }
-      utils.store.commands = data.menus;
-      _.sendMessage({
-        cmd: 'GetMetas',
-        data: data.ids,
-      }).then(function (scripts) {
-        utils.store.scripts = scripts;
-      });
-    },
-  };
-  _.sendMessage = _.getMessenger({});
-  _.mx.rt.listen('Popup', function (req) {
-    var func = commands[req.cmd];
-    if (func) func(req.data, req.src);
-  });
-
-  init();
-  _.mx.br.onBrowserEvent = function (data) {
-    switch (data.type) {
-    case 'TAB_SWITCH':
-    case 'ON_NAVIGATE':
-      init();
-    }
-  };
-}();
+}
