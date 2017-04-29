@@ -29,6 +29,8 @@ import webBridgeObj from './web';
     }
   }
 
+  browser.__isContent = true;
+
   // Messages
   browser.runtime.onMessage.addListener((req, src) => {
     const handlers = {

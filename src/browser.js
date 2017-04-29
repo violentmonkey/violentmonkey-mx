@@ -3,6 +3,7 @@ const global = window;
 
 if (typeof browser === 'undefined') {
   const EXTENSION = 'EXTENSION';
+  const CONTENT = 'CONTENT';
   const rt = global.external.mxGetRuntime();
   const br = rt.create('mx.browser');
   const ui = rt.create('mx.app.ui');
@@ -70,12 +71,36 @@ if (typeof browser === 'undefined') {
   };
 
   const messenger = {
-    initListen() {
+    init() {
       const onMessageListeners = [];
+      const promises = {};
       messenger.listen = listener => { onMessageListeners.push(listener); };
-      rt.listen(EXTENSION, res => {
+      messenger.send = (target, data) => {
+        const promise = new Promise((resolve, reject) => {
+          const callback = `CALLBACK_${getUniqId()}`;
+          promises[callback] = { resolve, reject };
+          rt.post(target, {
+            source: {
+              id: sourceId,
+              url: location.href,
+              callback,
+            },
+            data,
+          });
+        })
+        .then(res => {
+          if (res && res.error) throw res.error;
+          return res && res.data;
+        });
+        promise.catch(err => {
+          if (process.env.DEBUG) console.warn(err);
+        });
+        return promise;
+      };
+      const onMessage = res => {
         const { source } = res;
-        let { callback } = res;
+        if (source.id === sourceId) return; // ignore message from self
+        let { callback } = source;
         const sendResponse = data => {
           if (!callback) throw new Error('Already called!');
           rt.post(source.id, { callback, data });
@@ -94,51 +119,27 @@ if (typeof browser === 'undefined') {
             sendResponse({ data: result });
           }
         });
-      });
-    },
-    listen(data) {
-      messenger.initListen();
-      return messenger.listen(data);
-    },
-    initSend() {
-      const promises = {};
-      messenger.send = data => {
-        const promise = new Promise((resolve, reject) => {
-          const callback = `CALLBACK_${getUniqId()}`;
-          promises[callback] = { resolve, reject };
-          rt.post(EXTENSION, {
-            source: {
-              id: sourceId,
-              url: location.href,
-            },
-            callback,
-            data,
-          });
-        })
-        .then(res => {
-          if (res && res.error) throw res.error;
-          return res && res.data;
-        });
-        promise.catch(err => {
-          if (process.env.DEBUG) console.warn(err);
-        });
-        return promise;
       };
+      rt.listen(global.browser.__isContent ? CONTENT : EXTENSION, onMessage);
       rt.listen(sourceId, res => {
         if (res && res.callback) {
           const promise = promises[res.callback];
           delete promises[res.callback];
           if (promise) promise.resolve(res.data);
-        }
+        } else onMessage(res);
       });
     },
-    send(data) {
-      messenger.initSend();
-      return messenger.send(data);
+    listen(...args) {
+      messenger.init();
+      return messenger.listen(...args);
+    },
+    send(...args) {
+      messenger.init();
+      return messenger.send(...args);
     },
   };
 
-  global.browser = {
+  const browser = {
     browserAction: {
       setBadgeText(data) {
         badges.set(data);
@@ -230,7 +231,7 @@ if (typeof browser === 'undefined') {
         },
       },
       sendMessage(data) {
-        return messenger.send(data);
+        return messenger.send(EXTENSION, data);
       },
     },
     tabs: {
@@ -264,7 +265,7 @@ if (typeof browser === 'undefined') {
         if (tab) tab.close();
       },
       sendMessage(target, data) {
-        rt.post(target, data);
+        messenger.send(target, data);
       },
       query(options) {
         const tabs = [];
@@ -290,7 +291,8 @@ if (typeof browser === 'undefined') {
       },
     },
   };
-  global.browser.__patched = true;
+  browser.__patched = true;
+  global.browser = browser;
 }
 
 function getUniqId() {

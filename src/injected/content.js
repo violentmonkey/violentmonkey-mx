@@ -50,38 +50,38 @@ function injectScript(data) {
   inject(`!${func.toString()}(${args.join(',')})`);
 }
 
+const commands = {
+  GetRequestId: getRequestId,
+  HttpRequest: httpRequest,
+  AbortRequest: abortRequest,
+  Inject: injectScript,
+  TabOpen: tabOpen,
+  TabClose: tabClose,
+  SetValue(data) {
+    sendMessage({ cmd: 'SetValue', data });
+  },
+  RegisterMenu(data) {
+    if (window.top === window) menus.push(data);
+    getPopup();
+  },
+  AddStyle(css) {
+    if (document.head) {
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.head.appendChild(style);
+    }
+  },
+  Notification: onNotificationCreate,
+  SetClipboard(data) {
+    sendMessage({ cmd: 'SetClipboard', data });
+  },
+};
 function handleContent(req) {
   if (!req) {
     console.error('[Violentmonkey] Invalid data! There might be unsupported data format.');
     return;
   }
-  const handlers = {
-    GetRequestId: getRequestId,
-    HttpRequest: httpRequest,
-    AbortRequest: abortRequest,
-    Inject: injectScript,
-    TabOpen: tabOpen,
-    TabClose: tabClose,
-    SetValue(data) {
-      sendMessage({ cmd: 'SetValue', data });
-    },
-    RegisterMenu(data) {
-      if (window.top === window) menus.push(data);
-      getPopup();
-    },
-    AddStyle(css) {
-      if (document.head) {
-        const style = document.createElement('style');
-        style.textContent = css;
-        document.head.appendChild(style);
-      }
-    },
-    Notification: onNotificationCreate,
-    SetClipboard(data) {
-      sendMessage({ cmd: 'SetClipboard', data });
-    },
-  };
-  const handle = handlers[req.cmd];
+  const handle = commands[req.cmd];
   if (handle) handle(req.data);
 }
 

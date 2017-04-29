@@ -19,7 +19,7 @@ hookOptions(changes => {
 });
 
 function broadcast(data) {
-  browser.tabs.sendMessage('EXTENSION', data);
+  browser.tabs.sendMessage('CONTENT', data);
 }
 
 function checkUpdateAll() {
