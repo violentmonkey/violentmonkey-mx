@@ -16,18 +16,25 @@ import webBridgeObj from './web';
   const badge = {
     number: 0,
     ready: false,
-    willSet: false,
   };
-  function getBadge() {
-    badge.willSet = true;
-    setBadge();
+  function updateBadge() {
+    sendMessage({ cmd: 'GetBadge' });
   }
-  function setBadge() {
-    if (badge.ready && badge.willSet) {
+  function setBadge(tabId) {
+    if (badge.ready) {
       // XXX: only scripts run in top level window are counted
-      if (top === window) sendMessage({ cmd: 'SetBadge', data: badge.number });
+      if (top === window) {
+        sendMessage({
+          cmd: 'SetBadge',
+          data: {
+            tabId,
+            number: badge.number,
+          },
+        });
+      }
     }
   }
+  window.setBadge = setBadge;
 
   browser.__isContent = true;
 
@@ -37,8 +44,6 @@ import webBridgeObj from './web';
       Command(data) {
         bridge.post({ cmd: 'Command', data });
       },
-      GetPopup: bridge.getPopup,
-      GetBadge: getBadge,
       HttpRequested: httpRequested,
       TabClosed: tabClosed,
       UpdateValues(data) {
@@ -79,7 +84,7 @@ import webBridgeObj from './web';
       bridge.post({ cmd: 'LoadScripts', data });
       badge.ready = true;
       bridge.getPopup();
-      setBadge();
+      updateBadge();
     });
   }
   initBridge();
