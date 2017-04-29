@@ -19,7 +19,7 @@ const paths = {
   def: 'src/def.yml',
   copy: [
     'src/public/**',
-    'src/icons',
+    'src/icons/**',
   ],
   locales: [
     'src/locale/**',

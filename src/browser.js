@@ -1,3 +1,5 @@
+import 'es6-promise';
+
 /* global chrome */
 const global = window;
 

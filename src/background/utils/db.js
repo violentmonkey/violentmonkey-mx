@@ -103,6 +103,7 @@ function encodeScript(script) {
     const handler = scriptFieldEncoders[key];
     const val = script[key];
     res[key] = handler ? handler(val) : val;
+    return res;
   }, {});
 }
 
