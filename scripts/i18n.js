@@ -3,12 +3,10 @@ const path = require('path');
 const gutil = require('gulp-util');
 const through = require('through2');
 const yaml = require('js-yaml');
+const promisify = require('es6-promisify');
 
-function readFile(file) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(file, 'utf8', (err, data) => err ? reject(err) : resolve(data));
-  });
-}
+const readFile = promisify(fs.readFile);
+const readdir = promisify(fs.readdir);
 
 function parseIni(ini) {
   return ini.split('\n')
@@ -50,13 +48,8 @@ const transformers = {
 
 class Locale {
   constructor(lang, basepath, basedir) {
-    this.extensions = ['.yml', '.json', '.ini'];
+    this.defaultLocale = 'messages.yml';
     this.lang = lang;
-    const ext = path.extname(basepath);
-    if (ext) {
-      console.warn(`Extension name is ignored in basepath: ${basepath}`);
-      basepath = basepath.slice(0, -ext.length);
-    }
     this.basepath = basepath;
     this.basedir = basedir || '.';
     this.data = {};
@@ -64,14 +57,18 @@ class Locale {
   }
 
   load() {
-    const file = `${this.basedir}/${this.basepath}`;
+    const localeDir = `${this.basedir}/${this.basepath}`;
     const data = {};
-    return this.extensions.reduce((promise, ext) => promise.then(() => (
-      readFile(file + ext)
-      .then(res => {
-        Object.assign(data, transformers[ext](res));
-      }, err => {})
-    )), Promise.resolve())
+    return readdir(localeDir)
+    .then(files => [this.defaultLocale].concat(files.filter(file => file !== this.defaultLocale)))
+    .then(files => files.reduce((promise, file) => promise.then(() => {
+      const ext = path.extname(file);
+      const transformer = transformers[ext];
+      if (transformer) {
+        return readFile(`${localeDir}/${file}`, 'utf8')
+        .then(res => { Object.assign(data, transformer(res)); }, err => {});
+      }
+    }), Promise.resolve()))
     .then(() => Object.keys(data).reduce((desc, key) => {
       this.data[key] = data[key].message;
       desc[key] = desc[key] || data[key].description;
@@ -83,7 +80,7 @@ class Locale {
     return this.data[key] || def;
   }
 
-  dump(data, ext) {
+  dump(data, ext, basename) {
     if (ext === '.ini') {
       data = dumpIni(data);
     } else if (ext === '.yml') {
@@ -91,8 +88,11 @@ class Locale {
     } else {
       throw 'Unknown extension name!';
     }
+    let filepath = this.basepath;
+    if (basename) filepath += `/${basename}`;
+    filepath += ext;
     return {
-      path: this.basepath + ext,
+      path: filepath,
       data,
     };
   }
@@ -110,18 +110,9 @@ class Locales {
     this.loaded = this.load();
   }
 
-  getLanguages() {
-    const localeDir = this.base + '/' + this.prefix;
-    return new Promise((resolve, reject) => {
-      fs.readdir(localeDir, (err, files) => {
-        if (err) return reject(err);
-        resolve(files.map(file => file.replace(/\.(ini|yml)$/, '')));
-      });
-    });
-  }
-
   load() {
-    return this.getLanguages().then(langs => {
+    return readdir(`${this.base}/${this.prefix}`)
+    .then(langs => {
       this.langs = langs;
       return Promise.all(langs.map(lang => {
         const locale = this.data[lang] = new Locale(lang, `${this.prefix}/${lang}`, this.base);
@@ -159,7 +150,7 @@ class Locales {
     return this.langs.map(lang => {
       const data = this.getData(lang, options);
       const locale = this.data[lang];
-      const out = locale.dump(data, options.extension);
+      const out = locale.dump(data, options.extension, options.basename);
       return new gutil.File({
         base: '',
         path: out.path,
@@ -223,6 +214,7 @@ function extract(options) {
         useDefaultLang: options.useDefaultLang,
         markUntouched: options.markUntouched,
         extension: options.extension,
+        basename: options.basename,
       });
     }).then(files => {
       files.forEach(file => {

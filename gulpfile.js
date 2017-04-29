@@ -125,6 +125,7 @@ gulp.task('i18n', () => (
     useDefaultLang: false,
     markUntouched: true,
     extension: '.yml',
+    basename: 'messages',
   }))
   .pipe(bom.add())
   .pipe(gulp.dest('src'))

@@ -3,156 +3,156 @@
   message: Violentmonkey
 extDescription:
   description: Description for this extension.
-  message: Podpora uživatelských skriptů pro Maxthon.
+  message: Wsparcie dla UserScriptów dla Maxthona.
 extTranslator:
   description: Information of the translator.
-  message: R3gi <regiprogi@gmail.com>
+  message: 'MISI90 <cydziol@gmail.com>, Piter432 <MyReksio@gmail.com>'
   touched: false
 msgUpdated:
   description: Message shown when a script is updated/reinstalled.
-  message: Skript aktualizován.
+  message: Skrypt zaktualizowany.
 msgErrorFetchingScript:
   description: Message shown when Violentmonkey fails fetching a new version of the script.
-  message: Chyba načítání skriptů!
+  message: Błąd podczas pobierania skryptu!
 msgInstalled:
   description: Message shown when a script is installed.
-  message: Skript nainstalován.
+  message: Skrypt zainstalowany
 Warning:
   description: Show warnings with a notification.
-  message: Varování
+  message: Warning
 msgWarnGrant:
   description: Message shown when `@grant` is not found in a script.
   message: >-
-    Skript [$1] nemá žádné „@grant“ řádky, což není doporučeno a může způsobovat
-    problémy. Pro více informací klepněte sem.
+    Script [$1] has no `@grant` lines, which is not recommended and may cause
+    failures. Click to see more details.
 labelNoName:
   description: Text as the name of a script when no @name is assigned.
-  message: Bez názvu
+  message: Bez nazwy
 msgUpdating:
   description: Message shown when a new version of script is being fetched.
-  message: Aktualizování…
+  message: Aktualizowanie skryptu...
 msgNewVersion:
   description: >-
     Message shown when a new version of script is found by @updateURL, but no
     @downloadURL is provided.
-  message: Nalezena nová verze.
+  message: Znaleziono nową wersję tego skryptu.
 msgCheckingForUpdate:
   description: Message shown when a script is being checked for updates by version numbers.
-  message: Vyhledávání aktualizací…
+  message: Sprawdzanie aktualizacji skryptu...
 msgErrorFetchingUpdateInfo:
   description: Message shown when Violentmonkey fails fetching version data of the script.
-  message: Informace o aktualizaci se nepodařilo načíst.
+  message: Błąd podczas pobierania informacji aktualizacji dla tego skryptu.
 msgNoUpdate:
   description: Message shown when there is no new version of a script.
-  message: Aktualizace nenalezena.
+  message: Brak aktualizacji dla tego skryptu.
 labelInstall:
   description: Shown in the title of the confirm page while trying to install a script.
-  message: Instalace skriptu
+  message: Instalator skryptu
 buttonInstallOptions:
   description: Button to show options of installation confirm page.
-  message: Možnosti
+  message: Options
 installOptionClose:
   description: Option to close confirm window after installation.
   message: ''
 installOptionTrack:
   description: Option to track the loading local file before window is closed.
-  message: Sledovat lokální soubor před zavřením tohoto okna
+  message: Track local file before this window is closed
 buttonConfirmInstallation:
   description: Button to confirm installation of a script.
-  message: Potvrdit instalaci
+  message: Potwierdź instalację skryptu
 buttonClose:
   description: Button to close window.
-  message: Zavřít
+  message: Zamknij edytor/instalator
 msgErrorLoadingData:
   description: >-
     Message shown on confirm page when the script to be installed cannot be
     loaded.
-  message: Chyba načítání skriptu.
+  message: Błąd wczytywania skryptu.
 msgLoadedData:
   description: >-
     Message shown in the confirm page when a javascript file to be installed is
     loaded.
-  message: Skript načten.
+  message: Skrypt wczytany.
 msgErrorLoadingDependency:
   description: Message shown when not all requirements are loaded successfully.
-  message: Chyba načítání požadavků.
+  message: Błąd podczas wczytywania wymagań.
 msgLoadingDependency:
   description: Message shown on confirm page when the requirements are being downloaded.
-  message: Načítání požadavků… ($1/$2)
+  message: Wczytywanie wymagań... ($1/$2)
 msgScriptURL:
   description: URL of the script to be installed on confirm page.
-  message: 'URL adresa skriptu: $1'
+  message: 'Skrypt URL: $1'
   touched: false
 msgLoadingData:
   description: Message shown on confirm page when the script to be installed is loading.
-  message: Načítání skriptu…
+  message: Wczytywanie skryptu...
 sideMenuInstalled:
   description: 'Side menu: Installed scripts'
-  message: Nainstalované skripty
+  message: Zainstalowane skrypty
 sideMenuSettings:
   description: 'Side menu: Settings'
-  message: Nastavení
+  message: Ustawienia
 sideMenuAbout:
   description: 'Side menu: About'
-  message: O rozšíření
+  message: O rozszerzeniu
 buttonNew:
   description: Button to create a new script.
-  message: Nový
+  message: Nowy skrypt
 buttonUpdateAll:
   description: Check all scripts for updates.
-  message: Aktualizovat vše
+  message: Sprawdź aktualizacje dla wszystkich skryptów
 anchorGetMoreScripts:
   description: Link to get more scripts.
-  message: Získat více skriptů
+  message: Znajdź nowe skrypty
 msgLoading:
   description: Message shown in the options page before script list is loaded.
-  message: Načítání…
+  message: Wczytywanie...
 labelSettings:
   description: Label shown on the top of settings page
-  message: Nastavení
+  message: Ustawienia
 labelAutoUpdate:
   description: Option to allow automatically checking scripts for updates every 24 hours.
-  message: Automaticky každý den kontrolovat aktualizace skriptů
+  message: Automatycznie sprawdzaj aktualizacje dla skryptów każdego dnia
 labelShowBadge:
-  description: Option to show number of running scripts on the badge
-  message: Zobrazit počet běžících skriptů
+  description: Option to show number of running scripts on the badge.
+  message: Pokaż liczbę uruchomionych skryptów w ikonie rozszerzenia
 labelStartReload:
   description: Option to reload pages on extension start
-  message: Přenačíst stránky při spuštění rozšíření
+  message: Odśwież strony po uruchomieniu rozszerzenia
 labelReloadHTTPS:
   description: Option to reload HTTPS pages on extension start
-  message: Obnovit HTTPS stránky
+  message: Odśwież strony z bezpiecznym protokołem HTTPS
 labelDataImport:
   description: Section title of data import.
-  message: Import dat
+  message: Import danych
 buttonImportData:
   description: Button to choose a file for data import.
-  message: Import ze ZIPu
+  message: Importuj skrypty z pliku ".zip"
 buttonVacuum:
   description: Button to vacuum extension data.
-  message: Vyluxovat data
+  message: Wyczyść dane
 labelDataExport:
   description: Section title of data export.
-  message: Export dat
+  message: Eksport danych
 labelScriptsToExport:
   description: Label shown on top of the script list for export.
-  message: Skripty pro export
+  message: Skrypty do eksportu
   touched: false
 labelExportScriptData:
   description: Option to export script data along with scripts.
-  message: Exportovat data skriptů
+  message: Eksportuj dane skryptów
 buttonAllNone:
   description: Button to select all scripts or none.
-  message: Vše/nic
+  message: Wszystkie/Żaden
 buttonExportData:
   description: Button to open the data export dialog.
-  message: Export do ZIP archivu
+  message: Eksportuj skrypty do pliku ".zip"
 labelAbout:
   description: Label shown on top of the about page.
-  message: O Violentmonkey
+  message: O rozszerzeniu Violentmonkey
 labelRelated:
   description: Label of related links.
-  message: 'Související odkazy: '
+  message: 'Related links: '
 anchorSupportPage:
   description: Link to the support page of Violentmonkey.
   message: >-
@@ -161,10 +161,10 @@ anchorSupportPage:
   touched: false
 labelDonate:
   description: Label of link to donate page.
-  message: Podpořte vývoj
+  message: Dotacja
 labelFeedback:
   description: Label of link to feedback page.
-  message: Zpětná vazba
+  message: Feedback
 labelAuthor:
   description: Label of author shown in the details of a script.
   message: 'Autor: '
@@ -173,156 +173,163 @@ anchorAuthor:
   message: '<a href=mailto:gera2ld@163.com>Gerald</a>'
 labelTranslator:
   description: Label of translator.
-  message: 'Český překlad: '
+  message: 'Tłumacze: '
 anchorTranslator:
   description: Translator shown on about tab.
-  message: '<a href=mailto:regiprogi@gmail.com>R3gi</a>'
+  message: >-
+    <a href=mailto:cydziol@gmail.com>MISI90</a>, <a
+    href=mailto:MyReksio@gmail.com>Piter432</a>
 labelCurrentLang:
   description: Label of current language.
-  message: 'Aktuální jazyk: '
+  message: 'Current language: '
 labelScriptEditor:
   description: Shown in the title of the script editing page.
-  message: Editor skriptu
+  message: Edytor skryptu
 buttonCustomMeta:
   description: Button to edit the custom meta data of a script.
-  message: Vlastní metadata
+  message: Własne metadane skryptu
+  touched: false
 labelName:
   description: Label of script name.
-  message: 'Název:'
+  message: 'Nazwa:'
 labelRunAt:
   description: Label of script @run-at properties in custom meta data.
-  message: 'Spouštět v:'
+  message: 'Uruchom gdy:'
 labelRunAtDefault:
   description: Shown when custom @run-at is not assigned.
-  message: (Výchozí)
+  message: (domyślnie)
 labelHomepageURL:
   description: Label of script @homepageURL in custom meta data.
-  message: 'Domovská stránka:'
+  message: 'Strona domowa:'
 labelUpdateURL:
   description: Label of script @updateURL in custom meta data.
-  message: 'URL aktualizace:'
+  message: 'URL do aktualizacji skryptu:'
 labelDownloadURL:
   description: Label of script @downloadURL in custom meta data.
-  message: 'URL stahování:'
+  message: 'URL do pobrania skryptu:'
 labelInclude:
   description: Label of @include rules.
-  message: Zahrnutí
+  message: Includes
 labelKeepInclude:
   description: Option to keep the original @include rules.
-  message: Ponechat původní pravidla pro zahrnutí
+  message: Zachowaj oryginalne zasady include
+  touched: false
 labelCustomInclude:
   description: Label of custom @include rules.
-  message: 'Vlastní pravidla pro zahrnutí: <em>(jedno na řádek)</em>'
+  message: 'Własne zasady include: <em>(jedna na linię)</em>'
+  touched: false
 labelMatch:
   description: Label of @match rules.
-  message: Shody
+  message: Matches
 labelKeepMatch:
   description: Option to keep the original @match rules.
-  message: Ponechat původní pravidla shod
+  message: Zachowaj oryginalne zasady match
+  touched: false
 labelCustomMatch:
   description: Label of custom @match rules.
-  message: 'Vlastní pravidla pro shody: <em>(jedno na řádek)</em>'
+  message: 'Własne zasady match: <em>(jedna na linię)</em>'
+  touched: false
 labelExclude:
   description: Label of @exclude rules.
-  message: Vynechání
+  message: Excludes
 labelKeepExclude:
   description: Option to keep the original @exclude rules.
-  message: Ponechat původní pravidla pro vynechání
+  message: Zachowaj oryginalne zasady exclude
+  touched: false
 labelCustomExclude:
   description: Label of custom @exclude rules.
-  message: 'Vlastní pravidla pro vynechání: <em>(jedno na řádek)</em>'
+  message: 'Własne zasady exclude: <em>(jedna na linię)</em>'
+  touched: false
 labelAllowUpdate:
   description: Option to allow checking updates for a script.
-  message: Povolit aktualizaci
+  message: Zezwól na aktualizacje skryptu
 buttonSave:
   description: Button to save modifications of a script.
-  message: Uložit
+  message: Zapisz skrypt
 buttonSaveClose:
   description: Button to save modifications of a script and then close the editing page.
-  message: Uložit a zavřít
+  message: Zapisz  skrypt i zamknij edytor
 labelNoScripts:
   description: Message shown when no script is installed.
-  message: Zatím nemáte přidány žádné skripty.
+  message: 'Oops, you haven''t got any script yet.'
 hintSupportPage:
   description: Hint for support page.
-  message: Stránka podpory
+  message: Strona wsparcia
   touched: false
 buttonDisable:
   description: Button to disable a script.
-  message: Vypnout
+  message: Wyłącz skrypt
 buttonEnable:
   description: Button to enable a script.
-  message: Povolit
+  message: Włącz skrypt
 buttonEdit:
   description: Button to edit a script.
-  message: Upravit
+  message: Edytuj skrypt
 buttonRemove:
   description: Button to remove a script.
-  message: Odstranit
+  message: Usuń skrypt
 buttonUpdate:
   description: Check a script for updates.
-  message: Zkontrolovat aktualizace
+  message: Sprawdź aktualizację/e skryptu
 msgImported:
   description: >-
     Message shown after import. There is an argument referring to the count of
     scripts imported.
-  message: 'Počet importovaných položek: $1'
+  message: $1 pozycja/e/i zaimportowana/e/ych.
 hintUseDownloadURL:
   description: Shown as a place holder for @updateURL when it is not assigned
-  message: Použijte @downloadURL
+  message: Use @downloadURL
 confirmNotSaved:
   description: Confirm message shown when there are unsaved script modifications.
-  message: |-
-    Změny nejsou uloženy!
-    Klepněte na OK pro jejich zahození nebo na Zrušit pro setrvání na místě.
+  message: >-
+    Modyfikacje w tym skrypcie nie zostały zapisane! Kliknij "OK", aby wyjść lub
+    "Anuluj", aby pozostać.
 buttonVacuuming:
   description: Message shown when data vacuum is in progress.
-  message: Luxování dat…
+  message: Czyszczenie danych...
 buttonVacuumed:
   description: Message shown when data is vacuumed.
-  message: Data vyluxována
+  message: Dane wyczyszczone
 hintVacuum:
   description: Hint for vacuuming data.
-  message: >-
-    Zlikvidování redudance a pokus o znovu načtení chybějících zdrojů z
-    mezipaměti.
+  message: Usuń nadmiarowość i spróbuj przeładować brakujące dane w pamięci podręcznej.
 menuManageScripts:
   description: 'Menu item to manage scripts, or to open the options page of the extension.'
-  message: Správa skriptů
+  message: Zarządzaj skryptami
   touched: false
 menuFindScripts:
   description: Menu item to find scripts for a site.
-  message: Vyhledat skripty pro tuto stránku
+  message: Znajdź skrypty dla tej strony
 menuBack:
   description: Menu item to go back to main menu from script commands.
-  message: Zpět
+  message: Wstecz
   touched: false
 menuCommands:
   description: Menu item to list script commands.
-  message: Příkazy skriptů…
+  message: Komendy skryptu...
 menuScriptEnabled:
   description: 'Menu item showing the status of Violentmonkey, when enabled.'
-  message: Skripty povoleny
+  message: Skrypty włączone
 labelSearch:
   description: Label for search input in search box.
-  message: 'Hledat: '
+  message: 'Szukaj w: '
 labelSearchFor:
   description: Text shown as a place holder in the search box.
-  message: Hledat…
+  message: Szukaj w...
   touched: false
 labelReplace:
   description: Label for replace input in search box.
-  message: 'Nahradit: '
+  message: 'Zamień na: '
 labelReplaceWith:
   description: Text shown as a place holder in the replace box.
-  message: Nahradit čím…
+  message: Zamień na...
   touched: false
 buttonReplace:
   description: Button to replace the current match.
-  message: Nahradit
+  message: Zamień
 buttonReplaceAll:
   description: Button to replace all matches.
-  message: Vše
+  message: Wszystko
 labelIgnoreGrant:
   description: Option to suppress no @grant warnings.
   message: ''
@@ -457,6 +464,37 @@ labelSyncService:
 labelSyncSettings:
   description: Label for sync settings.
   message: ''
+  touched: false
 labelSyncScriptStatus:
   description: Label for option to sync script status.
+  message: ''
+buttonOK:
+  description: OK button on dialog.
+  message: ''
+buttonCancel:
+  description: Cancel button on dialog.
+  message: ''
+editNavCode:
+  description: Label of code tab in script editor.
+  message: ''
+editNavSettings:
+  description: Label of settings tab in script editor.
+  message: ''
+editLabelSettings:
+  description: Settings section in settings tab of script editor.
+  message: ''
+editLabelMeta:
+  description: Metadata section in settings tab of script editor.
+  message: ''
+labelKeepOriginal:
+  description: Option to keep the original match or ignore rules.
+  message: ''
+labelExcludeMatch:
+  description: Label of @exclude-match rules.
+  message: ''
+learnBlacklist:
+  description: Refers to a link to introduce blacklist patterns.
+  message: ''
+labelImportSettings:
+  description: Label for option to import settings from zip file.
   message: ''

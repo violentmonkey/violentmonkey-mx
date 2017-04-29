@@ -114,7 +114,7 @@ labelAutoUpdate:
   description: Option to allow automatically checking scripts for updates every 24 hours.
   message: Güncellemeleri otomatik olarak günlük kontrol et
 labelShowBadge:
-  description: Option to show number of running scripts on the badge
+  description: Option to show number of running scripts on the badge.
   message: Simge üzerinde çalışan script sayısını göster.
 labelStartReload:
   description: Option to reload pages on extension start
@@ -186,6 +186,7 @@ labelScriptEditor:
 buttonCustomMeta:
   description: Button to edit the custom meta data of a script.
   message: Özel meta data
+  touched: false
 labelName:
   description: Label of script name.
   message: 'İsim:'
@@ -210,27 +211,33 @@ labelInclude:
 labelKeepInclude:
   description: Option to keep the original @include rules.
   message: Orjinal dahiliyet kurallarını kullan
+  touched: false
 labelCustomInclude:
   description: Label of custom @include rules.
   message: 'Özel dahiliyet kuralları: <em>(Satır başına)</em>'
+  touched: false
 labelMatch:
   description: Label of @match rules.
   message: Eşleşmeler
 labelKeepMatch:
   description: Option to keep the original @match rules.
   message: Orjinal eşleşme kurallarını kullan
+  touched: false
 labelCustomMatch:
   description: Label of custom @match rules.
   message: 'Özel eşleşme kuralları: <em>(Satır başına)</em>'
+  touched: false
 labelExclude:
   description: Label of @exclude rules.
   message: Hariç bırakılanlar
 labelKeepExclude:
   description: Option to keep the original @exclude rules.
   message: Orjinal hariciyet kurallarını kullan
+  touched: false
 labelCustomExclude:
   description: Label of custom @exclude rules.
   message: 'Özel hariciyet kuralları: <em>(Satır başına)</em>'
+  touched: false
 labelAllowUpdate:
   description: Option to allow checking updates for a script.
   message: Güncellemeye izin ver
@@ -457,6 +464,37 @@ labelSyncService:
 labelSyncSettings:
   description: Label for sync settings.
   message: ''
+  touched: false
 labelSyncScriptStatus:
   description: Label for option to sync script status.
+  message: ''
+buttonOK:
+  description: OK button on dialog.
+  message: ''
+buttonCancel:
+  description: Cancel button on dialog.
+  message: ''
+editNavCode:
+  description: Label of code tab in script editor.
+  message: ''
+editNavSettings:
+  description: Label of settings tab in script editor.
+  message: ''
+editLabelSettings:
+  description: Settings section in settings tab of script editor.
+  message: ''
+editLabelMeta:
+  description: Metadata section in settings tab of script editor.
+  message: ''
+labelKeepOriginal:
+  description: Option to keep the original match or ignore rules.
+  message: ''
+labelExcludeMatch:
+  description: Label of @exclude-match rules.
+  message: ''
+learnBlacklist:
+  description: Refers to a link to introduce blacklist patterns.
+  message: ''
+labelImportSettings:
+  description: Label for option to import settings from zip file.
   message: ''
