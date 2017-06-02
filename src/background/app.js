@@ -1,12 +1,12 @@
 import { i18n, defaultImage, injectContent, debounce } from 'src/common';
 import * as sync from './sync';
-import { getRequestId, httpRequest, abortRequest, confirmInstall } from './utils/requests';
-import cache from './utils/cache';
-import { newScript, parseMeta } from './utils/script';
-import { setClipboard } from './utils/clipboard';
-import { getOption, setOption, hookOptions, getAllOptions } from './utils/options';
-import * as vmdb from './utils/db';
-import checkUpdate from './utils/update';
+import {
+  notify, cache, vmdb,
+  getRequestId, httpRequest, abortRequest, confirmInstall,
+  newScript, parseMeta,
+  setClipboard, checkUpdate,
+  getOption, setOption, hookOptions, getAllOptions,
+} from './utils';
 
 const VM_VER = browser.runtime.getManifest().version;
 
@@ -241,15 +241,8 @@ vmdb.initialized.then(() => {
   setTimeout(autoUpdate, 2e4);
   sync.initialize();
   if (getOption('startReload')) reinit();
+  vmdb.checkPosition();
 });
-
-function notify(options) {
-  browser.notifications.create(options.id || 'Violentmonkey', {
-    title: `${options.title} - ${i18n('extName')}`,
-    message: options.body,
-    isClickable: options.isClickable,
-  });
-}
 
 {
   const badges = {};
