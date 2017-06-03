@@ -73,6 +73,16 @@ if (typeof browser === 'undefined') {
   };
 
   const messenger = {
+    data: {},
+    ensureTabId() {
+      const tabIdPromise = new Promise(resolve => {
+        window.setTabId = tabId => {
+          messenger.data.tabId = tabId;
+          resolve();
+        };
+      });
+      messenger.ensureTabId = () => tabIdPromise;
+    },
     init() {
       const onMessageListeners = [];
       const promises = {};
@@ -86,6 +96,7 @@ if (typeof browser === 'undefined') {
               id: sourceId,
               url: location.href,
               callback,
+              tab: { id: messenger.data.tabId },
             },
             data,
           });
@@ -140,6 +151,7 @@ if (typeof browser === 'undefined') {
       return messenger.send(...args);
     },
   };
+  messenger.ensureTabId();
 
   const browser = {
     browserAction: {
@@ -294,6 +306,7 @@ if (typeof browser === 'undefined') {
     },
   };
   browser.__patched = true;
+  browser.__ensureTabId = () => messenger.ensureTabId();
   global.browser = browser;
 }
 

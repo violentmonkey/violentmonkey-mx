@@ -100,9 +100,10 @@ import webBridgeObj from './web';
           url: location.href,
           from: document.referrer,
         },
-      }, () => {
+      })
+      .then(() => {
         if (history.length > 1) history.go(-1);
-        else window.close();
+        else sendMessage({ cmd: 'TabClose' });
       });
     }
   }

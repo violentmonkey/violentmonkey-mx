@@ -167,7 +167,8 @@ export default {
       });
     },
     close() {
-      window.close();
+      // window.close();
+      sendMessage({ cmd: 'TabClose' });
     },
     getFile(url, { isBlob, useCache } = {}) {
       const cacheKey = isBlob ? `blob+${url}` : `text+${url}`;

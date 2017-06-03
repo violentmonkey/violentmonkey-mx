@@ -169,7 +169,7 @@ const commands = {
     .then(tab => ({ id: tab.id }));
   },
   TabClose(data, src) {
-    const tabId = data && (data.id || (src.tab && src.tab.id));
+    const tabId = (data && data.id) || (src.tab && src.tab.id);
     if (tabId) browser.tabs.remove(tabId);
   },
   GetAllOptions: getAllOptions,
@@ -314,5 +314,10 @@ browser.tabs.onUpdated.addListener((tabId, changes) => {
       url: changes.url,
     });
     browser.tabs.remove(tabId);
+  } else {
+    // XXX: Maxthon sucks
+    setTimeout(() => {
+      injectContent(`window.setTabId(${JSON.stringify(tabId)})`);
+    }, 500);
   }
 });
