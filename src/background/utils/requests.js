@@ -148,7 +148,7 @@ export function confirmInstall(info) {
       url: info.url,
       from: info.from,
     });
-    const optionsURL = browser.runtime.getURL(browser.runtime.getManifest().options_page);
+    const optionsURL = browser.runtime.getURL(browser.runtime.getManifest().config);
     browser.tabs.create({ url: `${optionsURL}#confirm?id=${confirmKey}` });
   });
 }
