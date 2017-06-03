@@ -305,7 +305,10 @@ export function moveScript(id, offset) {
       const args = [script.position, number];
       tx.executeSql(sql, args, (t, res) => {
         const items = readSQLResult(res);
-        const updates = [[items[items.length - 1].position, id]];
+        const updates = [
+          [items[items.length - 1].position, id],
+          [script.position, items[0].id],
+        ];
         for (let i = 1; i < items.length; i += 1) {
           updates.push([items[i - 1].position, items[i].id]);
         }
