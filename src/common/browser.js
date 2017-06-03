@@ -1,4 +1,4 @@
-import 'es6-promise';
+import './polyfills';
 
 /* global chrome */
 const global = window;

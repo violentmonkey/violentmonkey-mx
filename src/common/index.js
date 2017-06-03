@@ -1,4 +1,5 @@
-import './polyfills';
+// Polyfills are imported in `browser.js`
+// import './polyfills';
 
 export function i18n(name, args) {
   return browser.i18n.getMessage(name, args) || name;
