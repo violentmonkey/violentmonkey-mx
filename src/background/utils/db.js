@@ -1,6 +1,6 @@
 import Promise from 'sync-promise-lite';
-import { i18n, request } from 'src/common';
-import { getNameURI, getScriptInfo, isRemote, parseMeta, newScript } from './script';
+import { i18n, request, buffer2string, getFullUrl, isRemote } from 'src/common';
+import { getNameURI, getScriptInfo, parseMeta, newScript } from './script';
 import { testScript, testBlacklist } from './tester';
 
 let db;
@@ -409,19 +409,25 @@ const cacheRequests = {};
 function fetchCache(url, check) {
   let promise = cacheRequests[url];
   if (!promise) {
-    promise = request(url, { responseType: 'blob' })
-    .then(({ data }) => Promise.resolve(check && check(data)).then(() => data))
-    .then(data => new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        saveCache(url, window.btoa(reader.result)).then(() => {
-          delete cacheRequests[url];
-          resolve();
-        });
+    promise = request(url, { responseType: 'arraybuffer' })
+    .then(({ data: buffer }) => {
+      const data = {
+        buffer,
+        blob(options) {
+          return new Blob([buffer], options);
+        },
+        string() {
+          return buffer2string(buffer);
+        },
+        base64() {
+          return window.btoa(data.string());
+        },
       };
-      reader.onerror = e => { reject(e); };
-      reader.readAsBinaryString(data);
-    }));
+      if (check) return Promise.resolve(check(data)).then(() => data);
+      return data;
+    })
+    .then(({ base64 }) => saveCache(url, base64()))
+    .then(() => { delete cacheRequests[url]; });
     cacheRequests[url] = promise;
   }
   return promise;
@@ -514,9 +520,15 @@ export function vacuum() {
       values: {},
     };
     return getScriptsByIndex('position', null, tx, script => {
-      script.meta.require.forEach(uri => { data.require[uri] = 1; });
+      const base = script.custom.lastInstallURL;
+      script.meta.require.forEach(url => {
+        const fullUrl = getFullUrl(url, base);
+        data.require[fullUrl] = 1;
+      });
       Object.keys(script.meta.resources).forEach(key => {
-        data.cache[script.meta.resources[key]] = 1;
+        const url = script.meta.resources[key];
+        const fullUrl = getFullUrl(url, base);
+        data.cache[fullUrl] = 1;
       });
       if (isRemote(script.meta.icon)) data.cache[script.meta.icon] = 1;
       data.values[script.uri] = 1;
@@ -583,63 +595,70 @@ export function parseScript(data) {
       message: data.message == null ? i18n('msgUpdated') : data.message || '',
     },
   };
-  return getTransaction(true).then(tx => {
+  function fetchResources(tx, base) {
     // @require
     meta.require.forEach(url => {
-      const cache = data.require && data.require[url];
-      if (cache) saveRequire(url, cache, tx);
-      else fetchRequire(url);
+      const fullUrl = getFullUrl(url, base);
+      const cache = data.require && data.require[fullUrl];
+      if (cache) saveRequire(fullUrl, cache, tx);
+      else fetchRequire(fullUrl);
     });
     // @resource
     Object.keys(meta.resources).forEach(k => {
       const url = meta.resources[k];
-      const cache = data.resources && data.resources[url];
-      if (cache) saveCache(url, cache, tx);
-      else fetchCache(url);
+      const fullUrl = getFullUrl(url, base);
+      const cache = data.resources && data.resources[fullUrl];
+      if (cache) saveCache(fullUrl, cache, tx);
+      else fetchCache(fullUrl);
     });
     // @icon
     if (isRemote(meta.icon)) {
-      fetchCache(meta.icon, blob => new Promise((resolve, reject) => {
-        const url = URL.createObjectURL(blob);
-        const image = new Image();
-        const free = () => URL.revokeObjectURL(url);
-        image.onload = () => {
-          free();
-          resolve(blob);
-        };
-        image.onerror = () => {
-          free();
-          reject();
-        };
-        image.src = url;
-      }));
+      fetchCache(
+        getFullUrl(meta.icon, base),
+        ({ blob: getBlob }) => new Promise((resolve, reject) => {
+          const blob = getBlob({ type: 'image/png' });
+          const url = URL.createObjectURL(blob);
+          const image = new Image();
+          const free = () => URL.revokeObjectURL(url);
+          image.onload = () => {
+            free();
+            resolve(blob);
+          };
+          image.onerror = () => {
+            free();
+            reject();
+          };
+          image.src = url;
+        }),
+      );
     }
-    return queryScript(data.id, meta, tx)
-    .then(result => {
-      let script;
-      if (result) {
-        if (data.isNew) throw i18n('msgNamespaceConflict');
-        script = result;
-      } else {
-        script = newScript();
-        script.position = position.get();
-        res.cmd = 'AddScript';
-        res.data.message = i18n('msgInstalled');
-      }
-      updateProps(script, data.more);
-      Object.assign(script.custom, data.custom);
-      script.meta = meta;
-      script.code = data.code;
-      script.uri = getNameURI(script);
-      // use referer page as default homepage
-      if (!meta.homepageURL && !script.custom.homepageURL && isRemote(data.from)) {
-        script.custom.homepageURL = data.from;
-      }
-      if (isRemote(data.url)) script.custom.lastInstallURL = data.url;
-      script.custom.modified = data.modified || Date.now();
-      return saveScript(script, tx);
-    });
-  })
+  }
+  return getTransaction(true)
+  .then(tx => queryScript(data.id, meta, tx).then(result => {
+    let script;
+    if (result) {
+      if (data.isNew) throw i18n('msgNamespaceConflict');
+      script = result;
+    } else {
+      script = newScript();
+      script.position = position.get();
+      res.cmd = 'AddScript';
+      res.data.message = i18n('msgInstalled');
+    }
+    updateProps(script, data.more);
+    Object.assign(script.custom, data.custom);
+    script.meta = meta;
+    script.code = data.code;
+    script.uri = getNameURI(script);
+    // use referer page as default homepage
+    if (!meta.homepageURL && !script.custom.homepageURL && isRemote(data.from)) {
+      script.custom.homepageURL = data.from;
+    }
+    if (isRemote(data.url)) script.custom.lastInstallURL = data.url;
+    fetchResources(tx, script.custom.lastInstallURL);
+    script.custom.modified = data.modified || Date.now();
+    return saveScript(script, tx);
+  }))
   .then(script => {
     Object.assign(res.data, getScriptInfo(script));
     return res;

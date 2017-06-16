@@ -6,14 +6,20 @@
         <button v-text="i18n('buttonUpdateAll')" @click="updateAll"></button>
         <button v-text="i18n('buttonInstallFromURL')" @click="installFromURL"></button>
       </div>
-      <a href="https://greasyfork.org/scripts" target="_blank" v-text="i18n('anchorGetMoreScripts')"></a>
+      <div v-dropdown>
+        <button dropdown-toggle v-text="i18n('anchorGetMoreScripts')"></button>
+        <div class="dropdown-menu">
+          <a href="https://openuserjs.org/" target="_blank">OpenUserJS</a>
+          <a href="https://greasyfork.org/scripts" target="_blank">GreasyFork</a>
+        </div>
+      </div>
     </header>
-    <div class="backdrop" :class="{mask: store.loading}" v-show="message">
-      <div v-html="message"></div>
-    </div>
     <div class="scripts">
       <item v-for="script in store.scripts" :key="script"
       :script="script" @edit="editScript" @move="moveScript"></item>
+    </div>
+    <div class="backdrop" :class="{mask: store.loading}" v-show="message">
+      <div v-html="message"></div>
     </div>
     <edit v-if="script" v-model="script" @close="endEditScript"></edit>
   </div>
@@ -116,3 +122,36 @@ export default {
   },
 };
 </script>
+
+<style>
+.backdrop,
+.scripts {
+  position: absolute;
+  top: 2rem;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+.scripts {
+  overflow-y: auto;
+}
+.backdrop {
+  text-align: center;
+  color: gray;
+}
+.backdrop > *,
+.backdrop::after {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 2rem;
+}
+.backdrop::after {
+  content: ' ';
+  width: 0;
+  height: 100%;
+}
+.mask {
+  background: rgba(0,0,0,.08);
+  /*transition: opacity 1s;*/
+}
+</style>

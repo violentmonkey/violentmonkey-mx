@@ -1,4 +1,4 @@
-import { getUniqId, request, i18n } from 'src/common';
+import { getUniqId, request, i18n, buffer2string } from 'src/common';
 import cache from './cache';
 import { isUserScript } from './script';
 
@@ -36,20 +36,16 @@ function xhrCallbackWrapper(req) {
       // ignore if responseText is unreachable
     }
     if (evt.type === 'loadend') clearRequest(req);
-    lastPromise = lastPromise.then(() => new Promise(resolve => {
-      if (xhr.response && xhr.responseType === 'blob') {
-        const reader = new FileReader();
-        reader.onload = () => {
-          data.response = reader.result;
-          resolve();
-        };
-        reader.readAsDataURL(xhr.response);
+    lastPromise = lastPromise.then(() => {
+      if (xhr.response && xhr.responseType === 'arraybuffer') {
+        const contentType = xhr.getResponseHeader('Content-Type') || 'application/octet-stream';
+        const binstring = buffer2string(xhr.response);
+        data.response = `data:${contentType};base64,${window.btoa(binstring)}`;
       } else {
         // default `null` for blob and '' for text
         data.response = xhr.response;
-        resolve();
       }
-    }))
+    })
     .then(() => {
       if (req.cb) req.cb(res);
     });
@@ -69,7 +65,7 @@ export function httpRequest(details, cb) {
         xhr.setRequestHeader(key, details.headers[key]);
       });
     }
-    if (details.responseType) xhr.responseType = 'blob';
+    if (details.responseType) xhr.responseType = 'arraybuffer';
     if (details.overrideMimeType) xhr.overrideMimeType(details.overrideMimeType);
     const callback = xhrCallbackWrapper(req);
     [

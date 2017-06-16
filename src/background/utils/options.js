@@ -1,10 +1,10 @@
 import { initHooks, debounce, normalizeKeys, object } from 'src/common';
-import storage from 'localStorage';   // eslint-disable-line import/no-extraneous-dependencies
+import storage from 'localStorage'; // eslint-disable-line import/no-extraneous-dependencies
 
 const defaults = {
   isApplied: true,
   autoUpdate: true,
-  ignoreGrant: false,
+  // ignoreGrant: false,
   lastUpdate: 0,
   showBadge: true,
   exportValues: true,

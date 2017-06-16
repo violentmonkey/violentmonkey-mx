@@ -1,7 +1,10 @@
 import { debounce, normalizeKeys, request, noop } from 'src/common';
-import getEventEmitter from '../utils/events';
-import { getOption, setOption, hookOptions } from '../utils/options';
-import { getScriptsByIndex, parseScript, removeScript, checkPosition } from '../utils/db';
+import {
+  getEventEmitter, vmdb,
+  getOption, setOption, hookOptions,
+} from '../utils';
+
+const { getScriptsByIndex, parseScript, removeScript, checkPosition } = vmdb;
 
 const serviceNames = [];
 const services = {};
@@ -143,7 +146,7 @@ export const BaseService = serviceFactory({
     this.authState = serviceState([
       'idle',
       'initializing',
-      'authorizing',  // in case some services require asynchronous requests to get access_tokens
+      'authorizing', // in case some services require asynchronous requests to get access_tokens
       'authorized',
       'unauthorized',
       'error',
@@ -164,7 +167,7 @@ export const BaseService = serviceFactory({
     });
   },
   log(...args) {
-    console.log(...args);  // eslint-disable-line no-console
+    console.log(...args); // eslint-disable-line no-console
   },
   syncFactory() {
     let promise;

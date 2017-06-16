@@ -30,15 +30,25 @@
       </form>
       <form class="inline-block mr-1" @submit.prevent="findNext()">
         <span v-text="i18n('labelSearch')"></span>
-        <input ref="search" v-model="search.state.query" title="Ctrl-F">
-        <button type="button" @click="findNext(1)" title="Shift-Ctrl-G">&lt;</button>
-        <button type="submit" title="Ctrl-G">&gt;</button>
+        <tooltip title="Ctrl-F">
+          <input ref="search" v-model="search.state.query">
+        </tooltip>
+        <tooltip title="Shift-Ctrl-G">
+          <button type="button" @click="findNext(1)">&lt;</button>
+        </tooltip>
+        <tooltip title="Ctrl-G">
+          <button type="submit">&gt;</button>
+        </tooltip>
       </form>
       <form class="inline-block mr-1" @submit.prevent="replace()">
         <span v-text="i18n('labelReplace')"></span>
         <input v-model="search.state.replace">
-        <button type="submit" v-text="i18n('buttonReplace')" title="Shift-Ctrl-F"></button>
-        <button type="button" v-text="i18n('buttonReplaceAll')" @click="replace(1)" title="Shift-Ctrl-R"></button>
+        <tooltip title="Shift-Ctrl-F">
+          <button type="submit" v-text="i18n('buttonReplace')"></button>
+        </tooltip>
+        <tooltip title="Shift-Ctrl-R">
+          <button type="button" v-text="i18n('buttonReplaceAll')" @click="replace(1)"></button>
+        </tooltip>
       </form>
     </div>
     <div class="frame-block">
@@ -57,6 +67,7 @@ import { i18n, debounce, sendMessage, noop } from 'src/common';
 import { showMessage } from '../../utils';
 import VmCode from '../code';
 import VmSettings from './settings';
+import Tooltip from '../tooltip';
 
 function fromList(list) {
   return (list || []).join('\n');
@@ -109,9 +120,10 @@ export default {
   components: {
     VmCode,
     VmSettings,
+    Tooltip,
   },
   data() {
-    this.debouncedFind = debounce(this.find, 100);
+    this.debouncedFind = debounce(this.doFind, 100);
     return {
       nav: 'code',
       canSave: false,
@@ -270,18 +282,26 @@ export default {
     initEditor(cm) {
       this.cm = cm;
     },
-    find() {
-      const { state } = this.search;
-      state.posTo = state.posFrom;
-      this.findNext();
-    },
-    findNext(reversed) {
+    doFind(reversed) {
       const { state } = this.search;
       const { cm } = this;
       if (state.query) {
         findNext(cm, state, reversed);
       }
       this.search.show = true;
+    },
+    find() {
+      const { state } = this.search;
+      state.posTo = state.posFrom;
+      this.doFind();
+      this.$nextTick(() => {
+        const { search } = this.$refs;
+        search.select();
+        search.focus();
+      });
+    },
+    findNext(reversed) {
+      this.doFind(reversed);
       this.$nextTick(() => {
         this.$refs.search.focus();
       });
@@ -371,11 +391,11 @@ export default {
       color: #bbb;
       &.active {
         background: white;
-        box-shadow: 0 -1px 1px #999;
+        box-shadow: 0 -1px 1px #bbb;
         color: #333;
       }
       &:hover {
-        box-shadow: 0 -1px 1px #999;
+        box-shadow: 0 -1px 1px #bbb;
       }
     }
   }

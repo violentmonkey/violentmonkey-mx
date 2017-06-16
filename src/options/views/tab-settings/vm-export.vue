@@ -5,23 +5,28 @@
       <div class="ellipsis" v-for="item in items"
         :class="{active: item.active}"
         @click="item.active = !item.active"
-        v-text="item.script.custom.name || item.script.meta.name"></div>
+        v-text="getName(item)">
+      </div>
     </div>
     <button v-text="i18n('buttonAllNone')" @click="toggleSelection()"></button>
     <button v-text="i18n('buttonExportData')" @click="exportData" :disabled="exporting"></button>
     <label>
-      <input type=checkbox v-setting="'exportValues'">
+      <setting-check name="exportValues" />
       <span v-text="i18n('labelExportScriptData')"></span>
     </label>
   </section>
 </template>
 
 <script>
-import { sendMessage } from 'src/common';
+import { sendMessage, getLocaleString } from 'src/common';
 import options from 'src/common/options';
 import { store } from '../../utils';
+import SettingCheck from '../setting-check';
 
 export default {
+  components: {
+    SettingCheck,
+  },
   data() {
     return {
       store,
@@ -55,13 +60,16 @@ export default {
     exportData() {
       this.exporting = true;
       Promise.resolve(exportData(this.selectedIds))
-      .then(download)
+      .then(downloadBlob)
       .catch((err) => {
         console.error(err);
       })
       .then(() => {
         this.exporting = false;
       });
+    },
+    getName(item) {
+      return item.script.custom.name || getLocaleString(item.script.meta, 'name');
     },
   },
 };
@@ -82,8 +90,7 @@ function addFile(writer, file) {
   });
 }
 
-function download(blob) {
-  const url = URL.createObjectURL(blob);
+function download(url, cb) {
   const a = document.createElement('a');
   a.style.display = 'none';
   document.body.appendChild(a);
@@ -92,6 +99,13 @@ function download(blob) {
   a.click();
   setTimeout(() => {
     document.body.removeChild(a);
+    if (cb) cb();
+  });
+}
+
+function downloadBlob(blob) {
+  const url = URL.createObjectURL(blob);
+  download(url, () => {
     URL.revokeObjectURL(url);
   });
 }
@@ -112,6 +126,7 @@ function exportData(selectedIds) {
       scripts: {},
       settings: options.get(),
     };
+    delete vm.settings.sync;
     if (withValues) vm.values = {};
     const files = data.scripts.map((script) => {
       let name = script.custom.name || script.meta.name || 'Noname';

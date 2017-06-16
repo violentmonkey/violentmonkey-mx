@@ -115,14 +115,21 @@ export function getLocaleString(meta, key) {
     const i = languages[0].indexOf('-');
     if (i > 0) languages.push(languages[0].slice(0, i));
   }
-  const langKey = languages.map(lang => `${key}:${lang}`).find(item => item in meta);
-  return (langKey ? meta[langKey] : meta[key]) || '';
+  const localeMeta = languages
+  .map(lang => meta[`${key}:${lang}`] || meta[`${key}:${lang.toLowerCase()}`])
+  .find(Boolean);
+  return localeMeta || meta[key] || '';
 }
 
 const br = window.external.mxGetRuntime().create('mx.browser');
 export function injectContent(script) {
   br.executeScript(`if(window.mx)try{${script}}catch(e){}`);
 }
+
+const binaryTypes = [
+  'blob',
+  'arraybuffer',
+];
 
 /**
  * Make a request.
@@ -135,7 +142,7 @@ export function request(url, options = {}) {
     const xhr = new XMLHttpRequest();
     const { responseType } = options;
     xhr.open(options.method || 'GET', url, true);
-    if (['blob'].includes(responseType)) xhr.responseType = responseType;
+    if (binaryTypes.includes(responseType)) xhr.responseType = responseType;
     const headers = Object.assign({}, options.headers);
     let { body } = options;
     if (body && typeof body === 'object') {
@@ -157,13 +164,14 @@ export function request(url, options = {}) {
       const res = getResponse(xhr, { status: -1 });
       reject(res);
     };
+    xhr.onabort = xhr.onerror;
     xhr.ontimeout = xhr.onerror;
     xhr.send(body);
   });
   function getResponse(xhr, extra) {
     const { responseType } = options;
     let data;
-    if (responseType === 'blob') {
+    if (binaryTypes.includes(responseType)) {
       data = xhr.response;
     } else {
       data = xhr.responseText;
@@ -180,4 +188,25 @@ export function request(url, options = {}) {
       data,
     }, extra);
   }
+}
+
+export function buffer2string(buffer) {
+  const array = new window.Uint8Array(buffer);
+  const sliceSize = 8192;
+  let str = '';
+  for (let i = 0; i < array.length; i += sliceSize) {
+    str += String.fromCharCode.apply(null, array.subarray(i, i + sliceSize));
+  }
+  return str;
+}
+
+export function getFullUrl(url, base) {
+  const obj = new URL(url, base);
+  // Do not allow `file:` protocol
+  if (obj.protocol === 'file:') obj.protocol = 'http:';
+  return obj.href;
+}
+
+export function isRemote(url) {
+  return url && !(/^(file|data):/.test(url));
 }

@@ -2,15 +2,15 @@
   <div class="flex flex-col h-100">
     <div class="frame-block">
       <div class="buttons pull-right">
-        <div v-dropdown>
+        <div v-dropdown class="confirm-options">
           <button dropdown-toggle v-text="i18n('buttonInstallOptions')"></button>
           <div class="dropdown-menu options-panel" @mousedown.stop>
             <label>
-              <input type=checkbox v-setting="'closeAfterInstall'" @change="checkClose">
+              <setting-check name="closeAfterInstall" @change="checkClose" />
               <span v-text="i18n('installOptionClose')"></span>
             </label>
             <label>
-              <input type=checkbox v-setting="'trackLocalFile'" :disabled="settings.closeAfterInstall">
+              <setting-check name="trackLocalFile" :disabled="closeAfterInstall" />
               <span v-text="i18n('installOptionTrack')"></span>
             </label>
           </div>
@@ -30,34 +30,26 @@
 </template>
 
 <script>
-import { sendMessage, zfill, request } from 'src/common';
+import { sendMessage, zfill, request, buffer2string, isRemote, getFullUrl } from 'src/common';
 import options from 'src/common/options';
 import initCache from 'src/common/cache';
 import VmCode from './code';
 import { store } from '../utils';
+import SettingCheck from './setting-check';
 
 const cache = initCache({});
-
-const settings = {
-  closeAfterInstall: options.get('closeAfterInstall'),
-};
-
-options.hook(changes => {
-  if ('closeAfterInstall' in changes) {
-    settings.closeAfterInstall = changes.closeAfterInstall;
-  }
-});
 
 export default {
   components: {
     VmCode,
+    SettingCheck,
   },
   data() {
     return {
       store,
-      settings,
       installable: false,
       dependencyOK: false,
+      closeAfterInstall: options.get('closeAfterInstall'),
       message: '',
       code: '',
       commands: {
@@ -71,7 +63,7 @@ export default {
       return this.store.route.query;
     },
     isLocal() {
-      return /^file:\/\/\//.test(this.info.url);
+      return !isRemote(this.info.url);
     },
   },
   mounted() {
@@ -139,14 +131,19 @@ export default {
         updateStatus();
         this.require = {};
         this.resources = {};
-        const promises = script.require.map(url => (
-          this.getFile(url, { useCache: true }).then(res => {
-            this.require[url] = res;
-          })
-        ))
-        .concat(urls.map(url => this.getFile(url, { isBlob: true, useCache: true }).then((res) => {
-          this.resources[url] = res;
-        })))
+        const promises = script.require.map(url => {
+          const fullUrl = getFullUrl(url, this.info.url);
+          return this.getFile(fullUrl, { useCache: true }).then(res => {
+            this.require[fullUrl] = res;
+          });
+        })
+        .concat(urls.map(url => {
+          const fullUrl = getFullUrl(url, this.info.url);
+          return this.getFile(fullUrl, { isBlob: true, useCache: true })
+          .then(res => {
+            this.resources[fullUrl] = res;
+          });
+        }))
         .map(promise => promise.then(() => {
           finished += 1;
           updateStatus();
@@ -176,18 +173,9 @@ export default {
         return Promise.resolve(cache.get(cacheKey));
       }
       return request(url, {
-        responseType: isBlob ? 'blob' : null,
+        responseType: isBlob ? 'arraybuffer' : null,
       })
-      .then(({ data }) => {
-        if (!isBlob) return data;
-        return new Promise(resolve => {
-          const reader = new FileReader();
-          reader.onload = function onload() {
-            resolve(window.btoa(this.result));
-          };
-          reader.readAsBinaryString(data);
-        });
-      })
+      .then(({ data }) => (isBlob ? window.btoa(buffer2string(data)) : data))
       .then(data => {
         if (useCache) cache.put(cacheKey, data);
         return data;
@@ -223,7 +211,6 @@ export default {
       })
       .then(res => {
         this.message = `${res.message}[${this.getTimeString()}]`;
-        if (res.code < 0) return;
         if (this.closeAfterInstall) this.close();
         else if (this.isLocal && options.get('trackLocalFile')) this.trackLocalFile();
       });
@@ -241,9 +228,23 @@ export default {
         this.trackLocalFile();
       });
     },
-    checkClose(e) {
-      if (e.target.checked) options.set('trackLocalFile', false);
+    checkClose(value) {
+      this.closeAfterInstall = value;
+      if (value) options.set('trackLocalFile', false);
     },
   },
 };
 </script>
+
+<style>
+.confirm-options .dropdown-menu {
+  width: 13rem;
+}
+.confirm-url {
+  float: left;
+  max-width: 50%;
+}
+.confirm-msg {
+  text-align: right;
+}
+</style>

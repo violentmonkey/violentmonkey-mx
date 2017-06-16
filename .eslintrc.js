@@ -45,6 +45,10 @@ module.exports = {
     'no-bitwise': ['error', {int32Hint: true}],
     'no-underscore-dangle': ['off'],
     'arrow-parens': 0,
+    indent: ['error', 2, {
+      MemberExpression: 0,
+      flatTernaryExpressions: true,
+    }],
   },
   globals: {
     browser: true,

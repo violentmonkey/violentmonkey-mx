@@ -1,13 +1,11 @@
+export { isRemote } from 'src/common';
+
 const metaStart = '==UserScript==';
 const metaEnd = '==/UserScript==';
 
-export function isRemote(url) {
-  return url && !(/^(file|data):/.test(url));
-}
-
 export function isUserScript(text) {
   if (/^\s*</.test(text)) return false; // HTML
-  if (text.indexOf(metaStart) < 0) return false;  // Lack of meta block
+  if (text.indexOf(metaStart) < 0) return false; // Lack of meta block
   return true;
 }
 
