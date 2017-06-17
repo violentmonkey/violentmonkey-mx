@@ -44,7 +44,7 @@ function openDatabase() {
 
 function dbError(reject) {
   return (t, e) => {
-    console.error(`Database error: ${e.message}`);
+    console.error('Database error: ', e);
     if (reject) reject();
   };
 }
@@ -394,7 +394,10 @@ export function saveScript(script, cTx) {
       'code',
     ];
     const sql = `REPLACE INTO scripts(${fields.map(field => `"${field}"`).join(',')}) VALUES(${placeholders(fields.length)})`;
-    const args = fields.map(key => encoded[key]);
+    const args = fields.map(key => {
+      const value = encoded[key];
+      return value == null ? null : value;
+    });
     tx.executeSql(sql, args, (t, res) => {
       script.id = script.id || res.insertId;
       resolve(script);
