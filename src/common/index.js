@@ -201,11 +201,11 @@ export function buffer2string(buffer) {
   return str;
 }
 
-export function getFullUrl(url, base) {
-  const obj = new URL(url, base);
-  // Do not allow `file:` protocol
-  if (obj.protocol === 'file:') obj.protocol = 'http:';
-  return obj.href;
+export function getFullUrl(url, base) { // eslint-disable-line
+  // Maxthon sucks
+  // Maxthon does not support URL constructor
+  // TODO add polyfill for URL constructor
+  return url;
 }
 
 export function isRemote(url) {

@@ -212,11 +212,17 @@ if (typeof browser === 'undefined') {
             body: data.message,
             icon: data.iconUrl,
           });
+          const revoker = setTimeout(() => {
+            // Auto close should not emit close events
+            notice.onclose = null;
+            notice.close();
+          }, 10000);
           notice.onclick = () => {
             onNotificationClickListeners.forEach(listener => { listener(id); });
             setTimeout(() => { notice.close(); });
           };
           notice.onclose = () => {
+            clearTimeout(revoker);
             onNotificationCloseListeners.forEach(listener => { listener(id); });
           };
         }

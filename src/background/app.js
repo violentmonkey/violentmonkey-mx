@@ -158,7 +158,8 @@ const commands = {
       url: data.url,
       active: data.active,
     })
-    // Bug of Maxthon: tab.id is a number, but getTabById requires a string
+    // Maxthon sucks
+    // Bug: tab.id is a number, but getTabById requires a string
     .then(tab => ({ id: tab.id.toString() }));
   },
   TabClose(data, src) {
@@ -311,17 +312,15 @@ browser.notifications.onClosed.addListener(id => {
 });
 
 function onTabUpdate(tabId, changes) {
+  // Maxthon sucks
+  // When ON_NAVIGATE is fired, the old context is actually alive and the new context
+  // is not ready yet, so we cannot do anything with the new context here.
   // file:/// URLs will not be injected on Maxthon 5
   if (/^file:\/\/\/.*?\.user\.js$/.test(changes.url)) {
     commands.InstallScript({
       url: changes.url,
     });
     browser.tabs.remove(tabId);
-  } else {
-    // XXX: Maxthon sucks
-    setTimeout(() => {
-      injectContent(`window.setTabId(${JSON.stringify(tabId)})`);
-    }, 500);
   }
 }
 
