@@ -10,6 +10,8 @@ import initialize from './content';
   if (window.VM) return;
   window.VM = 1;
 
+  browser.__isContent = true;
+
   function initBridge() {
     const contentId = getUniqId();
     const webId = getUniqId();

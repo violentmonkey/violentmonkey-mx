@@ -209,14 +209,13 @@ if (typeof browser === 'undefined') {
             body: data.message,
             icon: data.iconUrl,
           });
-          if (data.isClickable) {
-            notice.onclick = () => {
-              onNotificationClickListeners.forEach(listener => { listener(id); });
-            };
-            notice.onclose = () => {
-              onNotificationCloseListeners.forEach(listener => { listener(id); });
-            };
-          }
+          notice.onclick = () => {
+            onNotificationClickListeners.forEach(listener => { listener(id); });
+            setTimeout(() => { notice.close(); });
+          };
+          notice.onclose = () => {
+            onNotificationCloseListeners.forEach(listener => { listener(id); });
+          };
         }
       },
       onClicked: {

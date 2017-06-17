@@ -111,6 +111,7 @@ export default {
     },
     onToggle() {
       options.set('isApplied', !this.options.isApplied);
+      if (options.get('autoReload')) browser.tabs.reload(this.store.currentTab.id);
     },
     onManage() {
       const url = browser.runtime.getURL(browser.runtime.getManifest().config);
