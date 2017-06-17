@@ -68,6 +68,11 @@ export default function initialize(contentId, webId) {
     getPopup();
     updateBadge();
   });
+
+  browser.__ensureTabId().then(() => {
+    sendMessage({ cmd: 'Navigate' });
+  });
+  sendMessage({ cmd: 'GetTabId' });
 }
 
 const handlers = {

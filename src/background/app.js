@@ -178,6 +178,22 @@ const commands = {
   },
   CheckPosition: vmdb.checkPosition,
   ConfirmInstall: confirmInstall,
+  GetTabId() {
+    browser.tabs.query({})
+    .then(tabs => {
+      tabs.forEach((tab) => {
+        const id = tab.id.toString();
+        injectContent(`window.setTabId(${JSON.stringify(id)})`, id);
+      });
+    });
+  },
+  // XXX Maxthon sucks, patch for ON_NAVIGATE
+  // ON_NAVIGATE won't emit for 302
+  Navigate(_, src) {
+    if (src.tab && src.tab.id) {
+      onTabUpdate(src.tab.id, src.tab);
+    }
+  },
 };
 
 function reinit() {
@@ -294,7 +310,7 @@ browser.notifications.onClosed.addListener(id => {
   });
 });
 
-browser.tabs.onUpdated.addListener((tabId, changes) => {
+function onTabUpdate(tabId, changes) {
   // file:/// URLs will not be injected on Maxthon 5
   if (/^file:\/\/\/.*?\.user\.js$/.test(changes.url)) {
     commands.InstallScript({
@@ -307,4 +323,6 @@ browser.tabs.onUpdated.addListener((tabId, changes) => {
       injectContent(`window.setTabId(${JSON.stringify(tabId)})`);
     }, 500);
   }
-});
+}
+
+browser.tabs.onUpdated.addListener(onTabUpdate);

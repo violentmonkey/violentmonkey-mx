@@ -93,9 +93,11 @@ if (typeof browser === 'undefined') {
           rt.post(target, {
             source: {
               id: sourceId,
-              url: location.href,
               callback,
-              tab: { id: messenger.data.tabId },
+              tab: {
+                id: messenger.data.tabId,
+                url: location.href,
+              },
             },
             data,
           });

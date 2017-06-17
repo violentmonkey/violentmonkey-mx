@@ -123,8 +123,8 @@ export function getLocaleString(meta, key) {
 
 const rt = window.external.mxGetRuntime();
 const br = rt && rt.create('mx.browser');
-export function injectContent(script) {
-  br.executeScript(`if(window.mx)try{${script}}catch(e){}`);
+export function injectContent(script, tabId) {
+  br.executeScript(`if(window.mx)try{${script}}catch(e){}`, tabId);
 }
 
 const binaryTypes = [
