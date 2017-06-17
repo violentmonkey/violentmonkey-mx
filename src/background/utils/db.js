@@ -552,9 +552,10 @@ export function vacuum() {
     return new Promise((resolve, reject) => {
       tx.executeSql(`SELECT uri FROM "${dbName}"`, [], (t, res) => {
         const results = readSQLResult(res);
-        return results.reduce(
+        resolve(results.reduce(
           (result, item) => result.then(() => deleteCache(item.uri)),
-          Promise.resolve());
+          Promise.resolve(),
+        ));
       }, dbError(reject));
     });
   }
