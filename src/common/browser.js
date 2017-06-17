@@ -177,7 +177,8 @@ if (typeof browser === 'undefined') {
         }
         const args = typeof arg === 'string' ? [arg] : arg;
         const data = message.replace(/\$(?:\{(\d+)\}|(\d+))/g, (_match, group1, group2) => {
-          const value = args[group1 || group2];
+          const index = (group1 || group2) - 1;
+          const value = args[index];
           return value || '';
         });
         return data;
