@@ -121,7 +121,8 @@ export function getLocaleString(meta, key) {
   return localeMeta || meta[key] || '';
 }
 
-const br = window.external.mxGetRuntime().create('mx.browser');
+const rt = window.external.mxGetRuntime();
+const br = rt && rt.create('mx.browser');
 export function injectContent(script) {
   br.executeScript(`if(window.mx)try{${script}}catch(e){}`);
 }

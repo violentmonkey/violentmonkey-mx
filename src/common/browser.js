@@ -6,8 +6,8 @@ if (typeof browser === 'undefined') {
   const EXTENSION = 'EXTENSION';
   const CONTENT = 'CONTENT';
   const rt = global.external.mxGetRuntime();
-  const br = rt.create('mx.browser');
-  const ui = rt.create('mx.app.ui');
+  const br = rt && rt.create('mx.browser');
+  const ui = rt && rt.create('mx.app.ui');
   const sourceId = `RUNTIME_${getUniqId()}`;
   const onNotificationClickListeners = [];
   const onNotificationCloseListeners = [];
@@ -249,10 +249,11 @@ if (typeof browser === 'undefined') {
     },
     tabs: {
       create(data) {
-        return br.tabs.newTab({
+        const tab = br.tabs.newTab({
           url: data.url,
           activate: data.active == null ? true : data.active,
         });
+        return Promise.resolve(tab);
       },
       get(id) {
         return Promise.resolve(br.tabs.getTabById(id));

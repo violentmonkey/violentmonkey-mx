@@ -23,8 +23,6 @@ import initialize from './content';
   }
   initBridge();
 
-  browser.__isContent = true;
-
   // For installation
   function checkJS() {
     if (!document.querySelector('title')) {
