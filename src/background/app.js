@@ -158,7 +158,8 @@ const commands = {
       url: data.url,
       active: data.active,
     })
-    .then(tab => ({ id: tab.id }));
+    // Bug of Maxthon: tab.id is a number, but getTabById requires a string
+    .then(tab => ({ id: tab.id.toString() }));
   },
   TabClose(data, src) {
     const tabId = (data && data.id) || (src.tab && src.tab.id);

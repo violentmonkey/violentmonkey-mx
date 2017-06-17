@@ -249,11 +249,15 @@ if (typeof browser === 'undefined') {
     },
     tabs: {
       create(data) {
-        const tab = br.tabs.newTab({
-          url: data.url,
-          activate: data.active == null ? true : data.active,
+        return new Promise((resolve, reject) => {
+          br.tabs.newTab({
+            url: data.url,
+            activate: data.active == null ? true : data.active,
+          }, tab => {
+            if (tab) resolve(tab);
+            else reject();
+          });
         });
-        return Promise.resolve(tab);
       },
       get(id) {
         return Promise.resolve(br.tabs.getTabById(id));
