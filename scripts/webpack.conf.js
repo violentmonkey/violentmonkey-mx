@@ -2,8 +2,9 @@ const webpack = require('webpack');
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const WrapperWebpackPlugin = require('wrapper-webpack-plugin');
 const base = require('./webpack.base.conf');
-const { IS_DEV } = require('./utils');
+const { IS_DEV, merge } = require('./utils');
 
 const entry = {
   'background/app': 'src/background/app.js',
@@ -12,14 +13,15 @@ const entry = {
   injected: 'src/injected/index.js',
 };
 
-module.exports = Object.assign({}, base, {
+const targets = [];
+module.exports = targets;
+
+targets.push(merge(base, {
   entry,
   plugins: [
-    ... base.plugins,
     new webpack.optimize.CommonsChunkPlugin({
       name: 'browser',
       chunks: Object.keys(entry),
-      minChunks: 4,
     }),
     new webpack.optimize.CommonsChunkPlugin({
       name: 'vendor',
@@ -48,18 +50,30 @@ module.exports = Object.assign({}, base, {
       chunksSortMode: 'dependency'
     }),
     // new FriendlyErrorsPlugin(),
-    ... IS_DEV ? [
-    ] : [
-      // extract css into its own file
-      new ExtractTextPlugin('[name].css'),
-      new webpack.optimize.UglifyJsPlugin({
-        compress: {
-          warnings: false
-        }
-      }),
-    ],
-  ],
+    !IS_DEV && new ExtractTextPlugin('[name].css'),
+  ].filter(Boolean),
   externals: {
     localStorage: 'localStorage',
   },
-});
+}));
+
+targets.push(merge(base, {
+  entry: {
+    'injected-web': 'src/injected/web',
+  },
+  output: {
+    libraryTarget: 'commonjs2',
+  },
+  plugins: [
+    new WrapperWebpackPlugin({
+      header: `\
+window.VM_initializeWeb = function () {
+  var module = { exports: {} };
+`,
+      footer: `
+  var exports = module.exports;
+  return exports.__esModule ? exports['default'] : exports;
+};`,
+    }),
+  ],
+}));

@@ -28,6 +28,12 @@
         </label>
       </div>
       <div class="mb-1">
+        <label>
+          <setting-check name="notifyUpdates" />
+          <span v-text="i18n('labelNotifyUpdates')"></span>
+        </label>
+      </div>
+      <div class="mb-1">
         <label class="mr-1">
           <input type=checkbox v-setting="'startReload'">
           <span v-text="i18n('labelStartReload')"></span>

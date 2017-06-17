@@ -20,9 +20,11 @@ msgInstalled:
 Warning:
   description: Show warnings with a notification.
   message: Warning
+  touched: false
 msgWarnGrant:
   description: Message shown when `@grant` is not found in a script.
   message: 'Script [$1] has no `@grant` lines! Click to see more details.'
+  touched: false
 labelNoName:
   description: Text as the name of a script when no @name is assigned.
   message: No Name
@@ -329,6 +331,7 @@ buttonReplaceAll:
 labelIgnoreGrant:
   description: Option to suppress no @grant warnings.
   message: Suppress no @grant warnings
+  touched: false
 labelAutoReloadCurrentTab:
   description: Option to reload current tab after a script is switched on or off from menu.
   message: Reload current tab after switching on/off a script from menu
@@ -496,3 +499,12 @@ learnBlacklist:
 labelImportSettings:
   description: Label for option to import settings from zip file.
   message: Import settings
+titleScriptUpdated:
+  description: Notification title for script updates.
+  message: Update
+msgScriptUpdated:
+  description: Notification message for script updates.
+  message: 'Script [$1] is updated!'
+labelNotifyUpdates:
+  description: Option to show notification when script is updated.
+  message: Notify script updates

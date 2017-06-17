@@ -20,9 +20,11 @@ msgInstalled:
 Warning:
   description: Show warnings with a notification.
   message: 警告
+  touched: false
 msgWarnGrant:
   description: Message shown when `@grant` is not found in a script.
   message: 脚本【$1】没有`@grant`行，这是不推荐的，并且可能导致运行失败。点击查看更多信息。
+  touched: false
 labelNoName:
   description: Text as the name of a script when no @name is assigned.
   message: 名稱為空值
@@ -329,6 +331,7 @@ buttonReplaceAll:
 labelIgnoreGrant:
   description: Option to suppress no @grant warnings.
   message: 不显示缺少@grant的警告
+  touched: false
 labelAutoReloadCurrentTab:
   description: Option to reload current tab after a script is switched on or off from menu.
   message: 从菜单开启或关闭脚本后自动刷新当前页面
@@ -493,4 +496,13 @@ learnBlacklist:
   message: ''
 labelImportSettings:
   description: Label for option to import settings from zip file.
+  message: ''
+titleScriptUpdated:
+  description: Notification title for script updates.
+  message: ''
+msgScriptUpdated:
+  description: Notification message for script updates.
+  message: ''
+labelNotifyUpdates:
+  description: Option to show notification when script is updated.
   message: ''

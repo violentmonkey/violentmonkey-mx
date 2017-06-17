@@ -9,10 +9,8 @@ const webpackConfig = require('./scripts/webpack.conf');
 const i18n = require('./scripts/i18n');
 const json = require('./scripts/json');
 const bom = require('./scripts/bom');
+const { IS_DEV, definitions } = require('./scripts/utils');
 const pkg = require('./package.json');
-const { definitions } = require('./scripts/utils');
-
-const isProd = process.env.NODE_ENV === 'production';
 
 const paths = {
   def: 'src/def.yml',
@@ -40,7 +38,8 @@ function webpackCallback(err, stats) {
   if (stats.hasWarnings()) {
     gutil.log('[WARNING] webpack compilation has warnings\n', stats.toJson().warnings.join('\n'));
   }
-  [stats].forEach(stat => {
+  (Array.isArray(stats.stats) ? stats.stats : [stats])
+  .forEach(stat => {
     const timeCost = (stat.endTime - stat.startTime) / 1000;
     const chunks = Object.keys(stat.compilation.namedChunks).join(' ');
     gutil.log(`Webpack built: [${timeCost.toFixed(3)}s] ${chunks}`);
@@ -67,7 +66,7 @@ gulp.task('manifest', () => (
   .pipe(bom.strip())
   .pipe(json(data => {
     data[0].version = pkg.version;
-    data[0].service.debug = !isProd;
+    data[0].service.debug = IS_DEV;
     definitions['process.env'].manifest = JSON.stringify(data[0]);
     return data;
   }))
@@ -78,7 +77,7 @@ gulp.task('manifest', () => (
 gulp.task('copy-files', ['manifest'], () => {
   const jsFilter = gulpFilter(['**/*.js'], { restore: true });
   let stream = gulp.src(paths.copy, { base: 'src' });
-  if (isProd) stream = stream
+  if (!IS_DEV) stream = stream
   .pipe(jsFilter)
   .pipe(uglify())
   .pipe(jsFilter.restore);

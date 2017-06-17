@@ -20,8 +20,9 @@
     "babel-plugin-transform-export-extensions": "^6.22.0",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-es2015": "^6.24.1",
-    "css-loader": "^0.28.0",
-    "del": "^2.2.0",
+    "babili-webpack-plugin": "^0.1.1",
+    "css-loader": "^0.28.4",
+    "del": "^3.0.0",
     "es6-promisify": "^5.0.0",
     "eslint": "^3.19.0",
     "eslint-config-airbnb-base": "^11.1.3",
@@ -43,9 +44,10 @@
     "through2": "^2.0.3",
     "vue-loader": "^12.0.2",
     "vue-style-loader": "^3.0.0",
-    "vue-template-compiler": "^2.3.0",
-    "webpack": "^2.4.1",
-    "webpack-bundle-size-analyzer": "^2.6.0"
+    "vue-template-compiler": "^2.3.4",
+    "webpack": "^2.6.1",
+    "webpack-bundle-size-analyzer": "^2.7.0",
+    "wrapper-webpack-plugin": "^0.1.11"
   },
   "author": "Gerald <i@gerald.top>",
   "repository": {

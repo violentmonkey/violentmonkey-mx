@@ -1,6 +1,4 @@
-import { sendMessage, noop } from 'src/common';
-
-export { sendMessage, noop };
+export { sendMessage, request } from 'src/common';
 
 export function postData(destId, data) {
   // Firefox issue: data must be stringified to avoid cross-origin problem
@@ -20,16 +18,14 @@ export function inject(code) {
   }
 }
 
-export function objEncode(obj) {
-  const list = Object.keys(obj).map(name => {
-    const value = obj[name];
-    const jsonKey = JSON.stringify(name);
-    if (typeof value === 'function') return `${jsonKey}:${value.toString()}`;
-    return `${jsonKey}:${JSON.stringify(value)}`;
-  });
-  return `{${list.join(',')}}`;
-}
-
 export function getUniqId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+export function bindEvents(srcId, destId, handle) {
+  document.addEventListener(srcId, e => {
+    const data = JSON.parse(e.detail);
+    handle(data);
+  }, false);
+  return data => { postData(destId, data); };
 }

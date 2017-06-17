@@ -17,6 +17,7 @@ const defaults = {
   sync: null,
   customCSS: null,
   importSettings: true,
+  notifyUpdates: true,
   startReload: true,
   reloadHTTPS: false,
 };

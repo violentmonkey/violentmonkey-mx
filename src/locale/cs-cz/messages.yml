@@ -20,11 +20,13 @@ msgInstalled:
 Warning:
   description: Show warnings with a notification.
   message: Varování
+  touched: false
 msgWarnGrant:
   description: Message shown when `@grant` is not found in a script.
   message: >-
     Skript [$1] nemá žádné „@grant“ řádky, což není doporučeno a může způsobovat
     problémy. Pro více informací klepněte sem.
+  touched: false
 labelNoName:
   description: Text as the name of a script when no @name is assigned.
   message: Bez názvu
@@ -333,6 +335,7 @@ buttonReplaceAll:
 labelIgnoreGrant:
   description: Option to suppress no @grant warnings.
   message: ''
+  touched: false
 labelAutoReloadCurrentTab:
   description: Option to reload current tab after a script is switched on or off from menu.
   message: ''
@@ -497,4 +500,13 @@ learnBlacklist:
   message: ''
 labelImportSettings:
   description: Label for option to import settings from zip file.
+  message: ''
+titleScriptUpdated:
+  description: Notification title for script updates.
+  message: ''
+msgScriptUpdated:
+  description: Notification message for script updates.
+  message: ''
+labelNotifyUpdates:
+  description: Option to show notification when script is updated.
   message: ''
