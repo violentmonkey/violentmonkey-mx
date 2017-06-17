@@ -1,6 +1,6 @@
 {
   "name": "violentmonkey-mx",
-  "version": "2.6.4",
+  "version": "2.7.0",
   "description": "Violentmonkey for Maxthon",
   "scripts": {
     "dev": "gulp watch",
