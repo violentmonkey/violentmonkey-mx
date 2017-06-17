@@ -60,7 +60,6 @@
   "dependencies": {
     "codemirror": "^5.25.2",
     "core-js": "^2.4.1",
-    "es6-promise": "^4.1.0",
     "sync-promise-lite": "^0.2.3",
     "vue": "^2.3.0",
     "vue-code": "^1.2.1"

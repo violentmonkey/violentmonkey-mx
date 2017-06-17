@@ -1,6 +1,5 @@
 import './polyfills';
 
-/* global chrome */
 const global = window;
 
 if (typeof browser === 'undefined') {
