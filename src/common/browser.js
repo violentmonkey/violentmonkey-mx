@@ -286,6 +286,10 @@ if (typeof browser === 'undefined') {
         }
         return Promise.resolve(tab);
       },
+      reload(id) {
+        const tab = br.tabs.getTabById(id);
+        if (tab) tab.refresh();
+      },
       remove(id) {
         const tab = br.tabs.getTabById(id);
         if (tab) tab.close();

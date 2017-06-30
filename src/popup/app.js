@@ -31,11 +31,12 @@ browser.runtime.onMessage.addListener((req, src) => {
 
   Object.assign(handlers, {
     GetPopup: init,
-    SetPopup(data, currentTab) {
+    SetPopup(data, src) {
       cancelClear();
-      store.currentTab = currentTab;
-      if (currentTab && /^https?:\/\//i.test(currentTab.url)) {
-        const matches = currentTab.url.match(/:\/\/(?:www\.)?([^/]*)/);
+      const tab = (src && src.tab) || {};
+      store.currentTab = tab;
+      if (/^https?:\/\//i.test(tab.url)) {
+        const matches = tab.url.match(/:\/\/(?:www\.)?([^/]*)/);
         const domain = matches[1];
         const domains = domain.split('.').reduceRight((res, part) => {
           const last = res[0];

@@ -51,7 +51,7 @@ gulp.task('clean', () => del(['dist']));
 gulp.task('pack', ['manifest', 'copy-files', 'copy-i18n']);
 
 gulp.task('watch', ['pack', 'js-dev', 'svg'], () => {
-  gulp.watch(paths.manifest, ['manifest']);
+  gulp.watch(paths.def, ['manifest']);
   gulp.watch(paths.copy, ['copy-files']);
   gulp.watch(paths.locales.concat(paths.templates), ['copy-i18n']);
 });
