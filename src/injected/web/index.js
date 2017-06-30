@@ -87,10 +87,10 @@ function onLoadScripts(data) {
     forEach(data.scripts, script => {
       values[script.uri] = data.values[script.uri] || {};
       if (script && script.enabled) {
-        const list = listMap[
+        const list = listMap[(
           script.custom.runAt || script.custom['run-at'] ||
           script.meta.runAt || script.meta['run-at']
-        ] || end;
+        )] || end;
         list.push(script);
       }
     });

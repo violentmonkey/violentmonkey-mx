@@ -67,8 +67,8 @@ const commands = {
       version: VM_VER,
     };
     return data.isApplied
-    ? vmdb.getScriptsByURL(url).then(res => Object.assign(data, res))
-    : data;
+      ? vmdb.getScriptsByURL(url).then(res => Object.assign(data, res))
+      : data;
   },
   UpdateScriptInfo(data) {
     return vmdb.updateScriptInfo(data.id, data, {

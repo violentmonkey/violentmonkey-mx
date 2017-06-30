@@ -41,9 +41,8 @@ function loadImage(url) {
   let promise = images[url];
   if (!promise) {
     const cache = store.cache[url];
-    promise = cache
-    ? Promise.resolve(cache)
-    : new Promise((resolve, reject) => {
+    promise = new Promise((resolve, reject) => {
+      if (cache) return resolve(cache);
       const img = new Image();
       img.onload = () => resolve(url);
       img.onerror = () => reject(url);

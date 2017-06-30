@@ -210,9 +210,7 @@ export function getScriptsByURL(url) {
     };
     const require = {};
     const cache = {};
-    return (testBlacklist(url)
-    ? Promise.resolve([])
-    : getScriptsByIndex('position', null, tx, script => {
+    return (testBlacklist(url) ? Promise.resolve([]) : getScriptsByIndex('position', null, tx, script => {
       if (!testScript(url, script)) return;
       data.uris.push(script.uri);
       script.meta.require.forEach(key => { require[key] = 1; });
