@@ -1,5 +1,3 @@
-import './polyfills';
-
 const global = window;
 
 if (typeof browser === 'undefined') {
