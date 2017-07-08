@@ -104,6 +104,7 @@ buttonUpdateAll:
 anchorGetMoreScripts:
   description: Link to get more scripts.
   message: 获取更多脚本
+  touched: false
 msgLoading:
   description: Message shown in the options page before script list is loaded.
   message: 加载中 ...
@@ -504,3 +505,12 @@ msgScriptUpdated:
 labelNotifyUpdates:
   description: Option to show notification when script is updated.
   message: 脚本更新时提示
+installFrom:
+  description: Label for button to install script from a userscript site.
+  message: 从$1安装
+labelSearchScript:
+  description: Placeholder for script search box.
+  message: 搜索脚本...
+labelNoSearchScripts:
+  description: Message shown when no script is found in search results.
+  message: 没有找到脚本！
