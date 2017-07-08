@@ -1,5 +1,5 @@
 <template>
-  <div class="content tab-settings">
+  <div class="tab-settings">
     <h1 v-text="i18n('labelSettings')"></h1>
     <section>
       <h3 v-text="i18n('labelGeneral')"></h3>
@@ -48,12 +48,12 @@
 
 <script>
 import { sendMessage } from 'src/common';
+import SettingCheck from 'src/common/ui/setting-check';
 import VmImport from './vm-import';
 import VmExport from './vm-export';
 import VmSync from './vm-sync';
 import VmBlacklist from './vm-blacklist';
 import VmCss from './vm-css';
-import SettingCheck from '../setting-check';
 
 export default {
   components: {
@@ -71,3 +71,12 @@ export default {
   },
 };
 </script>
+
+<style>
+.tab-settings {
+  overflow-y: auto;
+  textarea {
+    height: 10em;
+  }
+}
+</style>

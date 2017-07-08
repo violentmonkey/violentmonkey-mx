@@ -20,9 +20,11 @@ export default {
 <style>
 $bg-color: rgba(0,0,0,.8);
 $border-side: 4px solid transparent;
-$border-base: 8px solid $bg-color;
+$border-base: 6px solid $bg-color;
+$gap: 10px;
 
 .tooltip {
+  display: inline-block;
   position: relative;
   &-title {
     display: none;
@@ -41,17 +43,32 @@ $border-base: 8px solid $bg-color;
       content: '';
       position: absolute;
     }
-    &.tooltip-up {
-      left: 50%;
-      bottom: 100%;
-      transform: translate(-50%,-10px);
+    &.tooltip-up,
+    &.tooltip-down {
+      &,
       &::before {
-        top: 100%;
         left: 50%;
         transform: translateX(-50%);
+      }
+    }
+    &.tooltip-up {
+      bottom: 100%;
+      margin-bottom: $gap;
+      &::before {
+        top: 100%;
         border-top: $border-base;
         border-left: $border-side;
         border-right: $border-side;
+      }
+    }
+    &.tooltip-down {
+      top: 100%;
+      margin-top: $gap;
+      &::before {
+        bottom: 100%;
+        border-left: $border-side;
+        border-right: $border-side;
+        border-bottom: $border-base;
       }
     }
     &.tooltip-right {

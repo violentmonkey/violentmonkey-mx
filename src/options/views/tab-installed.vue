@@ -1,17 +1,25 @@
 <template>
-  <div class="content no-pad">
+  <div class="tab-installed">
     <header class="flex">
       <div class="flex-auto">
-        <button v-text="i18n('buttonNew')" @click="newScript"></button>
-        <button v-text="i18n('buttonUpdateAll')" @click="updateAll"></button>
-        <button v-text="i18n('buttonInstallFromURL')" @click="installFromURL"></button>
+        <vm-dropdown :closeAfterClick="true">
+          <span class="btn-ghost" slot="toggle">
+            <icon name="plus"></icon>
+          </span>
+          <a href="#" v-text="i18n('buttonNew')" @click.prevent="newScript"></a>
+          <a v-text="i18n('installFrom', 'OpenUserJS')" href="https://openuserjs.org/" target="_blank"></a>
+          <a v-text="i18n('installFrom', 'GreasyFork')" href="https://greasyfork.org/scripts" target="_blank"></a>
+          <a href="#" v-text="i18n('buttonInstallFromURL')" @click.prevent="installFromURL"></a>
+        </vm-dropdown>
+        <tooltip :title="i18n('buttonUpdateAll')" placement="down">
+          <span class="btn-ghost" @click="updateAll">
+            <icon name="refresh"></icon>
+          </span>
+        </tooltip>
       </div>
-      <div v-dropdown>
-        <button dropdown-toggle v-text="i18n('anchorGetMoreScripts')"></button>
-        <div class="dropdown-menu">
-          <a href="https://openuserjs.org/" target="_blank">OpenUserJS</a>
-          <a href="https://greasyfork.org/scripts" target="_blank">GreasyFork</a>
-        </div>
+      <div class="filter-search">
+        <input type="text" :placeholder="i18n('labelSearchScript')" v-model="search">
+        <icon name="search"></icon>
       </div>
     </header>
     <div class="scripts">
@@ -26,21 +34,35 @@
 </template>
 
 <script>
-import { i18n, sendMessage, noop } from 'src/common';
+import { i18n, sendMessage, noop, debounce } from 'src/common';
+import VmDropdown from 'src/common/ui/dropdown';
+import Icon from 'src/common/ui/icon';
 import Item from './script-item';
 import Edit from './edit';
 import { store, showMessage } from '../utils';
+import Tooltip from './tooltip';
 
 export default {
   components: {
     Item,
     Edit,
+    Tooltip,
+    VmDropdown,
+    Icon,
   },
   data() {
     return {
       store,
       script: null,
+      search: null,
+      scripts: store.scripts,
     };
+  },
+  watch: {
+    search() {
+      this.debouncedUpdate();
+    },
+    'store.scripts': 'onUpdate',
   },
   computed: {
     message() {
@@ -50,9 +72,19 @@ export default {
       if (!this.store.scripts.length) {
         return i18n('labelNoScripts');
       }
+      if (!this.scripts.length) {
+        return i18n('labelNoSearchScripts');
+      }
     },
   },
   methods: {
+    onUpdate() {
+      const { search } = this;
+      const { scripts } = this.store;
+      this.scripts = search
+        ? scripts.filter(script => (script._search || '').includes(search.toLowerCase()))
+        : scripts;
+    },
     newScript() {
       sendMessage({ cmd: 'NewScript' })
       .then((script) => {
@@ -120,14 +152,44 @@ export default {
       });
     },
   },
+  created() {
+    this.debouncedUpdate = debounce(this.onUpdate, 200);
+  },
 };
 </script>
 
 <style>
+$header-height: 4rem;
+
+.tab-installed {
+  padding: 0;
+  > header {
+    height: $header-height;
+    align-items: center;
+    padding: 0 1rem;
+    line-height: 1;
+    border-bottom: 1px solid darkgray;
+  }
+  .dropdown-menu {
+    padding: .5rem;
+    white-space: nowrap;
+    > a {
+      display: block;
+      width: 100%;
+      padding: .5rem;
+      text-decoration: none;
+      color: #666;
+      &:hover {
+        color: inherit;
+        background: #fbfbfb;
+      }
+    }
+  }
+}
 .backdrop,
 .scripts {
   position: absolute;
-  top: 2rem;
+  top: $header-height;
   left: 0;
   right: 0;
   bottom: 0;
@@ -153,5 +215,20 @@ export default {
 .mask {
   background: rgba(0,0,0,.08);
   /*transition: opacity 1s;*/
+}
+.filter-search {
+  position: relative;
+  width: 12rem;
+  .icon {
+    position: absolute;
+    height: 100%;
+    top: 0;
+    right: .5rem;
+  }
+  > input {
+    padding-left: .5rem;
+    padding-right: 2rem;
+    line-height: 2;
+  }
 }
 </style>

@@ -1,6 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
-// const BabiliWebpackPlugin = require('babili-webpack-plugin');
+const BabiliWebpackPlugin = require('babili-webpack-plugin');
 const vueLoaderConfig = require('./vue-loader.conf');
 const { IS_DEV, styleRule, definitions } = require('./utils');
 const DIST = 'dist';
@@ -51,14 +51,16 @@ module.exports = {
         loader: 'babel-loader',
         include: [resolve('src'), resolve('test')]
       },
-      styleRule({ fallback: 'vue-style-loader' }),
+      styleRule({
+        fallback: 'vue-style-loader',
+        loaders: ['postcss-loader'],
+      }),
     ],
   },
   // cheap-module-eval-source-map is faster for development
   devtool: IS_DEV ? '#inline-source-map' : false,
   plugins: [
     definePlugin,
-    // !IS_DEV && new BabiliWebpackPlugin(),
-    !IS_DEV && new webpack.optimize.UglifyJsPlugin(),
+    !IS_DEV && new BabiliWebpackPlugin(),
   ].filter(Boolean),
 };

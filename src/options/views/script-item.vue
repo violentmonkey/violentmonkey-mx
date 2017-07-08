@@ -5,7 +5,7 @@
       <a class="script-name ellipsis" target=_blank :href="homepageURL"
       v-text="script.custom.name || getLocaleString('name')"></a>
       <a class="script-support" v-if="script.meta.supportURL" target=_blank :href="script.meta.supportURL">
-        <svg class="icon"><use xlink:href="#question" /></svg>
+        <icon name="question"></icon>
       </a>
       <div class="flex-auto"></div>
       <div class="script-author ellipsis" :title="script.meta.author" v-if="author">
@@ -16,19 +16,36 @@
       <div class="script-version" v-text="script.meta.version?'v'+script.meta.version:''"></div>
     </div>
     <p class="script-desc ellipsis" v-text="script.custom.description || getLocaleString('description')"></p>
-    <div class=buttons>
-      <button v-text="i18n('buttonEdit')" @click="onEdit"></button>
-      <button @click="onEnable" v-text="labelEnable"></button>
-      <button v-text="i18n('buttonRemove')" @click="onRemove"></button>
-      <button v-if="canUpdate" :disabled="script.checking"
-      v-text="i18n('buttonUpdate')" @click="onUpdate"></button>
-      <span v-text="script.message"></span>
+    <div class="buttons flex">
+      <tooltip :title="i18n('buttonEdit')">
+        <span class="btn-ghost" @click="onEdit">
+          <icon name="code"></icon>
+        </span>
+      </tooltip>
+      <tooltip :title="labelEnable">
+        <span class="btn-ghost" @click="onEnable">
+          <icon :name="`toggle-${script.enabled ? 'on' : 'off'}`"></icon>
+        </span>
+      </tooltip>
+      <tooltip :title="i18n('buttonRemove')">
+        <span class="btn-ghost" @click="onRemove">
+          <icon name="trash"></icon>
+        </span>
+      </tooltip>
+      <tooltip v-if="canUpdate" :title="i18n('buttonUpdate')">
+        <span class="btn-ghost" :disabled="script.checking" @click="onUpdate">
+          <icon name="refresh"></icon>
+        </span>
+      </tooltip>
+      <span class="flex-auto" v-text="script.message"></span>
     </div>
   </div>
 </template>
 
 <script>
 import { sendMessage, getLocaleString } from 'src/common';
+import Icon from 'src/common/ui/icon';
+import Tooltip from './tooltip';
 import { store } from '../utils';
 
 const DEFAULT_ICON = '/icons/icon_48.png';
@@ -55,6 +72,10 @@ function loadImage(url) {
 
 export default {
   props: ['script'],
+  components: {
+    Icon,
+    Tooltip,
+  },
   data() {
     return {
       safeIcon: DEFAULT_ICON,
@@ -254,9 +275,72 @@ export default {
 </script>
 
 <style>
-.script-info {
-  > *:not(:last-child) {
-    margin-right: 8px;
+.script {
+  position: relative;
+  margin: 8px;
+  padding: 12px 10px 5px;
+  border: 1px solid #ccc;
+  border-radius: .3rem;
+  transition: transform .5s;
+  background: white;
+  &:hover {
+    border-color: darkgray;
+  }
+  &.disabled {
+    background: #f0f0f0;
+    color: #999;
+  }
+  .buttons {
+    align-items: center;
+    line-height: 1;
+    > .flex-auto {
+      text-align: right;
+    }
+  }
+  &-info {
+    margin-left: 3.5rem;
+    line-height: 1.5;
+    align-items: center;
+    > *:not(:last-child) {
+      margin-right: 8px;
+    }
+    .icon {
+      display: block;
+    }
+  }
+  &-icon {
+    position: absolute;
+    top: 1rem;
+    width: 3rem;
+    height: 3rem;
+    .disabled & {
+      filter: grayscale(.8);
+    }
+  }
+  &-name {
+    font-weight: bold;
+    font-size: 1rem;
+    .disabled & {
+      color: blueviolet;
+    }
+  }
+  &-author {
+    max-width: 30%;
+  }
+  &-desc {
+    margin-left: 3.5rem;
+    line-height: 2rem;
+    &::after {
+      content: "\200b";
+    }
+  }
+}
+.dragging {
+  position: fixed;
+  margin: 0;
+  z-index: 9;
+  &-placeholder {
+    visibility: hidden;
   }
 }
 </style>

@@ -20,8 +20,8 @@
 <script>
 import { sendMessage, getLocaleString } from 'src/common';
 import options from 'src/common/options';
+import SettingCheck from 'src/common/ui/setting-check';
 import { store } from '../../utils';
-import SettingCheck from '../setting-check';
 
 export default {
   components: {

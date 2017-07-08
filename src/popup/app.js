@@ -2,8 +2,9 @@ import Vue from 'vue';
 import 'src/common/polyfills';
 import 'src/common/browser';
 import 'src/common/sprite';
-import options from 'src/common/options';
 import { i18n, sendMessage, injectContent, debounce } from 'src/common';
+import handlers from 'src/common/handlers';
+import 'src/common/ui/style';
 import App from './views/app';
 import { store } from './utils';
 
@@ -12,16 +13,6 @@ Vue.prototype.i18n = i18n;
 new Vue({
   render: h => h(App),
 }).$mount('#app');
-
-const handlers = {
-  UpdateOptions(data) {
-    options.update(data);
-  },
-};
-browser.runtime.onMessage.addListener((req, src) => {
-  const func = handlers[req.cmd];
-  if (func) return func(req.data, src);
-});
 
 {
   const init = debounce(() => {

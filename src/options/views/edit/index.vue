@@ -1,5 +1,5 @@
 <template>
-  <div class="edit flex flex-col fixed-full">
+  <div class="frame flex flex-col fixed-full">
     <div class="flex edit-header">
       <h2 v-text="i18n('labelScriptEditor')"></h2>
       <div class="flex-auto pos-rel px-2">
@@ -64,8 +64,8 @@
 <script>
 import CodeMirror from 'codemirror';
 import { i18n, debounce, sendMessage, noop } from 'src/common';
+import VmCode from 'src/common/ui/code';
 import { showMessage } from '../../utils';
-import VmCode from '../code';
 import VmSettings from './settings';
 import Tooltip from '../tooltip';
 
@@ -172,7 +172,6 @@ export default {
     },
   },
   mounted() {
-    this.bindKeys();
     (this.value.id ? sendMessage({
       cmd: 'GetScript',
       data: this.value.id,
@@ -208,9 +207,6 @@ export default {
         this.canSave = false;
       });
     });
-  },
-  beforeDestroy() {
-    this.unbindKeys();
   },
   methods: {
     save() {
@@ -325,42 +321,6 @@ export default {
       }
       (all ? replaceAll : replaceOne)(cm, state);
     },
-    onKeyDown(e) {
-      const { cm } = this;
-      if (!cm) return;
-      const name = CodeMirror.keyName(e);
-      const commands = [
-        'cancel',
-        'find',
-        'findNext',
-        'findPrev',
-        'replace',
-        'replaceAll',
-      ];
-      [
-        cm.options.extraKeys,
-        cm.options.keyMap,
-      ].some((keyMap) => {
-        let stop = false;
-        if (keyMap) {
-          CodeMirror.lookupKey(name, keyMap, (b) => {
-            if (commands.includes(b)) {
-              e.preventDefault();
-              e.stopPropagation();
-              cm.execCommand(b);
-              stop = true;
-            }
-          }, cm);
-        }
-        return stop;
-      });
-    },
-    bindKeys() {
-      window.addEventListener('keydown', this.onKeyDown, false);
-    },
-    unbindKeys() {
-      window.removeEventListener('keydown', this.onKeyDown, false);
-    },
     goToLine() {
       const line = this.search.line - 1;
       const { cm } = this;
@@ -386,8 +346,6 @@ export default {
     > div {
       display: inline-block;
       padding: 8px 16px;
-      border-top-left-radius: 6px;
-      border-top-right-radius: 6px;
       color: #bbb;
       &.active {
         background: white;
