@@ -312,10 +312,18 @@ browser.notifications.onClosed.addListener(id => {
   });
 });
 
+const URL_CLOSE = browser.runtime.getURL('close');
+
 function onTabUpdate(tabId, changes) {
   // Maxthon sucks
   // When ON_NAVIGATE is fired, the old context is actually alive and the new context
   // is not ready yet, so we cannot do anything with the new context here.
+
+  // Since we cannot get tabId from a content page, we made a workaround by
+  // navigating to `/close`.
+  if (changes.url === URL_CLOSE) {
+    browser.tabs.remove(tabId);
+  }
   // file:/// URLs will not be injected on Maxthon 5
   if (/^file:\/\/\/.*?\.user\.js$/.test(changes.url)) {
     commands.InstallScript({

@@ -164,7 +164,8 @@ export default {
     },
     close() {
       // window.close();
-      sendMessage({ cmd: 'TabClose' });
+      // sendMessage({ cmd: 'TabClose' });
+      location.href = browser.runtime.getURL('close');
     },
     getFile(url, { isBlob, useCache } = {}) {
       const cacheKey = isBlob ? `blob+${url}` : `text+${url}`;

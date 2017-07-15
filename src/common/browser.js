@@ -42,17 +42,19 @@ if (typeof browser === 'undefined') {
       tabEvents.update = listener => { updatedListeners.push(listener); };
       tabEvents.activate = listener => { activatedListeners.push(listener); };
       br.onBrowserEvent = data => {
-        if ([
-          'ON_NAVIGATE',
-          // It seems that ON_NAVIGATE is not triggered for 302
-          // PAGE_LOADED is triggered after URL redirected
-          'PAGE_LOADED',
-        ].indexOf(data.type) >= 0) {
+        const { type } = data;
+        if (type === 'ON_NAVIGATE') {
+          // ON_NAVIGATE is not triggered for 302
           updatedListeners.forEach(listener => {
             listener(data.id, data);
           });
-        }
-        if (data.type === 'TAB_SWITCH') {
+        } else if (type === 'PAGE_LOADED') {
+          // PAGE_LOADED is triggered after URL redirected
+          const tab = br.tabs.getTabById(data.id);
+          updatedListeners.forEach(listener => {
+            listener(data.id, tab);
+          });
+        } else if (type === 'TAB_SWITCH') {
           activatedListeners.forEach(listener => {
             listener({ tabId: data.to });
           });
