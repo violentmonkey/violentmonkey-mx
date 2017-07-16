@@ -15,7 +15,7 @@ const pkg = require('./package.json');
 const paths = {
   def: 'src/def.yml',
   copy: [
-    'src/public/**',
+    'src/public/lib/**',
     'src/icons/**',
   ],
   locales: [
