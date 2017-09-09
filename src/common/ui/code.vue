@@ -286,3 +286,10 @@ export default {
   },
 };
 </script>
+
+<style>
+// compatible with Maxthon 4.4
+.editor-code.flex-auto {
+  height: 100%;
+}
+</style>
