@@ -356,13 +356,15 @@ export const BaseService = serviceFactory({
             const data = { more: {} };
             try {
               const obj = JSON.parse(raw);
+              data.code = obj.code;
               if (obj.version === 1) {
-                data.code = obj.code;
                 if (obj.more) data.more = obj.more;
               }
             } catch (e) {
               data.code = raw;
             }
+            // Invalid data
+            if (!data.code) return;
             const remoteInfo = remoteMeta.info[item.uri];
             const { modified, position } = remoteInfo;
             data.modified = modified;
