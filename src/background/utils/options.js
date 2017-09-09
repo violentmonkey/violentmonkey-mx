@@ -64,6 +64,9 @@ export function setOption(key, value) {
     }
     storage.setItem(mainKey, JSON.stringify(optionValue));
     fireChange(optionKey, value);
+    if (process.env.DEBUG) {
+      console.log('Options updated:', optionKey, value); // eslint-disable-line no-console
+    }
   }
 }
 

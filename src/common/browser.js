@@ -112,11 +112,17 @@ if (typeof browser === 'undefined') {
         return promise;
       };
       const onMessage = res => {
+        if (process.env.DEBUG) {
+          console.info('receive', res);
+        }
         const { source } = res;
         if (source.id === sourceId) return; // ignore message from self
         let { callback } = source;
         const sendResponse = data => {
           if (!callback) throw new Error('Already called!');
+          if (process.env.DEBUG) {
+            console.info('send', data);
+          }
           rt.post(source.id, { callback, data });
           callback = null;
         };
