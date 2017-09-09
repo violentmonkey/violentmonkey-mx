@@ -65,6 +65,7 @@
     "core-js": "^2.4.1",
     "sync-promise-lite": "^0.2.3",
     "vue": "^2.4.1",
-    "vue-code": "^1.2.2"
+    "vue-code": "^1.2.2",
+    "vueleton": "^0.4.0"
   }
 }

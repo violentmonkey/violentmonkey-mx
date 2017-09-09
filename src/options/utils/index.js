@@ -1,30 +1,22 @@
-import Vue from 'vue';
-import resetFeatures from './features';
+import Modal from 'vueleton/lib/modal';
 import Message from '../views/message';
 
-export const store = {
-  messages: null,
-};
-export const features = { reset: resetFeatures };
+export const store = {};
 
-function initMessage() {
-  if (store.messages) return;
-  store.messages = [];
-  const el = document.createElement('div');
-  document.body.appendChild(el);
-  new Vue({
-    render: h => h(Message),
-  }).$mount(el);
-}
-
-export function showMessage(options) {
-  initMessage();
-  const message = Object.assign({}, options, !options.buttons && {
-    onInit(vm) {
-      setTimeout(() => {
-        vm.$emit('dismiss');
-      }, 2000);
+export function showMessage(message) {
+  const modal = Modal.show(h => h(Message, {
+    props: { message },
+    on: {
+      dismiss() {
+        modal.close();
+      },
     },
+  }), {
+    transition: 'in-out',
   });
-  store.messages.push(message);
+  if (!message.buttons) {
+    setTimeout(() => {
+      modal.close();
+    }, 2000);
+  }
 }

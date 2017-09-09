@@ -2,7 +2,7 @@
   <div class="page-confirm frame flex flex-col h-100">
     <div class="frame-block">
       <div class="buttons pull-right">
-        <vm-dropdown class="confirm-options" align="right">
+        <vl-dropdown class="confirm-options" align="right">
           <button slot="toggle" v-text="i18n('buttonInstallOptions')"></button>
           <div class="options-panel">
             <label>
@@ -14,7 +14,7 @@
               <span v-text="i18n('installOptionTrack')"></span>
             </label>
           </div>
-        </vm-dropdown>
+        </vl-dropdown>
         <button v-text="i18n('buttonConfirmInstallation')"
         :disabled="!installable" @click="installScript"></button>
         <button v-text="i18n('buttonClose')" @click="close"></button>
@@ -30,11 +30,11 @@
 </template>
 
 <script>
+import VlDropdown from 'vueleton/lib/dropdown';
 import { sendMessage, zfill, request, buffer2string, isRemote, getFullUrl } from 'src/common';
 import options from 'src/common/options';
 import initCache from 'src/common/cache';
 import VmCode from 'src/common/ui/code';
-import VmDropdown from 'src/common/ui/dropdown';
 import SettingCheck from 'src/common/ui/setting-check';
 import getPathInfo from 'src/common/pathinfo';
 
@@ -43,7 +43,7 @@ const { query } = getPathInfo();
 
 export default {
   components: {
-    VmDropdown,
+    VlDropdown,
     VmCode,
     SettingCheck,
   },
@@ -241,7 +241,7 @@ export default {
   label {
     display: block;
   }
-  .dropdown-menu {
+  .vl-dropdown-menu {
     width: 13rem;
   }
 }

@@ -15,41 +15,12 @@
     <div class="frame-block flex-auto pos-rel">
       <vm-code
         v-show="nav === 'code'" class="abs-full"
-        v-model="code" :commands="commands" @ready="initEditor"
+        v-model="code" :commands="commands"
       />
       <vm-settings
         v-show="nav === 'settings'" class="abs-full"
-        :value="value" :settings="settings"
+        :value="script" :settings="settings"
       />
-    </div>
-    <div class="frame-block" v-show="search.show">
-      <button class="pull-right" @click="clearSearch">&times;</button>
-      <form class="inline-block mr-1" @submit.prevent="goToLine()">
-        <span v-text="i18n('labelLineNumber')"></span>
-        <input class="w-1" v-model="search.line">
-      </form>
-      <form class="inline-block mr-1" @submit.prevent="findNext()">
-        <span v-text="i18n('labelSearch')"></span>
-        <tooltip title="Ctrl-F">
-          <input ref="search" v-model="search.state.query">
-        </tooltip>
-        <tooltip title="Shift-Ctrl-G">
-          <button type="button" @click="findNext(1)">&lt;</button>
-        </tooltip>
-        <tooltip title="Ctrl-G">
-          <button type="submit">&gt;</button>
-        </tooltip>
-      </form>
-      <form class="inline-block mr-1" @submit.prevent="replace()">
-        <span v-text="i18n('labelReplace')"></span>
-        <input v-model="search.state.replace">
-        <tooltip title="Shift-Ctrl-F">
-          <button type="submit" v-text="i18n('buttonReplace')"></button>
-        </tooltip>
-        <tooltip title="Shift-Ctrl-R">
-          <button type="button" v-text="i18n('buttonReplaceAll')" @click="replace(1)"></button>
-        </tooltip>
-      </form>
     </div>
     <div class="frame-block">
       <div class="pull-right">
@@ -62,12 +33,11 @@
 </template>
 
 <script>
-import CodeMirror from 'codemirror';
-import { i18n, debounce, sendMessage, noop } from 'src/common';
+import { i18n, sendMessage, noop } from 'src/common';
+import { objectGet } from 'src/common/object';
 import VmCode from 'src/common/ui/code';
 import { showMessage } from '../../utils';
 import VmSettings from './settings';
-import Tooltip from '../tooltip';
 
 function fromList(list) {
   return (list || []).join('\n');
@@ -77,83 +47,23 @@ function toList(text) {
   .map(line => line.trim())
   .filter(Boolean);
 }
-function findNext(cm, state, reversed) {
-  cm.operation(() => {
-    const query = state.query || '';
-    let cursor = cm.getSearchCursor(query, reversed ? state.posFrom : state.posTo);
-    if (!cursor.find(reversed)) {
-      cursor = cm.getSearchCursor(query,
-        reversed ? CodeMirror.Pos(cm.lastLine()) : CodeMirror.Pos(cm.firstLine(), 0));
-      if (!cursor.find(reversed)) return;
-    }
-    cm.setSelection(cursor.from(), cursor.to());
-    state.posFrom = cursor.from();
-    state.posTo = cursor.to();
-  });
-}
-function replaceOne(cm, state) {
-  const start = cm.getCursor('start');
-  const end = cm.getCursor('end');
-  state.posTo = state.posFrom;
-  findNext(cm, state);
-  const start2 = cm.getCursor('start');
-  const end2 = cm.getCursor('end');
-  if (
-    start.line === start2.line && start.ch === start2.ch
-    && end.line === end2.line && end.ch === end2.ch
-  ) {
-    cm.replaceRange(state.replace, start, end);
-    findNext(cm, state);
-  }
-}
-function replaceAll(cm, state) {
-  cm.operation(() => {
-    const query = state.query || '';
-    for (let cursor = cm.getSearchCursor(query); cursor.findNext();) {
-      cursor.replace(state.replace);
-    }
-  });
-}
 
 export default {
-  props: ['value'],
+  props: ['initial'],
   components: {
     VmCode,
     VmSettings,
-    Tooltip,
   },
   data() {
-    this.debouncedFind = debounce(this.doFind, 100);
     return {
       nav: 'code',
       canSave: false,
+      script: null,
       code: '',
       settings: {},
-      search: {
-        show: false,
-        state: {
-          query: null,
-          replace: null,
-        },
-      },
       commands: {
         save: this.save,
-        cancel: () => {
-          if (this.search.show) {
-            this.clearSearch();
-          } else {
-            this.close();
-          }
-        },
-        find: this.find,
-        findNext: this.findNext,
-        findPrev: () => {
-          this.findNext(1);
-        },
-        replace: this.replace,
-        replaceAll: () => {
-          this.replace(1);
-        },
+        cancel: this.close,
       },
     };
   },
@@ -167,15 +77,15 @@ export default {
         this.canSave = true;
       },
     },
-    'search.state.query'() {
-      this.debouncedFind();
-    },
+  },
+  created() {
+    this.script = this.initial;
   },
   mounted() {
-    (this.value.id ? sendMessage({
+    (this.script.id ? sendMessage({
       cmd: 'GetScript',
-      data: this.value.id,
-    }) : Promise.resolve(this.value))
+      data: this.script.id,
+    }) : Promise.resolve(this.script))
     .then(script => {
       const settings = {};
       settings.more = {
@@ -233,12 +143,12 @@ export default {
       return sendMessage({
         cmd: 'ParseScript',
         data: {
-          id: this.value.id,
+          id: this.script.id,
           code: this.code,
           // User created scripts MUST be marked `isNew` so that
           // the backend is able to check namespace conflicts,
           // otherwise the script with same namespace will be overridden
-          isNew: !this.value.id,
+          isNew: !this.script.id,
           message: '',
           custom: value,
           more,
@@ -274,58 +184,6 @@ export default {
     },
     saveClose() {
       this.save().then(this.close);
-    },
-    initEditor(cm) {
-      this.cm = cm;
-    },
-    doFind(reversed) {
-      const { state } = this.search;
-      const { cm } = this;
-      if (state.query) {
-        findNext(cm, state, reversed);
-      }
-      this.search.show = true;
-    },
-    find() {
-      const { state } = this.search;
-      state.posTo = state.posFrom;
-      this.doFind();
-      this.$nextTick(() => {
-        const { search } = this.$refs;
-        search.select();
-        search.focus();
-      });
-    },
-    findNext(reversed) {
-      this.doFind(reversed);
-      this.$nextTick(() => {
-        this.$refs.search.focus();
-      });
-    },
-    clearSearch() {
-      const { cm } = this;
-      cm.operation(() => {
-        const { state } = this.search;
-        state.posFrom = null;
-        state.posTo = null;
-        this.search.show = false;
-      });
-      cm.focus();
-    },
-    replace(all) {
-      const { cm } = this;
-      const { state } = this.search;
-      if (!state.query) {
-        this.find();
-        return;
-      }
-      (all ? replaceAll : replaceOne)(cm, state);
-    },
-    goToLine() {
-      const line = this.search.line - 1;
-      const { cm } = this;
-      if (!isNaN(line)) cm.setCursor(line, 0);
-      cm.focus();
     },
   },
 };

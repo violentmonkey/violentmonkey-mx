@@ -59,11 +59,12 @@ code {
   height: 1rem;
 }
 
-svg path {
+svg {
   fill: currentColor;
 }
 
 .btn-ghost,
+.sep,
 button {
   display: inline-block;
   padding: 0 .5rem;
@@ -73,6 +74,7 @@ button {
   vertical-align: bottom;
 }
 .btn-ghost {
+  color: inherit;
   border: 1px solid transparent;
   &:hover {
     border-color: #bbb;
@@ -81,6 +83,13 @@ button {
   > .icon {
     display: block;
     height: 2rem;
+  }
+}
+
+.sep {
+  &::after {
+    content: '';
+    border-right: 1px solid #bbb;
   }
 }
 
@@ -180,4 +189,10 @@ button {
 }
 .CodeMirror-foldgutter-folded:after {
   content: "\25B8";
+}
+
+.vl-dropdown-menu {
+  padding: .5rem;
+  border: 1px solid #bbb;
+  background: white;
 }

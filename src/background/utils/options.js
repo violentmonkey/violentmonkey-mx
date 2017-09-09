@@ -1,4 +1,5 @@
-import { initHooks, debounce, normalizeKeys, object } from 'src/common';
+import { initHooks, debounce, normalizeKeys } from 'src/common';
+import { objectGet, objectSet } from 'src/common/object';
 import storage from 'localStorage'; // eslint-disable-line import/no-extraneous-dependencies
 
 const defaults = {
@@ -49,7 +50,7 @@ export function getOption(key, def) {
   }
   if (obj == null) obj = defaults[mainKey];
   if (obj == null) obj = def;
-  return keys.length > 1 ? object.get(obj, keys.slice(1), def) : obj;
+  return keys.length > 1 ? objectGet(obj, keys.slice(1), def) : obj;
 }
 
 export function setOption(key, value) {
@@ -59,7 +60,7 @@ export function setOption(key, value) {
   const mainKey = keys[0];
   if (mainKey in defaults) {
     if (keys.length > 1) {
-      optionValue = object.set(getOption(mainKey), keys.slice(1), value);
+      optionValue = objectSet(getOption(mainKey), keys.slice(1), value);
     }
     storage.setItem(mainKey, JSON.stringify(optionValue));
     fireChange(optionKey, value);

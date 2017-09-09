@@ -7,7 +7,7 @@ import options from 'src/common/options';
 import getPathInfo from 'src/common/pathinfo';
 import handlers from 'src/common/handlers';
 import 'src/common/ui/style';
-import { store, features } from './utils';
+import { store } from './utils';
 import App from './views/app';
 
 Vue.prototype.i18n = i18n;
@@ -64,7 +64,6 @@ function loadData() {
       store.scripts.forEach(initSearch);
     }
     store.loading = false;
-    features.reset('sync');
   });
 }
 
