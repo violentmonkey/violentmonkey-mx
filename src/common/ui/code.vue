@@ -55,7 +55,7 @@ import { debounce } from 'src/common';
 import Tooltip from './tooltip';
 
 function getHandler(key) {
-  return (cm) => {
+  return cm => {
     const { commands } = cm.state;
     const handle = commands && commands[key];
     return handle && handle();
@@ -73,7 +73,7 @@ function indentWithTab(cm) {
 
 [
   'save', 'cancel', 'find', 'findNext', 'findPrev', 'replace', 'replaceAll', 'close',
-].forEach((key) => {
+].forEach(key => {
   CodeMirror.commands[key] = getHandler(key);
 });
 
@@ -212,10 +212,10 @@ export default {
       [
         cm.options.extraKeys,
         cm.options.keyMap,
-      ].some((keyMap) => {
+      ].some(keyMap => {
         let stop = false;
         if (keyMap) {
-          CodeMirror.lookupKey(name, keyMap, (b) => {
+          CodeMirror.lookupKey(name, keyMap, b => {
             if (this.commands[b]) {
               e.preventDefault();
               e.stopPropagation();

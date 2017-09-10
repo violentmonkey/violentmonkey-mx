@@ -87,7 +87,7 @@ export default {
     },
     newScript() {
       sendMessage({ cmd: 'NewScript' })
-      .then((script) => {
+      .then(script => {
         this.script = script;
       });
     },

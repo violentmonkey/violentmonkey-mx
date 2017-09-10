@@ -84,7 +84,7 @@ function initMain() {
       if (!data) return;
       const script = store.scripts.find(item => item.id === data.id);
       if (script) {
-        Object.keys(data).forEach((key) => {
+        Object.keys(data).forEach(key => {
           Vue.set(script, key, data[key]);
         });
         initSearch(script);

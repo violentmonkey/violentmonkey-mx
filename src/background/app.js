@@ -183,7 +183,7 @@ const commands = {
   GetTabId() {
     browser.tabs.query({})
     .then(tabs => {
-      tabs.forEach((tab) => {
+      tabs.forEach(tab => {
         const id = tab.id.toString();
         injectContent(`window.setTabId(${JSON.stringify(id)})`, id);
       });

@@ -216,7 +216,7 @@ export default {
       });
     },
     trackLocalFile() {
-      new Promise((resolve) => {
+      new Promise(resolve => {
         setTimeout(resolve, 2000);
       })
       .then(() => this.loadData(true))

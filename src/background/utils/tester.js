@@ -127,7 +127,7 @@ export function resetBlacklist(list) {
   blacklistRules = (Array.isArray(list) ? list : (list || '').split('\n'))
   .map(line => {
     const item = line.trim();
-    if (!item || item.startsWith('#')) return;
+    if (!item || item.startsWith('#')) return null;
     // @exclude
     if (item.startsWith('@exclude ')) return autoReg(item.slice(9).trim());
     // domains

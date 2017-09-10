@@ -61,7 +61,7 @@ export default {
       this.exporting = true;
       Promise.resolve(exportData(this.selectedIds))
       .then(downloadBlob)
-      .catch((err) => {
+      .catch(err => {
         console.error(err);
       })
       .then(() => {
@@ -75,15 +75,15 @@ export default {
 };
 
 function getWriter() {
-  return new Promise((resolve) => {
-    zip.createWriter(new zip.BlobWriter(), (writer) => {
+  return new Promise(resolve => {
+    zip.createWriter(new zip.BlobWriter(), writer => {
       resolve(writer);
     });
   });
 }
 
 function addFile(writer, file) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     writer.add(file.name, new zip.TextReader(file.content), () => {
       resolve(writer);
     });
@@ -120,7 +120,7 @@ function exportData(selectedIds) {
       ids: selectedIds,
     },
   })
-  .then((data) => {
+  .then(data => {
     const names = {};
     const vm = {
       scripts: {},
@@ -128,7 +128,7 @@ function exportData(selectedIds) {
     };
     delete vm.settings.sync;
     if (withValues) vm.values = {};
-    const files = data.scripts.map((script) => {
+    const files = data.scripts.map(script => {
       let name = script.custom.name || script.meta.name || 'Noname';
       if (names[name]) {
         names[name] += 1;
@@ -157,8 +157,8 @@ function exportData(selectedIds) {
   .then(files => files.reduce((result, file) => (
     result.then(writer => addFile(writer, file))
   ), getWriter()))
-  .then(writer => new Promise((resolve) => {
-    writer.close((blob) => {
+  .then(writer => new Promise(resolve => {
+    writer.close(blob => {
       resolve(blob);
     });
   }));

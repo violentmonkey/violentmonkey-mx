@@ -34,7 +34,6 @@
 
 <script>
 import { i18n, sendMessage, noop } from 'src/common';
-import { objectGet } from 'src/common/object';
 import VmCode from 'src/common/ui/code';
 import { showMessage } from '../../utils';
 import VmSettings from './settings';
