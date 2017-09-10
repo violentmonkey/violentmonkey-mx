@@ -326,7 +326,7 @@ function onTabUpdate(tabId, changes) {
   }
   // file:/// URLs will not be injected on Maxthon 5
   if (/^file:\/\/\/.*?\.user\.js$/.test(changes.url)) {
-    commands.InstallScript({
+    confirmInstall({
       url: changes.url,
     });
     browser.tabs.remove(tabId);
