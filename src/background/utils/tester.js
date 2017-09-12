@@ -1,6 +1,11 @@
 import cache from './cache';
 import { getOption, hookOptions } from './options';
 
+let blacklistRules = [];
+hookOptions(changes => {
+  if ('blacklist' in changes) resetBlacklist(changes.blacklist || '');
+});
+
 /**
  * Test glob rules like `@include` and `@exclude`.
  */
@@ -113,16 +118,14 @@ function matchTester(rule) {
   return { test };
 }
 
-let blacklistRules = [];
-resetBlacklist(getOption('blacklist'));
-hookOptions(changes => {
-  const { blacklist } = changes;
-  if (blacklist) resetBlacklist(blacklist);
-});
 export function testBlacklist(url) {
   return blacklistRules.some(re => re.test(url));
 }
 export function resetBlacklist(list) {
+  const rules = list == null ? getOption('blacklist') : list;
+  if (process.env.DEBUG) {
+    console.info('Reset blacklist:', rules);
+  }
   // XXX compatible with {Array} list in v2.6.1-
   blacklistRules = (Array.isArray(list) ? list : (list || '').split('\n'))
   .map(line => {

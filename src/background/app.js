@@ -9,6 +9,7 @@ import {
   setClipboard, checkUpdate,
   getOption, setOption, hookOptions, getAllOptions,
 } from './utils';
+import { resetBlacklist } from './utils/tester';
 
 const VM_VER = browser.runtime.getManifest().version;
 
@@ -251,6 +252,7 @@ vmdb.initialized.then(() => {
   });
   setTimeout(autoUpdate, 2e4);
   sync.initialize();
+  resetBlacklist();
   if (getOption('startReload')) reinit();
   vmdb.checkPosition();
 });
