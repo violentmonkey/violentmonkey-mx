@@ -1,15 +1,21 @@
-const global = window;
+import 'src/common/polyfills';
+
+const globalObj = typeof global !== 'undefined' ? global : window;
 
 if (typeof browser === 'undefined') {
   const EXTENSION = 'EXTENSION';
   const CONTENT = 'CONTENT';
-  const rt = global.external.mxGetRuntime();
+  const rt = globalObj.external.mxGetRuntime();
   const br = rt && rt.create('mx.browser');
   const ui = rt && rt.create('mx.app.ui');
   const sourceId = `RUNTIME_${getUniqId()}`;
   const onNotificationClickListeners = [];
   const onNotificationCloseListeners = [];
   const manifest = process.env.manifest;
+
+  // Maxthon sucks
+  // Bug: tab.id is a number, but getTabById requires a string
+  const getTabById = id => br.tabs.getTabById(id.toString());
 
   const badges = {
     init() {
@@ -23,8 +29,8 @@ if (typeof browser === 'undefined') {
         data[tabId] = text;
         update();
       };
-      // global.browser.browserAction.setBadgeText = setBadgeText;
-      global.browser.tabs.onActivated.addListener(({ tabId }) => {
+      // globalObj.browser.browserAction.setBadgeText = setBadgeText;
+      globalObj.browser.tabs.onActivated.addListener(({ tabId }) => {
         currentTabId = tabId;
         update();
       });
@@ -50,7 +56,7 @@ if (typeof browser === 'undefined') {
           });
         } else if (type === 'PAGE_LOADED') {
           // PAGE_LOADED is triggered after URL redirected
-          const tab = br.tabs.getTabById(data.id);
+          const tab = getTabById(data.id);
           updatedListeners.forEach(listener => {
             listener(data.id, tab);
           });
@@ -96,7 +102,7 @@ if (typeof browser === 'undefined') {
               callback,
               tab: {
                 id: messenger.data.tabId,
-                url: location.href,
+                url: window.location.href,
               },
             },
             data,
@@ -140,7 +146,7 @@ if (typeof browser === 'undefined') {
           }
         });
       };
-      rt.listen(global.browser.__isContent ? CONTENT : EXTENSION, onMessage);
+      rt.listen(globalObj.browser.__isContent ? CONTENT : EXTENSION, onMessage);
       rt.listen(sourceId, res => {
         if (res && res.callback) {
           const promise = promises[res.callback];
@@ -159,6 +165,115 @@ if (typeof browser === 'undefined') {
     },
   };
   messenger.ensureTabId();
+
+  const storage = {
+    local: {},
+  };
+  {
+    const STORE_NAME = 'data';
+    const READWRITE = 'readwrite';
+    const getErrorHandler = reject => e => reject(e.target.error.message);
+    const ready = new Promise((resolve, reject) => {
+      const req = indexedDB.open('Violentmonkey', 1);
+      req.onsuccess = e => {
+        resolve(e.target.result);
+      };
+      req.onerror = getErrorHandler(reject);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        db.createObjectStore(STORE_NAME, { keyPath: 'key' });
+      };
+    });
+    storage.local.get = arg => ready.then(db => new Promise((resolve, reject) => {
+      const objectStore = db.transaction(STORE_NAME).objectStore(STORE_NAME);
+      const results = {};
+      if (!arg) {
+        // get all values
+        const req = objectStore.openCursor();
+        req.onsuccess = e => {
+          const cursor = e.target.result;
+          if (cursor) {
+            const { key, value } = cursor.value;
+            results[key] = value;
+            cursor.continue();
+          } else {
+            resolve(results);
+          }
+        };
+        req.onerror = getErrorHandler(reject);
+      } else {
+        let keys;
+        let defaults = {};
+        if (Array.isArray(arg)) keys = arg;
+        else if (typeof arg === 'string') keys = [arg];
+        else {
+          keys = Object.keys(arg);
+          defaults = arg;
+        }
+        let progress = 0;
+        let onReject = getErrorHandler(reject);
+        const onError = e => {
+          if (onReject) {
+            onReject(e);
+            onReject = null;
+          }
+        };
+        const checkResolve = () => {
+          if (!progress) resolve(results);
+        };
+        keys.forEach(key => {
+          progress += 1;
+          const req = objectStore.get(key);
+          req.onsuccess = e => {
+            const { result } = e.target;
+            results[key] = result ? result.value : defaults[key];
+            progress -= 1;
+            checkResolve();
+          };
+          req.onerror = onError;
+        });
+        checkResolve();
+      }
+    }));
+    storage.local.set = data => ready.then(db => new Promise((resolve, reject) => {
+      const objectStore = db.transaction(STORE_NAME, READWRITE).objectStore(STORE_NAME);
+      const updates = Object.keys(data).map(key => ({ key, value: data[key] }));
+      const onError = getErrorHandler(reject);
+      const doUpdate = () => {
+        const item = updates.shift();
+        if (item) {
+          const req = objectStore.put(item);
+          req.onsuccess = doUpdate;
+          req.onerror = onError;
+        } else {
+          resolve();
+        }
+      };
+      doUpdate();
+    }));
+    storage.local.remove = arg => ready.then(db => new Promise((resolve, reject) => {
+      const keys = Array.isArray(arg) ? arg : [arg];
+      const objectStore = db.transaction(STORE_NAME, READWRITE).objectStore(STORE_NAME);
+      const onError = getErrorHandler(reject);
+      const doRemove = () => {
+        const key = keys.shift();
+        if (key) {
+          const req = objectStore.delete(key);
+          req.onsuccess = doRemove;
+          req.onerror = onError;
+        } else {
+          resolve();
+        }
+      };
+      doRemove();
+    }));
+    storage.local.clear = () => ready.then(db => new Promise((resolve, reject) => {
+      const objectStore = db.transaction(STORE_NAME, READWRITE).objectStore(STORE_NAME);
+      const req = objectStore.clear();
+      req.onsuccess = resolve;
+      req.onerror = getErrorHandler(reject);
+    }));
+  }
 
   const browser = {
     browserAction: {
@@ -252,6 +367,17 @@ if (typeof browser === 'undefined') {
         if (relpath.startsWith('/')) relpath = relpath.slice(1);
         return base + relpath;
       },
+      openOptionsPage() {
+        const url = browser.runtime.getURL(browser.runtime.getManifest().config);
+        return browser.tabs.query({
+          url,
+          currentWindow: true,
+        })
+        .then(([optionsTab]) => {
+          if (optionsTab) browser.tabs.update(optionsTab.id, { active: true });
+          else browser.tabs.create({ url });
+        });
+      },
       onMessage: {
         addListener(listener) {
           return messenger.listen(listener);
@@ -261,6 +387,7 @@ if (typeof browser === 'undefined') {
         return messenger.send(EXTENSION, data);
       },
     },
+    storage,
     tabs: {
       create(data) {
         return new Promise((resolve, reject) => {
@@ -274,7 +401,7 @@ if (typeof browser === 'undefined') {
         });
       },
       get(id) {
-        return Promise.resolve(br.tabs.getTabById(id));
+        return Promise.resolve(getTabById(id));
       },
       update(...args) {
         let [id, data] = args;
@@ -284,7 +411,7 @@ if (typeof browser === 'undefined') {
           id = null;
           tab = br.tabs.getCurrentTab();
         } else {
-          tab = br.tabs.getTabById(id);
+          tab = getTabById(id);
         }
         if (tab) {
           if (data.active) tab.activate();
@@ -293,11 +420,11 @@ if (typeof browser === 'undefined') {
         return Promise.resolve(tab);
       },
       reload(id) {
-        const tab = br.tabs.getTabById(id);
+        const tab = getTabById(id);
         if (tab) tab.refresh();
       },
       remove(id) {
-        const tab = br.tabs.getTabById(id);
+        const tab = getTabById(id);
         if (tab) tab.close();
       },
       sendMessage(target, data) {
@@ -329,7 +456,7 @@ if (typeof browser === 'undefined') {
   };
   browser.__patched = true;
   browser.__ensureTabId = () => messenger.ensureTabId();
-  global.browser = browser;
+  globalObj.browser = browser;
 }
 
 function getUniqId() {

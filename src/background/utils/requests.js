@@ -35,6 +35,11 @@ function xhrCallbackWrapper(req) {
     } catch (e) {
       // ignore if responseText is unreachable
     }
+    if (evt.type === 'progress') {
+      ['lengthComputable', 'loaded', 'total'].forEach(key => {
+        data[key] = evt[key];
+      });
+    }
     if (evt.type === 'loadend') clearRequest(req);
     lastPromise = lastPromise.then(() => {
       if (xhr.response && xhr.responseType === 'arraybuffer') {
@@ -171,6 +176,6 @@ export function confirmInstall(info) {
       from: info.from,
     });
     const optionsURL = browser.runtime.getURL('/confirm/index.html');
-    browser.tabs.create({ url: `${optionsURL}#confirm?id=${confirmKey}` });
+    browser.tabs.create({ url: `${optionsURL}#?id=${confirmKey}` });
   });
 }

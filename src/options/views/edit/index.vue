@@ -34,6 +34,7 @@
 
 <script>
 import { i18n, sendMessage, noop } from 'src/common';
+import { objectGet } from 'src/common/object';
 import VmCode from 'src/common/ui/code';
 import { showMessage } from '../../utils';
 import VmSettings from './settings';
@@ -62,7 +63,7 @@ export default {
       settings: {},
       commands: {
         save: this.save,
-        cancel: this.close,
+        close: this.close,
       },
     };
   },
@@ -81,17 +82,27 @@ export default {
     this.script = this.initial;
   },
   mounted() {
-    (this.script.id ? sendMessage({
-      cmd: 'GetScript',
-      data: this.script.id,
-    }) : Promise.resolve(this.script))
-    .then(script => {
+    const id = objectGet(this.script, 'props.id');
+    (id
+      ? sendMessage({
+        cmd: 'GetScriptCode',
+        data: id,
+      })
+      : sendMessage({
+        cmd: 'NewScript',
+      })
+      .then(({ script, code }) => {
+        this.script = script;
+        return code;
+      })
+    )
+    .then(code => {
+      this.code = code;
       const settings = {};
-      settings.more = {
-        update: script.update,
+      const { custom, config } = this.script;
+      settings.config = {
+        shouldUpdate: config.shouldUpdate,
       };
-      this.code = script.code;
-      const { custom } = script;
       settings.custom = [
         'name',
         'homepageURL',
@@ -119,8 +130,8 @@ export default {
   },
   methods: {
     save() {
-      const { settings: { custom, more } } = this;
-      const value = [
+      const { settings: { config, custom: rawCustom } } = this;
+      const custom = [
         'name',
         'runAt',
         'homepageURL',
@@ -131,31 +142,32 @@ export default {
         'origMatch',
         'origExcludeMatch',
       ].reduce((val, key) => {
-        val[key] = custom[key];
+        val[key] = rawCustom[key];
         return val;
       }, {
-        include: toList(custom.include),
-        match: toList(custom.match),
-        exclude: toList(custom.exclude),
-        excludeMatch: toList(custom.excludeMatch),
+        include: toList(rawCustom.include),
+        match: toList(rawCustom.match),
+        exclude: toList(rawCustom.exclude),
+        excludeMatch: toList(rawCustom.excludeMatch),
       });
+      const id = objectGet(this.script, 'props.id');
       return sendMessage({
         cmd: 'ParseScript',
         data: {
-          id: this.script.id,
+          id,
+          custom,
+          config,
           code: this.code,
           // User created scripts MUST be marked `isNew` so that
           // the backend is able to check namespace conflicts,
           // otherwise the script with same namespace will be overridden
-          isNew: !this.script.id,
+          isNew: !id,
           message: '',
-          custom: value,
-          more,
         },
       })
-      .then(script => {
-        this.$emit('input', script);
+      .then(res => {
         this.canSave = false;
+        if (objectGet(res, 'where.id')) this.script = res.update;
       }, err => {
         showMessage({ text: err });
       });

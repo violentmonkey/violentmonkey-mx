@@ -42,8 +42,8 @@
         <span v-text="i18n('menuMatchedScripts')"></span>
       </div>
       <div class="submenu">
-        <div class="menu-item" v-for="item in scripts" @click="onToggleScript(item)" :class="{disabled:!item.data.enabled}">
-          <icon :name="getSymbolCheck(item.data.enabled)" class="icon-right"></icon>
+        <div class="menu-item" v-for="item in scripts" @click="onToggleScript(item)" :class="{disabled:!item.data.config.enabled}">
+          <icon :name="getSymbolCheck(item.data.config.enabled)" class="icon-right"></icon>
           <span v-text="item.name"></span>
         </div>
       </div>
@@ -109,21 +109,7 @@ export default {
       this.checkReload();
     },
     onManage() {
-      const url = browser.runtime.getURL(browser.runtime.getManifest().config);
-      // Firefox: browser.tabs.query cannot filter tabs by URLs with custom
-      // schemes like `moz-extension:`
-      browser.tabs.query({
-        currentWindow: true,
-        // url: url,
-      })
-      .then(tabs => {
-        const optionsTab = tabs.find(tab => {
-          const [path, qs] = tab.url.split('#');
-          return path === url && (!qs || qs.startsWith('?'));
-        });
-        if (optionsTab) browser.tabs.update(optionsTab.id, { active: true });
-        else browser.tabs.create({ url });
-      });
+      browser.runtime.openOptionsPage();
     },
     onFindScripts(item) {
       let domain;
@@ -144,15 +130,17 @@ export default {
       });
     },
     onToggleScript(item) {
+      const { data } = item;
+      const enabled = !data.config.enabled;
       sendMessage({
         cmd: 'UpdateScriptInfo',
         data: {
-          id: item.data.id,
-          enabled: !item.data.enabled,
+          id: data.props.id,
+          config: { enabled },
         },
       })
       .then(() => {
-        item.data.enabled = !item.data.enabled;
+        data.config.enabled = enabled;
         this.checkReload();
       });
     },

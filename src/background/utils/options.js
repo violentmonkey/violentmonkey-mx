@@ -1,6 +1,6 @@
 import { initHooks, debounce, normalizeKeys } from 'src/common';
 import { objectGet, objectSet } from 'src/common/object';
-import storage from 'localStorage'; // eslint-disable-line import/no-extraneous-dependencies
+import { register } from './init';
 
 const defaults = {
   isApplied: true,
@@ -18,13 +18,55 @@ const defaults = {
   sync: null,
   customCSS: null,
   importSettings: true,
-  notifyUpdates: true,
+  notifyUpdates: false,
   startReload: true,
   reloadHTTPS: false,
+  version: null,
 };
 let changes = {};
 const hooks = initHooks();
 const callHooksLater = debounce(callHooks, 100);
+
+let options = {};
+const init = browser.storage.local.get('options')
+.then(({ options: data }) => {
+  if (data && typeof data === 'object') options = data;
+  if (process.env.DEBUG) {
+    console.log('options:', options); // eslint-disable-line no-console
+  }
+  if (!objectGet(options, 'version')) {
+    // v2.8.0+ stores options in browser.storage.local
+    // Upgrade from v2.7.x
+    if (process.env.DEBUG) {
+      console.log('Upgrade options...'); // eslint-disable-line no-console
+    }
+    try {
+      if (localStorage.length) {
+        Object.keys(defaults)
+        .forEach(key => {
+          let value = localStorage.getItem(key);
+          if (value) {
+            try {
+              value = JSON.parse(value);
+            } catch (e) {
+              value = null;
+            }
+          }
+          if (value) {
+            if (process.env.DEBUG) {
+              console.log('Upgrade option:', key, value); // eslint-disable-line no-console
+            }
+            setOption(key, value);
+          }
+        });
+      }
+    } catch (e) {
+      // ignore security issue in Firefox
+    }
+    setOption('version', 1);
+  }
+});
+register(init);
 
 function fireChange(key, value) {
   changes[key] = value;
@@ -39,18 +81,10 @@ function callHooks() {
 export function getOption(key, def) {
   const keys = normalizeKeys(key);
   const mainKey = keys[0];
-  const value = storage.getItem(mainKey);
-  let obj;
-  if (value) {
-    try {
-      obj = JSON.parse(value);
-    } catch (e) {
-      // ignore invalid JSON
-    }
-  }
-  if (obj == null) obj = defaults[mainKey];
-  if (obj == null) obj = def;
-  return keys.length > 1 ? objectGet(obj, keys.slice(1), def) : obj;
+  let value = options[mainKey];
+  if (value == null) value = defaults[mainKey];
+  if (value == null) value = def;
+  return keys.length > 1 ? objectGet(value, keys.slice(1), def) : value;
 }
 
 export function setOption(key, value) {
@@ -62,10 +96,11 @@ export function setOption(key, value) {
     if (keys.length > 1) {
       optionValue = objectSet(getOption(mainKey), keys.slice(1), value);
     }
-    storage.setItem(mainKey, JSON.stringify(optionValue));
+    options[mainKey] = optionValue;
+    browser.storage.local.set({ options });
     fireChange(optionKey, value);
     if (process.env.DEBUG) {
-      console.log('Options updated:', optionKey, value); // eslint-disable-line no-console
+      console.log('Options updated:', optionKey, value, options); // eslint-disable-line no-console
     }
   }
 }

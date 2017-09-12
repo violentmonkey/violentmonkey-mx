@@ -4,16 +4,14 @@
       <div class="buttons pull-right">
         <vl-dropdown class="confirm-options" align="right">
           <button slot="toggle" v-text="i18n('buttonInstallOptions')"></button>
-          <div class="options-panel">
-            <label>
-              <setting-check name="closeAfterInstall" @change="checkClose" />
-              <span v-text="i18n('installOptionClose')"></span>
-            </label>
-            <label>
-              <setting-check name="trackLocalFile" :disabled="closeAfterInstall" />
-              <span v-text="i18n('installOptionTrack')"></span>
-            </label>
-          </div>
+          <label>
+            <setting-check name="closeAfterInstall" @change="checkClose" />
+            <span v-text="i18n('installOptionClose')"></span>
+          </label>
+          <label>
+            <setting-check name="trackLocalFile" :disabled="closeAfterInstall" />
+            <span v-text="i18n('installOptionTrack')"></span>
+          </label>
         </vl-dropdown>
         <button v-text="i18n('buttonConfirmInstallation')"
         :disabled="!installable" @click="installScript"></button>
@@ -55,7 +53,7 @@ export default {
       message: '',
       code: '',
       commands: {
-        cancel: this.close,
+        close: this.close,
       },
       info: {},
     };
@@ -165,7 +163,7 @@ export default {
     close() {
       // window.close();
       // sendMessage({ cmd: 'TabClose' });
-      location.href = browser.runtime.getURL('close');
+      window.location.href = browser.runtime.getURL('close');
     },
     getFile(url, { isBlob, useCache } = {}) {
       const cacheKey = isBlob ? `blob+${url}` : `text+${url}`;
@@ -209,8 +207,8 @@ export default {
           resources: this.resources,
         },
       })
-      .then(res => {
-        this.message = `${res.message}[${this.getTimeString()}]`;
+      .then(result => {
+        this.message = `${result.update.message}[${this.getTimeString()}]`;
         if (this.closeAfterInstall) this.close();
         else if (this.isLocal && options.get('trackLocalFile')) this.trackLocalFile();
       });

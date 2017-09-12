@@ -46,15 +46,12 @@ targets.push(merge(base, {
     }),
     new HtmlWebpackPlugin({
       filename: 'popup/index.html',
-      template: 'src/public/index.html',
+      template: 'src/popup/index.html',
       chunks: ['browser', 'common', 'popup/app'],
     }),
     // new FriendlyErrorsPlugin(),
     !IS_DEV && new ExtractTextPlugin('[name].css'),
   ].filter(Boolean),
-  externals: {
-    localStorage: 'localStorage',
-  },
 }));
 
 targets.push(merge(base, {

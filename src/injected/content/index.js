@@ -1,8 +1,10 @@
-import { bindEvents, sendMessage, postData, inject } from '../utils';
+import { bindEvents, sendMessage, inject, attachFunction } from '../utils';
 import bridge from './bridge';
 import { tabOpen, tabClose, tabClosed } from './tabs';
 import { onNotificationCreate, onNotificationClick, onNotificationClose } from './notifications';
 import { getRequestId, httpRequest, abortRequest, httpRequested } from './requests';
+
+const IS_TOP = window.top === window;
 
 const ids = [];
 const menus = [];
@@ -19,7 +21,7 @@ function updateBadge() {
 function setBadge(tabId) {
   if (badge.ready) {
     // XXX: only scripts run in top level window are counted
-    if (top === window) {
+    if (IS_TOP) {
       sendMessage({
         cmd: 'SetBadge',
         data: {
@@ -55,12 +57,12 @@ export default function initialize(contentId, webId) {
     if (handle) handle(req.data, src);
   });
 
-  sendMessage({ cmd: 'GetInjected', data: location.href })
+  sendMessage({ cmd: 'GetInjected', data: window.location.href })
   .then(data => {
     if (data.scripts) {
       data.scripts.forEach(script => {
-        ids.push(script.id);
-        if (script.enabled) badge.number += 1;
+        ids.push(script.props.id);
+        if (script.config.enabled) badge.number += 1;
       });
     }
     bridge.post({ cmd: 'LoadScripts', data });
@@ -86,7 +88,7 @@ const handlers = {
     sendMessage({ cmd: 'SetValue', data });
   },
   RegisterMenu(data) {
-    if (window.top === window) menus.push(data);
+    if (IS_TOP) menus.push(data);
     getPopup();
   },
   AddStyle(css) {
@@ -119,7 +121,7 @@ function getPopup() {
 
 window.setPopup = () => {
   // XXX: only scripts run in top level window are counted
-  if (top === window) {
+  if (IS_TOP) {
     sendMessage({
       cmd: 'SetPopup',
       data: { ids, menus },
@@ -129,19 +131,17 @@ window.setPopup = () => {
 document.addEventListener('DOMContentLoaded', getPopup, false);
 
 function injectScript(data) {
-  const [id, wrapperKeys, code] = data;
-  const func = (scriptId, cb, post, destId) => {
-    Object.defineProperty(window, `VM_${scriptId}`, {
-      value: cb,
-      configurable: true,
-    });
-    post(destId, { cmd: 'Injected', data: scriptId });
+  const [vId, wrapperKeys, code, vCallbackId] = data;
+  const func = (attach, id, cb, callbackId) => {
+    attach(id, cb);
+    const callback = window[callbackId];
+    if (callback) callback();
   };
   const args = [
-    JSON.stringify(id),
+    attachFunction.toString(),
+    JSON.stringify(vId),
     `function(${wrapperKeys.join(',')}){${code}}`,
-    postData.toString(),
-    JSON.stringify(bridge.destId),
+    JSON.stringify(vCallbackId),
   ];
   inject(`!${func.toString()}(${args.join(',')})`);
 }

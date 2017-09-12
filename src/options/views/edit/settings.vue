@@ -3,7 +3,7 @@
     <h4 v-text="i18n('editLabelSettings')"></h4>
     <div class="form-group">
       <label>
-        <input type="checkbox" v-model="more.update">
+        <input type="checkbox" v-model="config.shouldUpdate">
         <span v-text="i18n('labelAllowUpdate')"></span>
       </label>
     </div>
@@ -88,6 +88,7 @@
 
 <script>
 import { i18n } from 'src/common';
+import { objectGet } from 'src/common/object';
 import Tooltip from 'src/common/ui/tooltip';
 
 export default {
@@ -99,16 +100,16 @@ export default {
     custom() {
       return this.settings.custom || {};
     },
-    more() {
-      return this.settings.more || {};
+    config() {
+      return this.settings.config || {};
     },
     placeholders() {
       const { value } = this;
       return {
-        name: value.meta.name,
-        homepageURL: value.meta.homepageURL,
-        updateURL: value.meta.updateURL || i18n('hintUseDownloadURL'),
-        downloadURL: value.meta.downloadURL || value.lastInstallURL,
+        name: objectGet(value, 'meta.name'),
+        homepageURL: objectGet(value, 'meta.homepageURL'),
+        updateURL: objectGet(value, 'meta.updateURL') || i18n('hintUseDownloadURL'),
+        downloadURL: objectGet(value, 'meta.downloadURL') || value.lastInstallURL,
       };
     },
   },

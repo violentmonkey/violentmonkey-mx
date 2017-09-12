@@ -1,5 +1,8 @@
-export { sendMessage, request } from 'src/common';
+export { sendMessage, request, throttle } from 'src/common';
 export Promise from 'core-js/library/fn/promise';
+
+// cache native properties to avoid being overridden, see violentmonkey/violentmonkey#151
+export const { console, CustomEvent } = window;
 
 export function postData(destId, data) {
   // Firefox issue: data must be stringified to avoid cross-origin problem
@@ -29,4 +32,14 @@ export function bindEvents(srcId, destId, handle) {
     handle(data);
   }, false);
   return data => { postData(destId, data); };
+}
+
+export function attachFunction(id, cb) {
+  Object.defineProperty(window, id, {
+    value(...args) {
+      cb.apply(this, args);
+      delete window[id];
+    },
+    configurable: true,
+  });
 }

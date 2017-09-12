@@ -1,16 +1,14 @@
 import { debounce, normalizeKeys, request, noop } from 'src/common';
-import {
-  getEventEmitter, vmdb,
-  getOption, setOption, hookOptions,
-} from '../utils';
-
-const { getScriptsByIndex, parseScript, removeScript, checkPosition } = vmdb;
+import { objectPurify } from 'src/common/object';
+import { getEventEmitter, getOption, setOption, hookOptions } from '../utils';
+import { getScripts, getScriptCode, parseScript, removeScript, normalizePosition } from '../utils/db';
 
 const serviceNames = [];
+const serviceClasses = [];
 const services = {};
 const autoSync = debounce(sync, 60 * 60 * 1000);
 let working = Promise.resolve();
-const syncConfig = initConfig();
+let syncConfig;
 
 export function getFilename(uri) {
   return `vm-${encodeURIComponent(uri)}`;
@@ -20,6 +18,11 @@ export function isScriptFile(name) {
 }
 export function getURI(name) {
   return decodeURIComponent(name.slice(3));
+}
+
+function getLocalData() {
+  return getScripts()
+  .then(scripts => scripts.filter(script => !script.config.removed));
 }
 
 function initConfig() {
@@ -39,13 +42,6 @@ function initConfig() {
       config = {
         services: {},
       };
-
-      // XXX Migrate from old data
-      ['dropbox', 'onedrive']
-      .forEach(key => {
-        config.services[key] = getOption(key);
-      });
-
       set([], config);
     }
   }
@@ -112,7 +108,6 @@ export function getStates() {
 
 function serviceFactory(base) {
   const Service = function constructor() {
-    if (!(this instanceof Service)) return new Service();
     this.initialize();
   };
   Service.prototype = base;
@@ -289,7 +284,7 @@ export const BaseService = serviceFactory({
     .then(remoteMeta => Promise.all([
       remoteMeta,
       this.list(),
-      getScriptsByIndex('position'),
+      getLocalData(),
     ]))
     .then(([remoteMeta, remoteData, localData]) => {
       const remoteMetaInfo = remoteMeta.info || {};
@@ -322,19 +317,20 @@ export const BaseService = serviceFactory({
         return info;
       }, {});
       localData.forEach(item => {
-        const remoteInfo = remoteMeta.info[item.uri];
+        const { props: { uri, position, lastModified } } = item;
+        const remoteInfo = remoteMeta.info[uri];
         if (remoteInfo) {
-          if (firstSync || !item.custom.modified || remoteInfo.modified > item.custom.modified) {
-            const remoteItem = remoteItemMap[item.uri];
+          if (firstSync || !lastModified || remoteInfo.modified > lastModified) {
+            const remoteItem = remoteItemMap[uri];
             getRemote.push(remoteItem);
-          } else if (remoteInfo.modified < item.custom.modified) {
+          } else if (remoteInfo.modified < lastModified) {
             putRemote.push(item);
-          } else if (remoteInfo.position !== item.position) {
-            remoteInfo.position = item.position;
+          } else if (remoteInfo.position !== position) {
+            remoteInfo.position = position;
             remoteChanged = true;
           }
-          delete remoteItemMap[item.uri];
-        } else if (firstSync || !outdated || item.custom.modified > remoteTimestamp) {
+          delete remoteItemMap[uri];
+        } else if (firstSync || !outdated || lastModified > remoteTimestamp) {
           putRemote.push(item);
         } else {
           delLocal.push(item);
@@ -353,12 +349,21 @@ export const BaseService = serviceFactory({
           this.log('Download script:', item.uri);
           return this.get(getFilename(item.uri))
           .then(raw => {
-            const data = { more: {} };
+            const data = {};
             try {
               const obj = JSON.parse(raw);
               data.code = obj.code;
-              if (obj.version === 1) {
-                if (obj.more) data.more = obj.more;
+              if (obj.version === 2) {
+                data.config = obj.config;
+                data.custom = obj.custom;
+              } else if (obj.version === 1) {
+                if (obj.more) {
+                  data.custom = obj.more.custom;
+                  data.config = objectPurify({
+                    enabled: obj.more.enabled,
+                    shouldUpdate: obj.more.update,
+                  });
+                }
               }
             } catch (e) {
               data.code = raw;
@@ -366,33 +371,44 @@ export const BaseService = serviceFactory({
             // Invalid data
             if (!data.code) return;
             const remoteInfo = remoteMeta.info[item.uri];
-            const { modified, position } = remoteInfo;
+            const { modified } = remoteInfo;
             data.modified = modified;
-            if (position) data.more.position = position;
-            if (!getOption('syncScriptStatus') && data.more) {
-              delete data.more.enabled;
+            const position = +remoteInfo.position;
+            if (position) data.position = position;
+            if (!getOption('syncScriptStatus') && data.config) {
+              delete data.config.enabled;
             }
             return parseScript(data)
             .then(res => { browser.runtime.sendMessage(res); });
           });
         }),
-        ...putRemote.map(item => {
-          this.log('Upload script:', item.uri);
-          const data = JSON.stringify({
-            version: 1,
-            code: item.code,
-            more: {
-              custom: item.custom,
-              enabled: item.enabled,
-              update: item.update,
-            },
+        ...putRemote.map(script => {
+          this.log('Upload script:', script.props.uri);
+          return getScriptCode(script.props.id)
+          .then(code => {
+            // const data = {
+            //   version: 2,
+            //   code,
+            //   custom: script.custom,
+            //   config: script.config,
+            // };
+            // XXX use version 1 to be compatible with Violentmonkey on other platforms
+            const data = {
+              version: 1,
+              code,
+              more: {
+                custom: script.custom,
+                enabled: script.config.enabled,
+                update: script.config.shouldUpdate,
+              },
+            };
+            remoteMeta.info[script.props.uri] = {
+              modified: script.props.lastModified,
+              position: script.props.position,
+            };
+            remoteChanged = true;
+            return this.put(getFilename(script.props.uri), JSON.stringify(data));
           });
-          remoteMeta.info[item.uri] = {
-            modified: item.custom.modified,
-            position: item.position,
-          };
-          remoteChanged = true;
-          return this.put(getFilename(item.uri), data);
         }),
         ...delRemote.map(item => {
           this.log('Remove remote script:', item.uri);
@@ -400,17 +416,19 @@ export const BaseService = serviceFactory({
           remoteChanged = true;
           return this.remove(getFilename(item.uri));
         }),
-        ...delLocal.map(item => {
-          this.log('Remove local script:', item.uri);
-          return removeScript(item.id);
+        ...delLocal.map(script => {
+          this.log('Remove local script:', script.props.uri);
+          return removeScript(script.props.id);
         }),
       ];
-      promiseQueue.push(Promise.all(promiseQueue).then(() => checkPosition()).then(changed => {
+      promiseQueue.push(Promise.all(promiseQueue).then(() => normalizePosition()).then(changed => {
         if (!changed) return;
         remoteChanged = true;
-        return getScriptsByIndex('position', null, null, item => {
-          const remoteInfo = remoteMeta.info[item.uri];
-          if (remoteInfo) remoteInfo.position = item.position;
+        return getScripts().then(scripts => {
+          scripts.forEach(script => {
+            const remoteInfo = remoteMeta.info[script.props.uri];
+            if (remoteInfo) remoteInfo.position = script.props.position;
+          });
         });
       }));
       promiseQueue.push(Promise.all(promiseQueue).then(() => {
@@ -439,11 +457,8 @@ export const BaseService = serviceFactory({
   },
 });
 
-export function register(factory) {
-  const service = typeof factory === 'function' ? factory() : factory;
-  serviceNames.push(service.name);
-  services[service.name] = service;
-  return service;
+export function register(Factory) {
+  serviceClasses.push(Factory);
 }
 function getCurrent() {
   return syncConfig.get('current');
@@ -452,6 +467,13 @@ function getService(name) {
   return services[name || getCurrent()];
 }
 export function initialize() {
+  syncConfig = initConfig();
+  serviceClasses.forEach(Factory => {
+    const service = new Factory();
+    const { name } = service;
+    serviceNames.push(name);
+    services[name] = service;
+  });
   const service = getService();
   if (service) service.checkSync();
 }

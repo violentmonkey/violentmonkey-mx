@@ -1,4 +1,4 @@
-import { getUniqId, bindEvents, Promise } from '../utils';
+import { getUniqId, bindEvents, Promise, attachFunction, console, throttle } from '../utils';
 import { includes, forEach, map, utf8decode } from './helpers';
 import bridge from './bridge';
 import { onRequestCreate, onRequestStart, onRequestCallback } from './requests';
@@ -21,32 +21,25 @@ export default function initialize(webId, contentId, props) {
   bridge.checkLoad();
 }
 
-const commands = {};
-const ainject = {};
-const values = {};
+const store = {
+  commands: {},
+  values: {},
+};
 
 const handlers = {
   LoadScripts: onLoadScripts,
   Command(data) {
-    const func = commands[data];
+    const func = store.commands[data];
     if (func) func();
   },
   GotRequestId: onRequestStart,
   HttpRequested: onRequestCallback,
   TabClosed: onTabClosed,
-  UpdateValues(data) {
-    if (values[data.uri]) values[data.uri] = data.values;
+  UpdateValues({ id, values }) {
+    if (store.values[id]) store.values[id] = values;
   },
   NotificationClicked: onNotificationClicked,
   NotificationClosed: onNotificationClosed,
-  // advanced inject
-  Injected(id) {
-    const item = ainject[id];
-    const func = window[`VM_${id}`];
-    delete window[`VM_${id}`];
-    delete ainject[id];
-    if (item && func) runCode(item[0], func, item[1], item[2]);
-  },
   ScriptChecked(data) {
     if (bridge.onScriptChecked) bridge.onScriptChecked(data);
   },
@@ -64,7 +57,7 @@ function onLoadScripts(data) {
   bridge.version = data.version;
   if (includes([
     'greasyfork.org',
-  ], location.host)) {
+  ], window.location.host)) {
     exposeVM();
   }
   // reset load and checkLoad
@@ -85,13 +78,13 @@ function onLoadScripts(data) {
   };
   if (data.scripts) {
     forEach(data.scripts, script => {
-      values[script.uri] = data.values[script.uri] || {};
-      if (script && script.enabled) {
-        const list = listMap[(
-          script.custom.runAt || script.custom['run-at'] ||
-          script.meta.runAt || script.meta['run-at']
-        )] || end;
+      if (script && script.config.enabled) {
+        // XXX: use camelCase since v2.6.3
+        const runAt = script.custom.runAt || script.custom['run-at']
+          || script.meta.runAt || script.meta['run-at'];
+        const list = listMap[runAt] || end;
         list.push(script);
+        store.values[script.props.id] = data.values[script.props.id];
       }
     });
     run(start);
@@ -99,13 +92,15 @@ function onLoadScripts(data) {
   bridge.checkLoad();
   function buildCode(script) {
     const requireKeys = script.meta.require || [];
-    const wrapper = wrapGM(script, data.cache);
+    const pathMap = script.custom.pathMap || {};
+    const code = data.code[script.props.id] || '';
+    const wrapper = wrapGM(script, code, data.cache);
     // Must use Object.getOwnPropertyNames to list unenumerable properties
-    const wrapperKeys = Object.getOwnPropertyNames(wrapper);
-    const wrapperInit = map(wrapperKeys, name => `this["${name}"]=${name}`).join(';');
+    const argNames = Object.getOwnPropertyNames(wrapper);
+    const wrapperInit = map(argNames, name => `this["${name}"]=${name}`).join(';');
     const codeSlices = [`${wrapperInit};with(this)!function(){`];
     forEach(requireKeys, key => {
-      const requireCode = data.require[key];
+      const requireCode = data.require[pathMap[key] || key];
       if (requireCode) {
         codeSlices.push(requireCode);
         // Add `;` to a new line in case script ends with comment lines
@@ -113,22 +108,26 @@ function onLoadScripts(data) {
       }
     });
     // wrap code to make 'use strict' work
-    codeSlices.push(`!function(){${script.code}\n}.call(this)`);
+    codeSlices.push(`!function(){${code}\n}.call(this)`);
     codeSlices.push('}.call(this);');
-    const code = codeSlices.join('\n');
-    const name = script.custom.name || script.meta.name || script.id;
-    const args = map(wrapperKeys, key => wrapper[key]);
+    const codeConcat = codeSlices.join('\n');
+    const name = script.custom.name || script.meta.name || script.props.id;
+    const args = map(argNames, key => wrapper[key]);
     const thisObj = wrapper.window || wrapper;
-    const id = getUniqId();
-    ainject[id] = [name, args, thisObj];
-    bridge.post({ cmd: 'Inject', data: [id, wrapperKeys, code] });
+    const id = `VMin${getUniqId()}`;
+    const callbackId = `VMcb${getUniqId()}`;
+    attachFunction(callbackId, () => {
+      const func = window[id];
+      if (func) runCode(name, func, args, thisObj);
+    });
+    bridge.post({ cmd: 'Inject', data: [id, argNames, codeConcat, callbackId] });
   }
   function run(list) {
     while (list.length) buildCode(list.shift());
   }
 }
 
-function wrapGM(script, cache) {
+function wrapGM(script, code, cache) {
   // Add GM functions
   // Reference: http://wiki.greasespot.net/Greasemonkey_Manual:API
   const gm = {};
@@ -154,14 +153,17 @@ function wrapGM(script, cache) {
     o: val => JSON.parse(val),
     '': val => val,
   };
+  const pathMap = script.custom.pathMap || {};
+  const throttledDumpValues = throttle(dumpValues, 200);
+  const matches = code.match(/\/\/\s+==UserScript==\s+([\s\S]*?)\/\/\s+==\/UserScript==\s/);
+  const metaStr = matches ? matches[1] : '';
   const gmFunctions = {
     unsafeWindow: { value: window },
     GM_info: {
       get() {
-        const matches = script.code.match(/\/\/\s+==UserScript==\s+([\s\S]*?)\/\/\s+==\/UserScript==\s/);
         const obj = {
-          scriptMetaStr: matches ? matches[1] : '',
-          scriptWillUpdate: !!script.update,
+          scriptMetaStr: metaStr,
+          scriptWillUpdate: !!script.config.shouldUpdate,
           scriptHandler: 'Violentmonkey',
           version: bridge.version,
           script: {
@@ -185,14 +187,14 @@ function wrapGM(script, cache) {
     },
     GM_deleteValue: {
       value(key) {
-        const value = getValues();
+        const value = loadValues();
         delete value[key];
-        saveValues();
+        throttledDumpValues();
       },
     },
     GM_getValue: {
       value(key, def) {
-        const value = getValues();
+        const value = loadValues();
         const raw = value[key];
         if (raw) {
           const type = raw[0];
@@ -210,7 +212,7 @@ function wrapGM(script, cache) {
     },
     GM_listValues: {
       value() {
-        return Object.keys(getValues());
+        return Object.keys(loadValues());
       },
     },
     GM_setValue: {
@@ -218,16 +220,16 @@ function wrapGM(script, cache) {
         const type = (typeof val)[0];
         const handle = dataEncoders[type] || dataEncoders[''];
         const raw = type + handle(val);
-        const value = getValues();
+        const value = loadValues();
         value[key] = raw;
-        saveValues();
+        throttledDumpValues();
       },
     },
     GM_getResourceText: {
       value(name) {
         if (name in resources) {
-          const uri = resources[name];
-          const raw = cache[uri];
+          const key = resources[name];
+          const raw = cache[pathMap[key] || key];
           const text = raw && utf8decode(window.atob(raw));
           return text;
         }
@@ -239,7 +241,7 @@ function wrapGM(script, cache) {
           const key = resources[name];
           let blobUrl = urls[key];
           if (!blobUrl) {
-            const raw = cache[key];
+            const raw = cache[pathMap[key] || key];
             if (raw) {
               // Binary string is not supported by blob constructor,
               // so we have to transform it into array buffer.
@@ -263,9 +265,9 @@ function wrapGM(script, cache) {
       },
     },
     GM_log: {
-      value(data) {
+      value(...args) {
         // eslint-disable-next-line no-console
-        console.log(`[Violentmonkey][${script.meta.name || 'No name'}]`, data);
+        console.log(`[Violentmonkey][${script.meta.name || 'No name'}]`, ...args);
       },
     },
     GM_openInTab: {
@@ -279,7 +281,7 @@ function wrapGM(script, cache) {
     },
     GM_registerMenuCommand: {
       value(cap, func, acc) {
-        commands[cap] = func;
+        store.commands[cap] = func;
         bridge.post({ cmd: 'RegisterMenu', data: [cap, acc] });
       },
     },
@@ -314,8 +316,8 @@ function wrapGM(script, cache) {
     if (prop) addProperty(name, prop, gm);
   });
   return gm;
-  function getValues() {
-    return values[script.uri];
+  function loadValues() {
+    return store.values[script.props.id];
   }
   function propertyToString() {
     return '[Violentmonkey property]';
@@ -326,12 +328,12 @@ function wrapGM(script, cache) {
     Object.defineProperty(obj, name, prop);
     if (typeof obj[name] === 'function') obj[name].toString = propertyToString;
   }
-  function saveValues() {
+  function dumpValues() {
     bridge.post({
       cmd: 'SetValue',
       data: {
-        uri: script.uri,
-        values: getValues(),
+        where: { id: script.props.id },
+        values: loadValues(),
       },
     });
   }

@@ -31,7 +31,7 @@ module.exports = {
     }],
     // allow debugger during development
     'no-debugger': process.env.NODE_ENV === 'production' ? 2 : 0,
-    'no-console': ['error', {
+    'no-console': ['warn', {
       allow: ['error', 'warn', 'info'],
     }],
     'no-param-reassign': ['error', {
@@ -44,7 +44,6 @@ module.exports = {
     'no-bitwise': ['error', { int32Hint: true }],
     'no-underscore-dangle': 'off',
     'arrow-parens': ['error', 'as-needed'],
-    'indent': ['error', 2, { MemberExpression: 0 }],
     'prefer-promise-reject-errors': 'off',
     'prefer-destructuring': ['error', { array: false }],
     indent: ['error', 2, {

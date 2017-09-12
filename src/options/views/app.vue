@@ -7,7 +7,7 @@
       <div class="sidemenu">
         <a href="#?t=Installed" :class="{active: tab === 'Installed'}" v-text="i18n('sideMenuInstalled')"></a>
         <feature name="settings" tag="a" href="#?t=Settings" :class="{active: tab === 'Settings'}">
-          <span v-text="i18n('sideMenuSettings')" class="feature-text"></span>
+          <span class="feature-text" v-text="i18n('sideMenuSettings')"></span>
         </feature>
         <a href="#?t=About" :class="{active: tab === 'About'}" v-text="i18n('sideMenuAbout')"></a>
       </div>
