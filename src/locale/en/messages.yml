@@ -518,3 +518,15 @@ labelSearchScript:
 labelNoSearchScripts:
   description: Message shown when no script is found in search results.
   message: No script is found.
+labelRemoved:
+  description: Label shown when a script is removed.
+  message: '[Removed]'
+buttonUndo:
+  description: Button to undo removement of a script.
+  message: Undo
+buttonHome:
+  description: Button to open homepage.
+  message: Homepage
+buttonSupport:
+  description: Button to open support page.
+  message: Support page

@@ -520,3 +520,15 @@ labelSearchScript:
 labelNoSearchScripts:
   description: Message shown when no script is found in search results.
   message: ''
+labelRemoved:
+  description: Label shown when a script is removed.
+  message: ''
+buttonUndo:
+  description: Button to undo removement of a script.
+  message: ''
+buttonHome:
+  description: Button to open homepage.
+  message: ''
+buttonSupport:
+  description: Button to open support page.
+  message: ''
