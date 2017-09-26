@@ -274,7 +274,7 @@ msgImported:
   description: >-
     Message shown after import. There is an argument referring to the count of
     scripts imported.
-  message: $1 öğe kullanılmak üzere alındı.
+  message: '$1' öğe kullanılmak üzere alındı.
 hintUseDownloadURL:
   description: Shown as a place holder for @updateURL when it is not assigned
   message: Use @downloadURL
@@ -333,7 +333,7 @@ buttonReplaceAll:
   message: Hepsi
 labelIgnoreGrant:
   description: Option to suppress no @grant warnings.
-  message: `@grant` izin bulunmama uyarılarını engelle
+  message: '@grant' izin bulunmama uyarılarını engelle
   touched: false
 labelAutoReloadCurrentTab:
   description: Option to reload current tab after a script is switched on or off from menu.
