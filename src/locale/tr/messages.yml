@@ -277,7 +277,7 @@ msgImported:
   message: '$1' öğe kullanılmak üzere alındı.
 hintUseDownloadURL:
   description: Shown as a place holder for @updateURL when it is not assigned
-  message: Use @downloadURL
+  message: '@downloadURL Kullan'
 confirmNotSaved:
   description: Confirm message shown when there are unsaved script modifications.
   message: |-
@@ -333,7 +333,7 @@ buttonReplaceAll:
   message: Hepsi
 labelIgnoreGrant:
   description: Option to suppress no @grant warnings.
-  message: '@grant' izin bulunmama uyarılarını engelle
+  message: '@grant izin bulunmama uyarılarını engelle'
   touched: false
 labelAutoReloadCurrentTab:
   description: Option to reload current tab after a script is switched on or off from menu.
