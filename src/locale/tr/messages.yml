@@ -12,6 +12,540 @@ msgUpdated:
   description: Message shown when a script is updated/reinstalled.
   message: Script güncellendi
 msgErrorFetchingScript:
+﻿extName:
+  description: Name of this extension.
+  message: Violentmonkey
+extDescription:
+  description: Description for this extension.
+  message: Maxthon için Userscript desteği.
+extTranslator:
+  description: Information of the translator.
+  message: Erdem Uysal <erdem@erdemuysal.net> - Taha Yasin Hatay <arrest.anarchy@gmail.com>
+  touched: false
+msgUpdated:
+  description: Message shown when a script is updated/reinstalled.
+  message: Script güncellendi
+msgErrorFetchingScript:
+  description: Message shown when Violentmonkey fails fetching a new version of the script.
+  message: Script alınamadı!
+msgInstalled:
+  description: Message shown when a script is installed.
+  message: Script kuruldu.
+Warning:
+  description: Show warnings with a notification.
+  message: Uyarı
+  touched: false
+msgWarnGrant:
+  description: Message shown when `@grant` is not found in a script.
+  message: 'Script [$1] içerisinde `@grant` satırı yok! Detaylı inceleme için tıklayın.'
+  touched: false
+labelNoName:
+  description: Text as the name of a script when no @name is assigned.
+  message: İsimsiz
+msgUpdating:
+  description: Message shown when a new version of script is being fetched.
+  message: Güncelleniyor...
+msgNewVersion:
+  description: >-
+    Message shown when a new version of script is found by @updateURL, but no
+    @downloadURL is provided.
+  message: Yeni sürüm bulundu.
+msgCheckingForUpdate:
+  description: Message shown when a script is being checked for updates by version numbers.
+  message: Güncellemeler denetleniyor...
+msgErrorFetchingUpdateInfo:
+  description: Message shown when Violentmonkey fails fetching version data of the script.
+  message: Güncelleme bilgisi alınamadı.
+msgNoUpdate:
+  description: Message shown when there is no new version of a script.
+  message: Daha güncel bir sürüm bulunmuyor.
+labelInstall:
+  description: Shown in the title of the confirm page while trying to install a script.
+  message: Script yükleniyor
+buttonInstallOptions:
+  description: Button to show options of installation confirm page.
+  message: Options
+installOptionClose:
+  description: Option to close confirm window after installation.
+  message: ''
+installOptionTrack:
+  description: Option to track the loading local file before window is closed.
+  message: Track local file before this window is closed
+buttonConfirmInstallation:
+  description: Button to confirm installation of a script.
+  message: Yüklemeyi onayla
+buttonClose:
+  description: Button to close window.
+  message: Kapat
+msgErrorLoadingData:
+  description: >-
+    Message shown on confirm page when the script to be installed cannot be
+    loaded.
+  message: Script yüklenemedi.
+msgLoadedData:
+  description: >-
+    Message shown in the confirm page when a javascript file to be installed is
+    loaded.
+  message: Script yüklendi.
+msgErrorLoadingDependency:
+  description: Message shown when not all requirements are loaded successfully.
+  message: Gereksinimler yüklenemedi.
+msgLoadingDependency:
+  description: Message shown on confirm page when the requirements are being downloaded.
+  message: Gereksinimler yükleniyor... ($1/$2)
+msgScriptURL:
+  description: URL of the script to be installed on confirm page.
+  message: 'Script link: $1'
+  touched: false
+msgLoadingData:
+  description: Message shown on confirm page when the script to be installed is loading.
+  message: Script yükleniyor...
+sideMenuInstalled:
+  description: 'Side menu: Installed scripts'
+  message: Yüklenmiş scriptler
+sideMenuSettings:
+  description: 'Side menu: Settings'
+  message: Ayarlar
+sideMenuAbout:
+  description: 'Side menu: About'
+  message: Hakkında
+buttonNew:
+  description: Button to create a new script.
+  message: Yeni
+buttonUpdateAll:
+  description: Check all scripts for updates.
+  message: Tüm güncellemeleri kontrol et
+anchorGetMoreScripts:
+  description: Link to get more scripts.
+  message: Daha Fazla Script Al...
+  touched: false
+msgLoading:
+  description: Message shown in the options page before script list is loaded.
+  message: Yükleniyor...
+labelSettings:
+  description: Label shown on the top of settings page
+  message: Ayarlar
+labelAutoUpdate:
+  description: Option to allow automatically checking scripts for updates every 24 hours.
+  message: Güncellemeleri otomatik olarak günlük kontrol et
+labelShowBadge:
+  description: Option to show number of running scripts on the badge.
+  message: Simge üzerinde çalışan script sayısını göster.
+labelStartReload:
+  description: Option to reload pages on extension start
+  message: Uzantı başladığında sayfayı yenile
+labelReloadHTTPS:
+  description: Option to reload HTTPS pages on extension start
+  message: Reload HTTPS pages
+labelDataImport:
+  description: Section title of data import.
+  message: İçe aktar
+buttonImportData:
+  description: Button to choose a file for data import.
+  message: Zip dosyadan al
+buttonVacuum:
+  description: Button to vacuum extension data.
+  message: Veritabanını vakumla
+labelDataExport:
+  description: Section title of data export.
+  message: Dışa aktar
+labelScriptsToExport:
+  description: Label shown on top of the script list for export.
+  message: Scriptleri dışa aktar
+  touched: false
+labelExportScriptData:
+  description: Option to export script data along with scripts.
+  message: Script verisini dışa aktar
+buttonAllNone:
+  description: Button to select all scripts or none.
+  message: Hepsi/Hiçbiri
+buttonExportData:
+  description: Button to open the data export dialog.
+  message: Zip dosyaya aktar
+labelAbout:
+  description: Label shown on top of the about page.
+  message: Violentmonkey Hakkında
+labelRelated:
+  description: Label of related links.
+  message: 'Related links: '
+anchorSupportPage:
+  description: Link to the support page of Violentmonkey.
+  message: >-
+    <a href=https://github.com/gera2ld/Violentmonkey-mx/wiki
+    target=_blank>Violentmonkey</a>
+  touched: false
+labelDonate:
+  description: Label of link to donate page.
+  message: Donate
+labelFeedback:
+  description: Label of link to feedback page.
+  message: Feedback
+labelAuthor:
+  description: Label of author shown in the details of a script.
+  message: 'Yazar: '
+anchorAuthor:
+  description: Author shown on about tab.
+  message: '<a href=mailto:gera2ld@163.com>Gerald</a>'
+labelTranslator:
+  description: Label of translator.
+  message: 'Çevirmen: '
+anchorTranslator:
+  description: Translator shown on about tab.
+  message: '<a href=mailto:erdem@erdemuysal.net>Erdem Uysal</a> - <a href=mailto:arrest.anarchy@gmail.com>Taha Yasin Hatay</a>  '
+labelCurrentLang:
+  description: Label of current language.
+  message: 'Geçerli Dil: '
+labelScriptEditor:
+  description: Shown in the title of the script editing page.
+  message: Script editörü
+buttonCustomMeta:
+  description: Button to edit the custom meta data of a script.
+  message: Özel meta data
+  touched: false
+labelName:
+  description: Label of script name.
+  message: 'İsim:'
+labelRunAt:
+  description: Label of script @run-at properties in custom meta data.
+  message: 'Çalışacak:'
+labelRunAtDefault:
+  description: Shown when custom @run-at is not assigned.
+  message: (Varsayılan)
+labelHomepageURL:
+  description: Label of script @homepageURL in custom meta data.
+  message: 'Ana sayfa:'
+labelUpdateURL:
+  description: Label of script @updateURL in custom meta data.
+  message: 'Güncelleme linki:'
+labelDownloadURL:
+  description: Label of script @downloadURL in custom meta data.
+  message: 'İndirme Linki:'
+labelInclude:
+  description: Label of @include rules.
+  message: Dahil edilenler
+labelKeepInclude:
+  description: Option to keep the original @include rules.
+  message: Orjinal dahiliyet kurallarını kullan
+  touched: false
+labelCustomInclude:
+  description: Label of custom @include rules.
+  message: 'Özel dahiliyet kuralları: <em>(Satır başına)</em>'
+  touched: false
+labelMatch:
+  description: Label of @match rules.
+  message: Eşleşmeler
+labelKeepMatch:
+  description: Option to keep the original @match rules.
+  message: Orjinal eşleşme kurallarını kullan
+  touched: false
+labelCustomMatch:
+  description: Label of custom @match rules.
+  message: 'Özel eşleşme kuralları: <em>(Satır başına)</em>'
+  touched: false
+labelExclude:
+  description: Label of @exclude rules.
+  message: Hariç bırakılanlar
+labelKeepExclude:
+  description: Option to keep the original @exclude rules.
+  message: Orjinal hariciyet kurallarını kullan
+  touched: false
+labelCustomExclude:
+  description: Label of custom @exclude rules.
+  message: 'Özel hariciyet kuralları: <em>(Satır başına)</em>'
+  touched: false
+labelAllowUpdate:
+  description: Option to allow checking updates for a script.
+  message: Güncellemeye izin ver
+buttonSave:
+  description: Button to save modifications of a script.
+  message: Kaydet
+buttonSaveClose:
+  description: Button to save modifications of a script and then close the editing page.
+  message: Kaydet ve Kapat
+labelNoScripts:
+  description: Message shown when no script is installed.
+  message: 'Oops, you haven''t got any script yet.'
+hintSupportPage:
+  description: Hint for support page.
+  message: Destek sayfası
+  touched: false
+buttonDisable:
+  description: Button to disable a script.
+  message: Devre dışı
+buttonEnable:
+  description: Button to enable a script.
+  message: Etkinleştir
+buttonEdit:
+  description: Button to edit a script.
+  message: Düzenle
+buttonRemove:
+  description: Button to remove a script.
+  message: Kaldır
+buttonUpdate:
+  description: Check a script for updates.
+  message: Güncellemeleri kontrol et
+msgImported:
+  description: >-
+    Message shown after import. There is an argument referring to the count of
+    scripts imported.
+  message: '$1 öğe kullanılmak üzere alındı.'
+hintUseDownloadURL:
+  description: Shown as a place holder for @updateURL when it is not assigned
+  message: '@downloadURL Kullan'
+confirmNotSaved:
+  description: Confirm message shown when there are unsaved script modifications.
+  message: |-
+    Değişiklikler kaydedilmedi!
+    Tamam'a basarak değiştir ya da İptal ile değiştirmeden çık.
+buttonVacuuming:
+  description: Message shown when data vacuum is in progress.
+  message: Veriler vakumlanıyor...
+buttonVacuumed:
+  description: Message shown when data is vacuumed.
+  message: Veriler vakumlandı
+hintVacuum:
+  description: Hint for vacuuming data.
+  message: >-
+    Gereksiz verileri temizleyin ve gerekli kaynakların ön belleğe yüklenmesini
+    sağlayın.
+menuManageScripts:
+  description: 'Menu item to manage scripts, or to open the options page of the extension.'
+  message: Scriptleri yönet
+  touched: false
+menuFindScripts:
+  description: Menu item to find scripts for a site.
+  message: Bu site için script ara
+menuBack:
+  description: Menu item to go back to main menu from script commands.
+  message: Geri
+  touched: false
+menuCommands:
+  description: Menu item to list script commands.
+  message: Script komutları...
+menuScriptEnabled:
+  description: 'Menu item showing the status of Violentmonkey, when enabled.'
+  message: Scriptler Etkinleştirildi
+labelSearch:
+  description: Label for search input in search box.
+  message: 'Ara: '
+labelSearchFor:
+  description: Text shown as a place holder in the search box.
+  message: Ara...
+  touched: false
+labelReplace:
+  description: Label for replace input in search box.
+  message: 'İle değiştir: '
+labelReplaceWith:
+  description: Text shown as a place holder in the replace box.
+  message: İle değiştir...
+  touched: false
+buttonReplace:
+  description: Button to replace the current match.
+  message: Değiştir
+buttonReplaceAll:
+  description: Button to replace all matches.
+  message: Hepsi
+labelIgnoreGrant:
+  description: Option to suppress no @grant warnings.
+  message: '@grant izin bulunmama uyarılarını engelle'
+  touched: false
+labelAutoReloadCurrentTab:
+  description: Option to reload current tab after a script is switched on or off from menu.
+  message: Bir script dosyasını menüden açıp / kapattıktan sonra geçerli sekmeyi yeniden yükle
+labelInjectMode:
+  description: Label for a combo box to choose script injection modes.
+  message: 'Script enjekte modu:'
+  touched: false
+injectModeNormal:
+  description: 'Script injection mode: Normal'
+  message: Normal
+  touched: false
+injectModeAdvanced:
+  description: 'Script injection mode: Advanced'
+  message: Gelişmiş
+  touched: false
+hintInjectModeNormal:
+  description: Hint to explain the normal injection mode.
+  message: ''
+  touched: false
+hintInjectModeAdvanced:
+  description: Hint to explain the advanced injection mode.
+  message: Etkin durumda. Ancak bazı yüksek güvenlik sayfalarında başarısız, ör. https://github.com
+  touched: false
+hintInputURL:
+  description: Hint for a prompt box to input URL of a user script.
+  message: 'URL Girdisi:'
+buttonInstallFromURL:
+  description: Button to ask for URL of a user script.
+  message: URL den yükle
+msgNamespaceConflict:
+  description: >-
+    Message shown when namespace of the new script conflicts with an existent
+    one.
+  message: Script isiminde anlaşmazlık! Lütfen @name ve @namespace alanlarını düzenleyin.
+labelSyncTo:
+  description: Label for sync service.
+  message: '$1 e eşitle'
+  touched: false
+buttonAuthorized:
+  description: Button shown when permissions are already authorized for sync.
+  message: Yetkilendirildi
+  touched: false
+buttonAuthorizing:
+  description: Button shown when authorization is in progress.
+  message: Yetkilendiriliyor
+  touched: false
+buttonAuthorize:
+  description: Button to authorize permissions for sync.
+  message: Yetkilendirme
+  touched: false
+msgSyncInit:
+  description: Message shown when sync service is initializing.
+  message: Başlatılıyor..
+msgSyncInitError:
+  description: Message shown when sync fails in initialization.
+  message: Başlatma hatası!
+msgSyncError:
+  description: Message shown when sync failed.
+  message: Eşitlendirme başarısız!
+msgSyncReady:
+  description: Message shown when sync will start soon.
+  message: Eşitleme az sonra başlayacak...
+msgSyncing:
+  description: Message shown when sync is in progress.
+  message: Eşitleme çalışıyor...
+lastSync:
+  description: Label for last sync timestamp.
+  message: Son eşitleme zamanı $1
+labelSync:
+  description: Label for sync options.
+  message: Eşitleme
+msgInvalidScript:
+  description: Message shown when script is invalid.
+  message: Geçersiz Script
+menuScriptDisabled:
+  description: 'Menu item showing the status of Violentmonkey, when disabled.'
+  message: Scriptler deaktif edildi
+labelLineNumber:
+  description: Label for line number jumper.
+  message: 'Satır no: '
+msgSavedBlacklist:
+  description: Message shown when blacklist are saved.
+  message: Karaliste güncellendi
+msgSavedCustomCSS:
+  description: Message shown when custom CSS is saved.
+  message: Geçerli Stil güncellendi.
+labelSyncDisabled:
+  description: Label for option to disable sync service.
+  message: Hiçbiri
+labelSyncAuthorizing:
+  description: Label for button when authorization is in progress.
+  message: Yetkilendiriliyor
+labelSyncRevoke:
+  description: Label for button to revoke authorization for a service.
+  message: Geri al
+labelSyncAuthorize:
+  description: Label for button to authorize a service.
+  message: Yetkilendirme
+menuDashboard:
+  description: Label for menu item to open dashboard.
+  message: Paneli aç
+menuMatchedScripts:
+  description: Label for menu listing matched scripts.
+  message: Scripler işaretlendi
+labelGeneral:
+  description: Label for general settings.
+  message: Genel
+labelBlacklist:
+  description: Label for global blacklist settings in security section.
+  message: Kara liste
+descBlacklist:
+  description: HTML Description for the global blacklist.
+  message: Listede bulunan işaretli URL script tarafından enjekte edilmeyecek.
+buttonSaveBlacklist:
+  description: Button to save global blacklist.
+  message: Kaydet
+labelCustomCSS:
+  description: Label for custom CSS section.
+  message: Geçerli Stil
+descCustomCSS:
+  description: Description of custom CSS section.
+  message: >-
+    Seçenekler sayfası ve script yükleme sayfası için geçerli stil.
+    Eğer ne yaptığınızdan emin değilseniz, lütfen düzenleme yapmayınız.
+buttonSaveCustomCSS:
+  description: Label for button to save custom CSS.
+  message: Kaydet
+labelSyncService:
+  description: Label for sync service select.
+  message: Şuna eşitle
+labelSyncSettings:
+  description: Label for sync settings.
+  message: Ayarlar
+  touched: false
+labelSyncScriptStatus:
+  description: Label for option to sync script status.
+  message: Eşitlenen script durumu
+buttonOK:
+  description: OK button on dialog.
+  message: Tamam
+buttonCancel:
+  description: Cancel button on dialog.
+  message: İptal
+editNavCode:
+  description: Label of code tab in script editor.
+  message: Code
+editNavSettings:
+  description: Label of settings tab in script editor.
+  message: Ayarlar
+editLabelSettings:
+  description: Settings section in settings tab of script editor.
+  message: Script ayarları
+editLabelMeta:
+  description: Metadata section in settings tab of script editor.
+  message: Geçerli metadata
+labelKeepOriginal:
+  description: Option to keep the original match or ignore rules.
+  message: Orjinali Sakla
+labelExcludeMatch:
+  description: Label of @exclude-match rules.
+  message: '@exclude-match Kuralları'
+learnBlacklist:
+  description: Refers to a link to introduce blacklist patterns.
+  message: Kara liste kalıpları hakkında daha fazlasını öğren.
+labelImportSettings:
+  description: Label for option to import settings from zip file.
+  message: İçeri aktarma ayarları
+titleScriptUpdated:
+  description: Notification title for script updates.
+  message: Güncelleme
+msgScriptUpdated:
+  description: Notification message for script updates.
+  message: 'Script [$1] güncellendi!'
+labelNotifyUpdates:
+  description: Option to show notification when script is updated.
+  message: Script güncellemelerini bildir
+installFrom:
+  description: Label for button to install script from a userscript site.
+  message: '$1 den yükleme'
+labelSearchScript:
+  description: Placeholder for script search box.
+  message: Script Arama...
+labelNoSearchScripts:
+  description: Message shown when no script is found in search results.
+  message: ArananScript bulunamadı.
+labelRemoved:
+  description: Label shown when a script is removed.
+  message: '[Silindi]'
+buttonUndo:
+  description: Button to undo removement of a script.
+  message: Geri al
+buttonHome:
+  description: Button to open homepage.
+  message: Anasayfa
+buttonSupport:
+  description: Button to open support page.
+  message: Destek
   description: Message shown when Violentmonkey fails fetching a new version of the script.
   message: Script alınamadı!
 msgInstalled:
