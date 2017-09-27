@@ -177,7 +177,7 @@ labelTranslator:
   message: 'Çevirmen: '
 anchorTranslator:
   description: Translator shown on about tab.
-  message: '<a href=mailto:erdem@erdemuysal.net>Erdem Uysal</a> - <a href=mailto:arrest.anarchy@gmail.com>Taha Yasin Hatay</a>  '
+  message: '<a href=mailto:erdem@erdemuysal.net>Erdem Uysal</a> - <a href=mailto:arrest.anarchy@gmail.com>Taha Yasin Hatay</a>'
 labelCurrentLang:
   description: Label of current language.
   message: 'Geçerli Dil: '
