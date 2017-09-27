@@ -6,7 +6,7 @@ extDescription:
   message: Maxthon için Userscript desteği.
 extTranslator:
   description: Information of the translator.
-  message: Erdem Uysal <erdem@erdemuysal.net>
+  message: Erdem Uysal <erdem@erdemuysal.net> - Taha Yasin Hatay <arrest.anarchy@gmail.com>
   touched: false
 msgUpdated:
   description: Message shown when a script is updated/reinstalled.
@@ -19,13 +19,11 @@ msgInstalled:
   message: Script kuruldu.
 Warning:
   description: Show warnings with a notification.
-  message: Warning
+  message: Uyarı
   touched: false
 msgWarnGrant:
   description: Message shown when `@grant` is not found in a script.
-  message: >-
-    Script [$1] has no `@grant` lines, which is not recommended and may cause
-    failures. Click to see more details.
+  message: 'Script [$1] içerisinde `@grant` satırı yok! Detaylı inceleme için tıklayın.'
   touched: false
 labelNoName:
   description: Text as the name of a script when no @name is assigned.
@@ -179,10 +177,10 @@ labelTranslator:
   message: 'Çevirmen: '
 anchorTranslator:
   description: Translator shown on about tab.
-  message: '<a href=mailto:erdem@erdemuysal.net>Erdem Uysal</a>'
+  message: '<a href=mailto:erdem@erdemuysal.net>Erdem Uysal</a> - <a href=mailto:arrest.anarchy@gmail.com>Taha Yasin Hatay</a>'
 labelCurrentLang:
   description: Label of current language.
-  message: 'Current language: '
+  message: 'Geçerli Dil: '
 labelScriptEditor:
   description: Shown in the title of the script editing page.
   message: Script editörü
@@ -276,10 +274,10 @@ msgImported:
   description: >-
     Message shown after import. There is an argument referring to the count of
     scripts imported.
-  message: $1 öğe kullanılmak üzere alındı.
+  message: '$1 öğe kullanılmak üzere alındı.'
 hintUseDownloadURL:
   description: Shown as a place holder for @updateURL when it is not assigned
-  message: Use @downloadURL
+  message: '@downloadURL Kullan'
 confirmNotSaved:
   description: Confirm message shown when there are unsaved script modifications.
   message: |-
@@ -335,22 +333,22 @@ buttonReplaceAll:
   message: Hepsi
 labelIgnoreGrant:
   description: Option to suppress no @grant warnings.
-  message: ''
+  message: '@grant izin bulunmama uyarılarını engelle'
   touched: false
 labelAutoReloadCurrentTab:
   description: Option to reload current tab after a script is switched on or off from menu.
-  message: ''
+  message: Bir script dosyasını menüden açıp / kapattıktan sonra geçerli sekmeyi yeniden yükle
 labelInjectMode:
   description: Label for a combo box to choose script injection modes.
-  message: ''
+  message: 'Script enjekte modu:'
   touched: false
 injectModeNormal:
   description: 'Script injection mode: Normal'
-  message: ''
+  message: Normal
   touched: false
 injectModeAdvanced:
   description: 'Script injection mode: Advanced'
-  message: ''
+  message: Gelişmiş
   touched: false
 hintInjectModeNormal:
   description: Hint to explain the normal injection mode.
@@ -358,177 +356,179 @@ hintInjectModeNormal:
   touched: false
 hintInjectModeAdvanced:
   description: Hint to explain the advanced injection mode.
-  message: ''
+  message: Etkin durumda. Ancak bazı yüksek güvenlik sayfalarında başarısız, ör. https://github.com
   touched: false
 hintInputURL:
   description: Hint for a prompt box to input URL of a user script.
-  message: ''
+  message: 'URL Girdisi:'
 buttonInstallFromURL:
   description: Button to ask for URL of a user script.
-  message: ''
+  message: URL den yükle
 msgNamespaceConflict:
   description: >-
     Message shown when namespace of the new script conflicts with an existent
     one.
-  message: ''
+  message: Script isiminde anlaşmazlık! Lütfen @name ve @namespace alanlarını düzenleyin.
 labelSyncTo:
   description: Label for sync service.
-  message: ''
+  message: '$1 e eşitle'
   touched: false
 buttonAuthorized:
   description: Button shown when permissions are already authorized for sync.
-  message: ''
+  message: Yetkilendirildi
   touched: false
 buttonAuthorizing:
   description: Button shown when authorization is in progress.
-  message: ''
+  message: Yetkilendiriliyor
   touched: false
 buttonAuthorize:
   description: Button to authorize permissions for sync.
-  message: ''
+  message: Yetkilendirme
   touched: false
 msgSyncInit:
   description: Message shown when sync service is initializing.
-  message: ''
+  message: Başlatılıyor..
 msgSyncInitError:
   description: Message shown when sync fails in initialization.
-  message: ''
+  message: Başlatma hatası!
 msgSyncError:
   description: Message shown when sync failed.
-  message: ''
+  message: Eşitlendirme başarısız!
 msgSyncReady:
   description: Message shown when sync will start soon.
-  message: ''
+  message: Eşitleme az sonra başlayacak...
 msgSyncing:
   description: Message shown when sync is in progress.
-  message: ''
+  message: Eşitleme çalışıyor...
 lastSync:
   description: Label for last sync timestamp.
-  message: ''
+  message: Son eşitleme zamanı $1
 labelSync:
   description: Label for sync options.
-  message: ''
+  message: Eşitleme
 msgInvalidScript:
   description: Message shown when script is invalid.
-  message: ''
+  message: Geçersiz Script
 menuScriptDisabled:
   description: 'Menu item showing the status of Violentmonkey, when disabled.'
-  message: ''
+  message: Scriptler deaktif edildi
 labelLineNumber:
   description: Label for line number jumper.
-  message: ''
+  message: 'Satır no: '
 msgSavedBlacklist:
   description: Message shown when blacklist are saved.
-  message: ''
+  message: Karaliste güncellendi
 msgSavedCustomCSS:
   description: Message shown when custom CSS is saved.
-  message: ''
+  message: Geçerli Stil güncellendi.
 labelSyncDisabled:
   description: Label for option to disable sync service.
-  message: ''
+  message: Hiçbiri
 labelSyncAuthorizing:
   description: Label for button when authorization is in progress.
-  message: ''
+  message: Yetkilendiriliyor
 labelSyncRevoke:
   description: Label for button to revoke authorization for a service.
-  message: ''
+  message: Geri al
 labelSyncAuthorize:
   description: Label for button to authorize a service.
-  message: ''
+  message: Yetkilendirme
 menuDashboard:
   description: Label for menu item to open dashboard.
-  message: ''
+  message: Paneli aç
 menuMatchedScripts:
   description: Label for menu listing matched scripts.
-  message: ''
+  message: Scripler işaretlendi
 labelGeneral:
   description: Label for general settings.
-  message: ''
+  message: Genel
 labelBlacklist:
   description: Label for global blacklist settings in security section.
-  message: ''
+  message: Kara liste
 descBlacklist:
   description: HTML Description for the global blacklist.
-  message: ''
+  message: Listede bulunan işaretli URL script tarafından enjekte edilmeyecek.
 buttonSaveBlacklist:
   description: Button to save global blacklist.
-  message: ''
+  message: Kaydet
 labelCustomCSS:
   description: Label for custom CSS section.
-  message: ''
+  message: Geçerli Stil
 descCustomCSS:
   description: Description of custom CSS section.
-  message: ''
+  message: >-
+    Seçenekler sayfası ve script yükleme sayfası için geçerli stil.
+    Eğer ne yaptığınızdan emin değilseniz, lütfen düzenleme yapmayınız.
 buttonSaveCustomCSS:
   description: Label for button to save custom CSS.
-  message: ''
+  message: Kaydet
 labelSyncService:
   description: Label for sync service select.
-  message: ''
+  message: Şuna eşitle
 labelSyncSettings:
   description: Label for sync settings.
-  message: ''
+  message: Ayarlar
   touched: false
 labelSyncScriptStatus:
   description: Label for option to sync script status.
-  message: ''
+  message: Eşitlenen script durumu
 buttonOK:
   description: OK button on dialog.
-  message: ''
+  message: Tamam
 buttonCancel:
   description: Cancel button on dialog.
-  message: ''
+  message: İptal
 editNavCode:
   description: Label of code tab in script editor.
-  message: ''
+  message: Code
 editNavSettings:
   description: Label of settings tab in script editor.
-  message: ''
+  message: Ayarlar
 editLabelSettings:
   description: Settings section in settings tab of script editor.
-  message: ''
+  message: Script ayarları
 editLabelMeta:
   description: Metadata section in settings tab of script editor.
-  message: ''
+  message: Geçerli metadata
 labelKeepOriginal:
   description: Option to keep the original match or ignore rules.
-  message: ''
+  message: Orjinali Sakla
 labelExcludeMatch:
   description: Label of @exclude-match rules.
-  message: ''
+  message: '@exclude-match Kuralları'
 learnBlacklist:
   description: Refers to a link to introduce blacklist patterns.
-  message: ''
+  message: Kara liste kalıpları hakkında daha fazlasını öğren.
 labelImportSettings:
   description: Label for option to import settings from zip file.
-  message: ''
+  message: İçeri aktarma ayarları
 titleScriptUpdated:
   description: Notification title for script updates.
-  message: ''
+  message: Güncelleme
 msgScriptUpdated:
   description: Notification message for script updates.
-  message: ''
+  message: 'Script [$1] güncellendi!'
 labelNotifyUpdates:
   description: Option to show notification when script is updated.
-  message: ''
+  message: Script güncellemelerini bildir
 installFrom:
   description: Label for button to install script from a userscript site.
-  message: ''
+  message: '$1 den yükleme'
 labelSearchScript:
   description: Placeholder for script search box.
-  message: ''
+  message: Script Arama...
 labelNoSearchScripts:
   description: Message shown when no script is found in search results.
-  message: ''
+  message: ArananScript bulunamadı.
 labelRemoved:
   description: Label shown when a script is removed.
-  message: ''
+  message: '[Silindi]'
 buttonUndo:
   description: Button to undo removement of a script.
-  message: ''
+  message: Geri al
 buttonHome:
   description: Button to open homepage.
-  message: ''
+  message: Anasayfa
 buttonSupport:
   description: Button to open support page.
-  message: ''
+  message: Destek
