@@ -17,3 +17,7 @@ export function notify(options) {
     isClickable: options.isClickable,
   });
 }
+
+export function broadcast(data) {
+  browser.tabs.sendMessage('CONTENT', data);
+}

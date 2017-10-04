@@ -3,7 +3,6 @@
     <aside>
       <img src="/icons/icon_64.png">
       <h1 v-text="i18n('extName')"></h1>
-      <hr>
       <div class="sidemenu">
         <a href="#?t=Installed" :class="{active: tab === 'Installed'}" v-text="i18n('sideMenuInstalled')"></a>
         <feature name="settings" tag="a" href="#?t=Settings" :class="{active: tab === 'Settings'}">

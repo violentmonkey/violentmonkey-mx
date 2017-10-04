@@ -22,6 +22,9 @@ const defaults = {
   startReload: true,
   reloadHTTPS: false,
   version: null,
+  filters: {
+    sort: 'exec',
+  },
 };
 let changes = {};
 const hooks = initHooks();

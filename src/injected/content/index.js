@@ -41,8 +41,8 @@ const bgHandlers = {
   GetPopup: getPopup,
   HttpRequested: httpRequested,
   TabClosed: tabClosed,
-  UpdateValues(data) {
-    bridge.post({ cmd: 'UpdateValues', data });
+  UpdatedValues(data) {
+    bridge.post({ cmd: 'UpdatedValues', data });
   },
   NotificationClick: onNotificationClick,
   NotificationClose: onNotificationClose,
@@ -86,8 +86,8 @@ const handlers = {
   Inject: injectScript,
   TabOpen: tabOpen,
   TabClose: tabClose,
-  SetValue(data) {
-    sendMessage({ cmd: 'SetValue', data });
+  UpdateValue(data) {
+    sendMessage({ cmd: 'UpdateValue', data });
   },
   RegisterMenu(data) {
     if (IS_TOP) menus.push(data);
