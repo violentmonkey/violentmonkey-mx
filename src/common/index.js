@@ -94,9 +94,14 @@ export function getLocaleString(meta, key) {
   return localeMeta || meta[key] || '';
 }
 
-const rt = window.external.mxGetRuntime();
-const br = rt && rt.create('mx.browser');
+const __rt = {};
 export function injectContent(script, tabId) {
+  let { br } = __rt;
+  if (!br) {
+    const rt = window.external.mxGetRuntime();
+    br = rt && rt.create('mx.browser');
+    __rt.br = br;
+  }
   br.executeScript(`if(window.mx)try{${script}}catch(e){}`, tabId);
 }
 

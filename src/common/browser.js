@@ -1,4 +1,5 @@
 import 'src/common/polyfills';
+import { injectContent } from 'src/common';
 
 const globalObj = typeof global !== 'undefined' ? global : window;
 
@@ -92,11 +93,11 @@ if (typeof browser === 'undefined') {
       const onMessageListeners = [];
       const promises = {};
       messenger.listen = listener => { onMessageListeners.push(listener); };
-      messenger.send = (target, data) => {
+      messenger.send = (target, data, isTab) => {
         const promise = new Promise((resolve, reject) => {
           const callback = `CALLBACK_${getUniqId()}`;
           promises[callback] = { resolve, reject };
-          rt.post(target, {
+          const payload = {
             source: {
               id: sourceId,
               callback,
@@ -106,7 +107,13 @@ if (typeof browser === 'undefined') {
               },
             },
             data,
-          });
+          };
+          if (isTab) {
+            injectContent(`handleTabMessage(${JSON.stringify(payload)})`, target);
+            resolve();
+          } else {
+            rt.post(target, payload);
+          }
         })
         .then(res => {
           if (res && res.error) throw res.error;
@@ -427,8 +434,8 @@ if (typeof browser === 'undefined') {
         const tab = getTabById(id);
         if (tab) tab.close();
       },
-      sendMessage(target, data) {
-        messenger.send(target, data);
+      sendMessage(tabId, data) {
+        messenger.send(tabId, data, true);
       },
       query(options) {
         const tabs = [];

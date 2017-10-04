@@ -52,10 +52,12 @@ export default function initialize(contentId, webId) {
   bridge.post = bindEvents(contentId, webId, onHandle);
   bridge.destId = webId;
 
-  browser.runtime.onMessage.addListener((req, src) => {
+  const handleMessage = (req, src) => {
     const handle = bgHandlers[req.cmd];
     if (handle) handle(req.data, src);
-  });
+  };
+  browser.runtime.onMessage.addListener(handleMessage);
+  window.handleTabMessage = ({ source, data }) => handleMessage(data, source);
 
   sendMessage({ cmd: 'GetInjected', data: window.location.href })
   .then(data => {
