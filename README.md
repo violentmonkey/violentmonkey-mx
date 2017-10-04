@@ -18,6 +18,6 @@ Build
 ---
 
 ``` sh
-$ npm run build --production
+$ npm run build
 # Then pack with the official packaging tool
 ```

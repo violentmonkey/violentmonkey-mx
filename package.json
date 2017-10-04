@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "gulp watch",
     "prebuild": "gulp clean",
-    "build": "gulp build",
+    "build": "cross-env NODE_ENV=production gulp build",
     "analyze": "webpack --profile --json --config scripts/webpack.conf.js | webpack-bundle-size-analyzer",
     "analyze:json": "webpack --profile --json --config scripts/webpack.conf.js > stats.json",
     "i18n": "gulp i18n",
@@ -21,6 +21,7 @@
     "babel-plugin-transform-export-extensions": "^6.22.0",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.6.0",
+    "cross-env": "^5.0.5",
     "css-loader": "^0.28.4",
     "del": "^3.0.0",
     "eslint": "^4.2.0",
