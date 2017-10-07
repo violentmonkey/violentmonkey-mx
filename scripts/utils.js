@@ -49,6 +49,6 @@ exports.merge = merge;
 exports.definitions = {
   'process.env': {
     NODE_ENV: JSON.stringify(process.env.NODE_ENV),
-    DEBUG: JSON.stringify(IS_DEV),
+    DEBUG: IS_DEV ? 'true' : 'false', // whether to log message errors
   },
 };

@@ -530,3 +530,18 @@ buttonHome:
 buttonSupport:
   description: Button to open support page.
   message: Support page
+buttonFilter:
+  description: NEW_LOCALE_ITEM
+  message: ''
+labelFilterSort:
+  description: NEW_LOCALE_ITEM
+  message: ''
+optionShowEnabledFirst:
+  description: NEW_LOCALE_ITEM
+  message: ''
+filterExecutionOrder:
+  description: NEW_LOCALE_ITEM
+  message: ''
+filterAlphabeticalOrder:
+  description: NEW_LOCALE_ITEM
+  message: ''

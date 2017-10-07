@@ -4,7 +4,7 @@
   "description": "Violentmonkey for Maxthon",
   "scripts": {
     "dev": "gulp watch",
-    "prebuild": "gulp clean",
+    "prebuild": "npm run lint && gulp clean",
     "build": "cross-env NODE_ENV=production gulp build",
     "analyze": "webpack --profile --json --config scripts/webpack.conf.js | webpack-bundle-size-analyzer",
     "analyze:json": "webpack --profile --json --config scripts/webpack.conf.js > stats.json",
@@ -35,6 +35,7 @@
     "friendly-errors-webpack-plugin": "^1.6.1",
     "gulp": "^3.9.1",
     "gulp-filter": "^5.0.0",
+    "gulp-plumber": "^1.1.0",
     "gulp-svg-sprite": "^1.3.7",
     "gulp-uglify": "^3.0.0",
     "gulp-util": "^3.0.8",
@@ -63,6 +64,7 @@
   "dependencies": {
     "codemirror": "^5.27.4",
     "core-js": "^2.4.1",
+    "tldjs": "^2.2.0",
     "vue": "^2.4.1",
     "vueleton": "^0.4.0"
   }

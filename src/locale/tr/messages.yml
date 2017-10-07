@@ -6,7 +6,9 @@ extDescription:
   message: Maxthon için Userscript desteği.
 extTranslator:
   description: Information of the translator.
-  message: Erdem Uysal <erdem@erdemuysal.net> - Taha Yasin Hatay <arrest.anarchy@gmail.com>
+  message: >-
+    Erdem Uysal <erdem@erdemuysal.net> - Taha Yasin Hatay
+    <arrest.anarchy@gmail.com>
   touched: false
 msgUpdated:
   description: Message shown when a script is updated/reinstalled.
@@ -177,7 +179,9 @@ labelTranslator:
   message: 'Çevirmen: '
 anchorTranslator:
   description: Translator shown on about tab.
-  message: '<a href=mailto:erdem@erdemuysal.net>Erdem Uysal</a> - <a href=mailto:arrest.anarchy@gmail.com>Taha Yasin Hatay</a>'
+  message: >-
+    <a href=mailto:erdem@erdemuysal.net>Erdem Uysal</a> - <a
+    href=mailto:arrest.anarchy@gmail.com>Taha Yasin Hatay</a>
 labelCurrentLang:
   description: Label of current language.
   message: 'Geçerli Dil: '
@@ -274,7 +278,7 @@ msgImported:
   description: >-
     Message shown after import. There is an argument referring to the count of
     scripts imported.
-  message: '$1 öğe kullanılmak üzere alındı.'
+  message: $1 öğe kullanılmak üzere alındı.
 hintUseDownloadURL:
   description: Shown as a place holder for @updateURL when it is not assigned
   message: '@downloadURL Kullan'
@@ -337,7 +341,9 @@ labelIgnoreGrant:
   touched: false
 labelAutoReloadCurrentTab:
   description: Option to reload current tab after a script is switched on or off from menu.
-  message: Bir script dosyasını menüden açıp / kapattıktan sonra geçerli sekmeyi yeniden yükle
+  message: >-
+    Bir script dosyasını menüden açıp / kapattıktan sonra geçerli sekmeyi
+    yeniden yükle
 labelInjectMode:
   description: Label for a combo box to choose script injection modes.
   message: 'Script enjekte modu:'
@@ -356,7 +362,9 @@ hintInjectModeNormal:
   touched: false
 hintInjectModeAdvanced:
   description: Hint to explain the advanced injection mode.
-  message: Etkin durumda. Ancak bazı yüksek güvenlik sayfalarında başarısız, ör. https://github.com
+  message: >-
+    Etkin durumda. Ancak bazı yüksek güvenlik sayfalarında başarısız, ör.
+    https://github.com
   touched: false
 hintInputURL:
   description: Hint for a prompt box to input URL of a user script.
@@ -368,10 +376,12 @@ msgNamespaceConflict:
   description: >-
     Message shown when namespace of the new script conflicts with an existent
     one.
-  message: Script isiminde anlaşmazlık! Lütfen @name ve @namespace alanlarını düzenleyin.
+  message: >-
+    Script isiminde anlaşmazlık! Lütfen @name ve @namespace alanlarını
+    düzenleyin.
 labelSyncTo:
   description: Label for sync service.
-  message: '$1 e eşitle'
+  message: $1 e eşitle
   touched: false
 buttonAuthorized:
   description: Button shown when permissions are already authorized for sync.
@@ -457,8 +467,8 @@ labelCustomCSS:
 descCustomCSS:
   description: Description of custom CSS section.
   message: >-
-    Seçenekler sayfası ve script yükleme sayfası için geçerli stil.
-    Eğer ne yaptığınızdan emin değilseniz, lütfen düzenleme yapmayınız.
+    Seçenekler sayfası ve script yükleme sayfası için geçerli stil. Eğer ne
+    yaptığınızdan emin değilseniz, lütfen düzenleme yapmayınız.
 buttonSaveCustomCSS:
   description: Label for button to save custom CSS.
   message: Kaydet
@@ -513,7 +523,7 @@ labelNotifyUpdates:
   message: Script güncellemelerini bildir
 installFrom:
   description: Label for button to install script from a userscript site.
-  message: '$1 den yükleme'
+  message: $1 den yükleme
 labelSearchScript:
   description: Placeholder for script search box.
   message: Script Arama...
@@ -532,3 +542,18 @@ buttonHome:
 buttonSupport:
   description: Button to open support page.
   message: Destek
+buttonFilter:
+  description: NEW_LOCALE_ITEM
+  message: ''
+labelFilterSort:
+  description: NEW_LOCALE_ITEM
+  message: ''
+optionShowEnabledFirst:
+  description: NEW_LOCALE_ITEM
+  message: ''
+filterExecutionOrder:
+  description: NEW_LOCALE_ITEM
+  message: ''
+filterAlphabeticalOrder:
+  description: NEW_LOCALE_ITEM
+  message: ''

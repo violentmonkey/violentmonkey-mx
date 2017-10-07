@@ -4,10 +4,12 @@ const gutil = require('gulp-util');
 const gulpFilter = require('gulp-filter');
 const uglify = require('gulp-uglify');
 const svgSprite = require('gulp-svg-sprite');
+const plumber = require('gulp-plumber');
+const yaml = require('js-yaml');
 const webpack = require('webpack');
 const webpackConfig = require('./scripts/webpack.conf');
 const i18n = require('./scripts/i18n');
-const json = require('./scripts/json');
+const string = require('./scripts/string');
 const bom = require('./scripts/bom');
 const { IS_DEV, definitions } = require('./scripts/utils');
 const pkg = require('./package.json');
@@ -64,11 +66,13 @@ gulp.task('js-prd', () => webpack(webpackConfig, webpackCallback));
 gulp.task('manifest', () => (
   gulp.src(paths.def)
   .pipe(bom.strip())
-  .pipe(json(data => {
+  .pipe(string((input, file) => {
+    const data = yaml.safeLoad(input);
     data[0].version = pkg.version;
     data[0].service.debug = IS_DEV;
     definitions['process.env'].manifest = JSON.stringify(data[0]);
-    return data;
+    file.path = file.path.replace(/\.yml$/, '.json');
+    return JSON.stringify(data);
   }))
   .pipe(bom.add())
   .pipe(gulp.dest('dist'))
@@ -88,6 +92,7 @@ gulp.task('copy-files', ['manifest'], () => {
 gulp.task('copy-i18n', () => (
   gulp.src(paths.templates)
   .pipe(bom.strip())
+  .pipe(plumber(logError))
   .pipe(i18n.extract({
     base: 'src',
     prefix: 'locale',
@@ -116,6 +121,7 @@ gulp.task('svg', () => (
 gulp.task('i18n', () => (
   gulp.src(paths.templates)
   .pipe(bom.strip())
+  .pipe(plumber(logError))
   .pipe(i18n.extract({
     base: 'src',
     prefix: 'locale',
@@ -123,8 +129,12 @@ gulp.task('i18n', () => (
     useDefaultLang: false,
     markUntouched: true,
     extension: '.yml',
-    basename: 'messages',
   }))
   .pipe(bom.add())
   .pipe(gulp.dest('src'))
 ));
+
+function logError(err) {
+  gutil.log(err.toString());
+  return this.emit('end');
+}

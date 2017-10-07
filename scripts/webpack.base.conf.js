@@ -17,6 +17,9 @@ module.exports = {
     filename: '[name].js',
   },
   resolve: {
+    // Tell webpack to look for peer dependencies in `node_modules`
+    // when packages are linked from outside directories
+    modules: [resolve('node_modules')],
     extensions: ['.js', '.vue'],
     alias: {
       src: resolve('src'),

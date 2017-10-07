@@ -53,7 +53,6 @@ class Locale {
     this.basepath = basepath;
     this.basedir = basedir || '.';
     this.data = {};
-    this.loaded = this.load();
   }
 
   load() {
@@ -80,7 +79,7 @@ class Locale {
     return this.data[key] || def;
   }
 
-  dump(data, ext, basename) {
+  dump(data, { extension: ext, touchedOnly }) {
     if (ext === '.ini') {
       data = dumpIni(data);
     } else if (ext === '.yml') {
@@ -88,11 +87,8 @@ class Locale {
     } else {
       throw 'Unknown extension name!';
     }
-    let filepath = this.basepath;
-    if (basename) filepath += `/${basename}`;
-    filepath += ext;
     return {
-      path: filepath,
+      path: touchedOnly ? `${this.basepath}${ext}` : `${this.basepath}/messages${ext}`,
       data,
     };
   }
@@ -107,7 +103,6 @@ class Locales {
     this.langs = [];
     this.data = {};
     this.desc = {};
-    this.loaded = this.load();
   }
 
   load() {
@@ -116,7 +111,7 @@ class Locales {
       this.langs = langs;
       return Promise.all(langs.map(lang => {
         const locale = this.data[lang] = new Locale(lang, `${this.prefix}/${lang}`, this.base);
-        return locale.loaded;
+        return locale.load();
       }));
     })
     .then(data => {
@@ -150,7 +145,7 @@ class Locales {
     return this.langs.map(lang => {
       const data = this.getData(lang, options);
       const locale = this.data[lang];
-      const out = locale.dump(data, options.extension, options.basename);
+      const out = locale.dump(data, options);
       return new gutil.File({
         base: '',
         path: out.path,
@@ -171,10 +166,12 @@ class Locales {
 function extract(options) {
   const keys = new Set();
   const patterns = {
-    default: ['\\bi18n\\(\'(\\w+)\'', 1],
+    default: ['\\b(?:i18n\\(\'|i18n-key=")(\\w+)[\'"]', 1],
+    json: ['__MSG_(\\w+)__', 1],
   };
   const types = {
     '.js': 'default',
+    '.json': 'json',
     '.html': 'default',
     '.vue': 'default',
   };
@@ -205,7 +202,8 @@ function extract(options) {
   }
 
   function endStream(cb) {
-    locales.loaded.then(() => {
+    locales.load()
+    .then(() => {
       keys.forEach(key => {
         locales.touch(key);
       });
@@ -214,14 +212,15 @@ function extract(options) {
         useDefaultLang: options.useDefaultLang,
         markUntouched: options.markUntouched,
         extension: options.extension,
-        basename: options.basename,
       });
-    }).then(files => {
+    })
+    .then(files => {
       files.forEach(file => {
         this.push(file);
       });
       cb();
-    });
+    })
+    .catch(cb);
   }
 
   return through.obj(bufferContents, endStream);
