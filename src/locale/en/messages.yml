@@ -531,17 +531,17 @@ buttonSupport:
   description: Button to open support page.
   message: Support page
 buttonFilter:
-  description: NEW_LOCALE_ITEM
-  message: ''
+  description: Button to show filters menu.
+  message: Filters
 labelFilterSort:
-  description: NEW_LOCALE_ITEM
-  message: ''
+  description: Label for sort filter.
+  message: Sort by $1
 optionShowEnabledFirst:
-  description: NEW_LOCALE_ITEM
-  message: ''
+  description: Option to show enabled scripts first in alphabetical order.
+  message: Show enabled scripts first
 filterExecutionOrder:
-  description: NEW_LOCALE_ITEM
-  message: ''
+  description: Label for option to sort scripts in execution order.
+  message: execution order
 filterAlphabeticalOrder:
-  description: NEW_LOCALE_ITEM
-  message: ''
+  description: Label for option to sort scripts in alphabetical order.
+  message: alphabetical order
