@@ -270,7 +270,7 @@ initialize()
         });
       }
     }
-    return res;
+    return res || null;
   });
   setTimeout(autoUpdate, 2e4);
   sync.initialize();
