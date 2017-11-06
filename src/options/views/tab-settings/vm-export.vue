@@ -47,7 +47,9 @@ export default {
   },
   methods: {
     initItems() {
-      this.items = (store.scripts || []).map(script => ({
+      this.items = (store.scripts || [])
+      .filter(({ config: { removed } }) => !removed)
+      .map(script => ({
         script,
         active: true,
       }));
@@ -90,12 +92,39 @@ function addFile(writer, file) {
   });
 }
 
+function leftpad(src, length, pad = '0') {
+  let str = `${src}`;
+  while (str.length < length) str = pad + str;
+  return str;
+}
+
+function getTimestamp() {
+  const date = new Date();
+  return `${
+    date.getFullYear()
+  }-${
+    leftpad(date.getMonth() + 1, 2)
+  }-${
+    leftpad(date.getDate(), 2)
+  }_${
+    leftpad(date.getHours(), 2)
+  }.${
+    leftpad(date.getMinutes(), 2)
+  }.${
+    leftpad(date.getSeconds(), 2)
+  }`;
+}
+
+function getExportname() {
+  return `scripts_${getTimestamp()}.zip`;
+}
+
 function download(url, cb) {
   const a = document.createElement('a');
   a.style.display = 'none';
   document.body.appendChild(a);
   a.href = url;
-  a.download = 'scripts.zip';
+  a.download = getExportname();
   a.click();
   setTimeout(() => {
     document.body.removeChild(a);

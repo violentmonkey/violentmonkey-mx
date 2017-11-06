@@ -1,6 +1,6 @@
-import { i18n, request, buffer2string, getFullUrl } from 'src/common';
+import { i18n, request, buffer2string, getFullUrl, isRemote } from 'src/common';
 import { objectGet, objectSet } from 'src/common/object';
-import { getNameURI, isRemote, parseMeta, newScript } from './script';
+import { getNameURI, parseMeta, newScript } from './script';
 import { testScript, testBlacklist } from './tester';
 import { register } from './init';
 import patchDB from './patch-db';
@@ -178,6 +178,16 @@ export function normalizePosition() {
       objectSet(item, 'props.position', position);
       updates.push(item);
     }
+    // XXX patch v2.8.0
+    if (typeof item.custom.origInclude === 'undefined') {
+      item.custom = Object.assign({
+        origInclude: true,
+        origExclude: true,
+        origMatch: true,
+        origExcludeMatch: true,
+      }, item.custom);
+      if (!updates.includes(item)) updates.push(item);
+    }
   });
   store.storeInfo.position = store.scripts.length;
   const { length } = updates;
@@ -326,7 +336,7 @@ export function removeScript(id) {
     storage.code.remove(id);
     storage.value.remove(id);
   }
-  return browser.runtime.sendMessage({
+  browser.runtime.sendMessage({
     cmd: 'RemoveScript',
     data: id,
   });

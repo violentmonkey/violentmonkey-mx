@@ -59,18 +59,28 @@ export default function initialize(contentId, webId) {
   browser.runtime.onMessage.addListener(handleMessage);
   window.handleTabMessage = ({ source, data }) => handleMessage(data, source);
 
-  sendMessage({ cmd: 'GetInjected', data: window.location.href })
+  return sendMessage({ cmd: 'GetInjected', data: window.location.href })
   .then(data => {
     if (data.scripts) {
-      data.scripts.forEach(script => {
+      data.scripts = data.scripts.filter(script => {
         ids.push(script.props.id);
-        if (script.config.enabled) badge.number += 1;
+        if ((IS_TOP || !script.meta.noframes) && script.config.enabled) {
+          badge.number += 1;
+          return true;
+        }
+        return false;
       });
     }
-    bridge.post({ cmd: 'LoadScripts', data });
     badge.ready = true;
     getPopup();
     updateBadge();
+    const needInject = data.scripts && data.scripts.length;
+    if (needInject) {
+      bridge.ready.then(() => {
+        bridge.post({ cmd: 'LoadScripts', data });
+      });
+    }
+    return needInject;
   });
 
   browser.__ensureTabId().then(() => {
@@ -86,6 +96,9 @@ const handlers = {
   Inject: injectScript,
   TabOpen: tabOpen,
   TabClose: tabClose,
+  Ready() {
+    bridge.ready = Promise.resolve();
+  },
   UpdateValue(data) {
     sendMessage({ cmd: 'UpdateValue', data });
   },
@@ -93,12 +106,16 @@ const handlers = {
     if (IS_TOP) menus.push(data);
     getPopup();
   },
-  AddStyle(css) {
+  AddStyle({ css, callbackId }) {
+    let styleId = null;
     if (document.head) {
+      styleId = getUniqId('VMst');
       const style = document.createElement('style');
+      style.id = styleId;
       style.textContent = css;
       document.head.appendChild(style);
     }
+    bridge.post({ cmd: 'Callback', data: { callbackId, payload: styleId } });
   },
   Notification: onNotificationCreate,
   SetClipboard(data) {
@@ -111,6 +128,10 @@ const handlers = {
     });
   },
 };
+
+bridge.ready = new Promise(resolve => {
+  handlers.Ready = resolve;
+});
 
 function onHandle(req) {
   const handle = handlers[req.cmd];

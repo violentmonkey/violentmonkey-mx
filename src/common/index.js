@@ -75,8 +75,8 @@ export function zfill(input, length) {
   return num;
 }
 
-export function getUniqId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+export function getUniqId(prefix) {
+  return (prefix || '') + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
 /**
@@ -188,5 +188,5 @@ export function getFullUrl(url, base) { // eslint-disable-line
 }
 
 export function isRemote(url) {
-  return url && !(/^(file|data):/.test(url));
+  return url && !(/^(file:|data:|http:\/\/localhost[:/])/.test(url));
 }
