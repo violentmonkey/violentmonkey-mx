@@ -557,3 +557,6 @@ filterExecutionOrder:
 filterAlphabeticalOrder:
   description: Label for option to sort scripts in alphabetical order.
   message: ''
+labelLastUpdatedAt:
+  description: Label shown on last updated time.
+  message: ''

@@ -1,3 +1,4 @@
+import { getUniqId } from 'src/common';
 import { bindEvents, sendMessage, inject, attachFunction } from '../utils';
 import bridge from './bridge';
 import { tabOpen, tabClose, tabClosed } from './tabs';
@@ -59,6 +60,11 @@ export default function initialize(contentId, webId) {
   browser.runtime.onMessage.addListener(handleMessage);
   window.handleTabMessage = ({ source, data }) => handleMessage(data, source);
 
+  browser.__ensureTabId().then(() => {
+    sendMessage({ cmd: 'Navigate' });
+  });
+  sendMessage({ cmd: 'GetTabId' });
+
   return sendMessage({ cmd: 'GetInjected', data: window.location.href })
   .then(data => {
     if (data.scripts) {
@@ -82,11 +88,6 @@ export default function initialize(contentId, webId) {
     }
     return needInject;
   });
-
-  browser.__ensureTabId().then(() => {
-    sendMessage({ cmd: 'Navigate' });
-  });
-  sendMessage({ cmd: 'GetTabId' });
 }
 
 const handlers = {

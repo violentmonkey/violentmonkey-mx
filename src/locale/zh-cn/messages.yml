@@ -541,3 +541,6 @@ filterExecutionOrder:
 filterAlphabeticalOrder:
   description: Label for option to sort scripts in alphabetical order.
   message: 字母顺序
+labelLastUpdatedAt:
+  description: Label shown on last updated time.
+  message: 最后更新于 $1
