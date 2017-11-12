@@ -10,14 +10,21 @@ Development
 ---
 
 ``` sh
+$ yarn
+$ yarn dev
+# or
+$ npm i
 $ npm run dev
-# Then copy or link the `dist` directory to `addons`
 ```
 
 Build
 ---
 
 ``` sh
+$ yarn
+$ yarn build
+# or
+$ npm i
 $ npm run build
 # Then pack with the official packaging tool
 ```
