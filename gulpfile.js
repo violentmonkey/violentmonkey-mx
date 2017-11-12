@@ -94,15 +94,14 @@ gulp.task('copy-i18n', () => (
   .pipe(bom.strip())
   .pipe(plumber(logError))
   .pipe(i18n.extract({
-    base: 'src',
-    prefix: 'locale',
+    base: 'src/_locales',
     touchedOnly: true,
     useDefaultLang: true,
     markUntouched: false,
     extension: '.ini',
   }))
   .pipe(bom.add())
-  .pipe(gulp.dest('dist'))
+  .pipe(gulp.dest('dist/locale'))
 ));
 
 gulp.task('svg', () => (
@@ -123,15 +122,14 @@ gulp.task('i18n', () => (
   .pipe(bom.strip())
   .pipe(plumber(logError))
   .pipe(i18n.extract({
-    base: 'src',
-    prefix: 'locale',
+    base: 'src/_locales',
     touchedOnly: false,
     useDefaultLang: false,
     markUntouched: true,
     extension: '.yml',
   }))
   .pipe(bom.add())
-  .pipe(gulp.dest('src'))
+  .pipe(gulp.dest('src/_locales'))
 ));
 
 function logError(err) {

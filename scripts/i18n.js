@@ -47,16 +47,15 @@ const transformers = {
 };
 
 class Locale {
-  constructor(lang, basepath, basedir) {
+  constructor(lang, base) {
     this.defaultLocale = 'messages.yml';
     this.lang = lang;
-    this.basepath = basepath;
-    this.basedir = basedir || '.';
+    this.base = base;
     this.data = {};
   }
 
   load() {
-    const localeDir = `${this.basedir}/${this.basepath}`;
+    const localeDir = `${this.base}/${this.lang}`;
     const data = {};
     return readdir(localeDir)
     .then(files => [this.defaultLocale].concat(files.filter(file => file !== this.defaultLocale)))
@@ -79,26 +78,25 @@ class Locale {
     return this.data[key] || def;
   }
 
-  dump(data, { extension: ext, touchedOnly }) {
-    if (ext === '.ini') {
+  dump(data, { extension, touchedOnly }) {
+    if (extension === '.ini') {
       data = dumpIni(data);
-    } else if (ext === '.yml') {
-      data = yaml.safeDump(data);
+    } else if (extension === '.yml') {
+      data = yaml.safeDump(data, { sortKeys: true });
     } else {
       throw 'Unknown extension name!';
     }
     return {
-      path: touchedOnly ? `${this.basepath}${ext}` : `${this.basepath}/messages${ext}`,
+      path: touchedOnly ? `${this.lang}${extension}` : `${this.lang}/messages${extension}`,
       data,
     };
   }
 }
 
 class Locales {
-  constructor(prefix, base) {
+  constructor(base) {
     this.defaultLang = 'en';
     this.newLocaleItem = 'NEW_LOCALE_ITEM';
-    this.prefix = prefix || '.';
     this.base = base || '.';
     this.langs = [];
     this.data = {};
@@ -106,11 +104,11 @@ class Locales {
   }
 
   load() {
-    return readdir(`${this.base}/${this.prefix}`)
+    return readdir(this.base)
     .then(langs => {
       this.langs = langs;
       return Promise.all(langs.map(lang => {
-        const locale = this.data[lang] = new Locale(lang, `${this.prefix}/${lang}`, this.base);
+        const locale = this.data[lang] = new Locale(lang, this.base);
         return locale.load();
       }));
     })
@@ -176,7 +174,7 @@ function extract(options) {
     '.vue': 'default',
   };
 
-  const locales = new Locales(options.prefix, options.base);
+  const locales = new Locales(options.base);
 
   function extract(data, types) {
     if (!Array.isArray(types)) types = [types];
