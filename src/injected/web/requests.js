@@ -1,4 +1,4 @@
-import { includes, encodeBody } from './helpers';
+import { includes, encodeBody } from '../utils/helpers';
 import bridge from './bridge';
 
 const map = {};
