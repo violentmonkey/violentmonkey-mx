@@ -35,6 +35,9 @@ if (typeof browser === 'undefined') {
         currentTabId = tabId;
         update();
       });
+      globalObj.browser.tabs.onRemoved.addListener(tabId => {
+        delete data[tabId];
+      });
     },
     set(data) {
       badges.init();
@@ -46,8 +49,10 @@ if (typeof browser === 'undefined') {
     init() {
       const updatedListeners = [];
       const activatedListeners = [];
+      const removedListeners = [];
       tabEvents.update = listener => { updatedListeners.push(listener); };
       tabEvents.activate = listener => { activatedListeners.push(listener); };
+      tabEvents.remove = listener => { removedListeners.push(listener); };
       br.onBrowserEvent = data => {
         const { type } = data;
         if (type === 'ON_NAVIGATE') {
@@ -65,6 +70,10 @@ if (typeof browser === 'undefined') {
           activatedListeners.forEach(listener => {
             listener({ tabId: data.to });
           });
+        } else if (type === 'PAGE_CLOSED') {
+          removedListeners.forEach(listener => {
+            listener(data.id);
+          });
         }
       };
     },
@@ -80,14 +89,18 @@ if (typeof browser === 'undefined') {
 
   const messenger = {
     data: {},
-    ensureTabId() {
-      const tabIdPromise = new Promise(resolve => {
+    initTabId() {
+      messenger.tabIdPromise = new Promise(resolve => {
         window.setTabId = tabId => {
           messenger.data.tabId = tabId;
           resolve();
         };
       });
-      messenger.ensureTabId = () => tabIdPromise;
+    },
+    ensureTabId() {
+      messenger.ensureTabId = () => messenger.tabIdPromise;
+      // if (!messenger.data.tabId) globalObj.browser.runtime.sendMessage({ cmd: 'GetTabId' });
+      return messenger.tabIdPromise;
     },
     init() {
       const onMessageListeners = [];
@@ -171,7 +184,7 @@ if (typeof browser === 'undefined') {
       return messenger.send(...args);
     },
   };
-  messenger.ensureTabId();
+  messenger.initTabId();
 
   const storage = {
     local: {},
@@ -459,10 +472,16 @@ if (typeof browser === 'undefined') {
           tabEvents.update(listener);
         },
       },
+      onRemoved: {
+        addListener(listener) {
+          tabEvents.remove(listener);
+        },
+      },
     },
   };
   browser.__patched = true;
-  browser.__ensureTabId = () => messenger.ensureTabId();
+  browser.__ensureTabId = () => messenger.tabIdPromise;
+  browser.__send = (target, data) => messenger.send(target, data);
   globalObj.browser = browser;
 }
 

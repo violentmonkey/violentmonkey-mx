@@ -1,5 +1,5 @@
 import 'src/common/browser';
-import { i18n, defaultImage, injectContent, debounce } from 'src/common';
+import { injectContent } from 'src/common';
 import { objectGet } from 'src/common/object';
 import * as sync from './sync';
 import {
@@ -8,8 +8,10 @@ import {
   newScript, parseMeta,
   setClipboard, checkUpdate,
   getOption, setOption, hookOptions, getAllOptions,
-  initialize, broadcast,
+  initialize,
 } from './utils';
+import { tabOpen, tabClose } from './utils/tabs';
+import createNotification from './utils/notifications';
 import {
   getScripts, removeScript, getData, checkRemove, getScriptsByURL,
   updateScriptInfo, getExportData, getScriptCode,
@@ -17,7 +19,7 @@ import {
   sortScripts,
 } from './utils/db';
 import { resetBlacklist } from './utils/tester';
-import { setValueStore, updateValueStore } from './utils/values';
+import { setValueStore, updateValueStore, resetValueOpener, addValueOpener } from './utils/values';
 
 const VM_VER = browser.runtime.getManifest().version;
 
@@ -75,14 +77,18 @@ const commands = {
       return data;
     });
   },
-  GetInjected(url) {
+  GetInjected({ url, reset }, src) {
+    if (reset) resetValueOpener(src.id);
     const data = {
       isApplied: getOption('isApplied'),
       version: VM_VER,
     };
-    return data.isApplied ? (
-      getScriptsByURL(url).then(res => Object.assign(data, res))
-    ) : data;
+    if (!data.isApplied) return data;
+    return getScriptsByURL(url)
+    .then(res => {
+      addValueOpener(src.id, Object.keys(res.values));
+      return Object.assign(data, res);
+    });
   },
   UpdateScriptInfo({ id, config }) {
     return updateScriptInfo(id, {
@@ -147,13 +153,14 @@ const commands = {
   GetRequestId: getRequestId,
   HttpRequest(details, src) {
     httpRequest(details, res => {
-      browser.tabs.sendMessage(src.tab.id, {
+      browser.__send(src.id, {
         cmd: 'HttpRequested',
         data: res,
       });
     });
   },
   AbortRequest: abortRequest,
+  SetBadge: setBadge,
   SyncAuthorize: sync.authorize,
   SyncRevoke: sync.revoke,
   SyncStart: sync.sync,
@@ -163,25 +170,10 @@ const commands = {
   CacheHit(data) {
     cache.hit(data.key, data.lifetime);
   },
-  Notification(data) {
-    return browser.notifications.create({
-      title: data.title || i18n('extName'),
-      message: data.text,
-      iconUrl: data.image || defaultImage,
-    });
-  },
+  Notification: createNotification,
   SetClipboard: setClipboard,
-  TabOpen(data) {
-    return browser.tabs.create({
-      url: data.url,
-      active: data.active,
-    })
-    .then(tab => ({ id: tab.id }));
-  },
-  TabClose(data, src) {
-    const tabId = (data && data.id) || (src.tab && src.tab.id);
-    if (tabId) browser.tabs.remove(tabId);
-  },
+  TabOpen: tabOpen,
+  TabClose: tabClose,
   GetAllOptions: getAllOptions,
   GetOptions(data) {
     return data.reduce((res, key) => {
@@ -194,15 +186,15 @@ const commands = {
     items.forEach(item => { setOption(item.key, item.value); });
   },
   ConfirmInstall: confirmInstall,
-  GetTabId() {
-    browser.tabs.query({})
-    .then(tabs => {
-      tabs.forEach(tab => {
-        const id = tab.id.toString();
-        injectContent(`window.setTabId(${JSON.stringify(id)})`, id);
-      });
-    });
-  },
+  // GetTabId(_, src) {
+  //   browser.tabs.query({ url: src.tab.url })
+  //   .then(tabs => {
+  //     tabs.forEach(tab => {
+  //       const id = tab.id.toString();
+  //       injectContent(`window.setTabId(${JSON.stringify(id)})`, id);
+  //     });
+  //   });
+  // },
   CheckScript({ name, namespace }) {
     return getScript({ meta: { name, namespace } })
     .then(script => (script ? script.meta.version : null));
@@ -212,6 +204,7 @@ const commands = {
   },
   // XXX Maxthon sucks, patch for ON_NAVIGATE
   // ON_NAVIGATE won't emit for 302
+  // REQUIRE tabId
   Navigate(_, src) {
     if (src.tab && src.tab.id) {
       onTabUpdate(src.tab.id, src.tab);
@@ -281,62 +274,31 @@ initialize()
   if (getOption('startReload')) initLoadedPages();
 });
 
-{
-  const badges = {};
-  const debouncedGetBadge = debounce(getBadge, 100);
-  browser.tabs.onActivated.addListener(debouncedGetBadge);
-  commands.GetBadge = debouncedGetBadge;
-  commands.SetBadge = setBadge;
-  function clear(tabId) {
+// REQUIRE tabId
+const badges = {};
+function setBadge({ number, reset }, src) {
+  const srcTab = src.tab || {};
+  let data = !reset && badges[srcTab.id];
+  if (!data) {
+    data = { number: 0 };
+    badges[srcTab.id] = data;
+  }
+  data.number += number;
+  if (getOption('showBadge')) {
     browser.browserAction.setBadgeText({
-      text: '',
-      tabId,
+      tabId: srcTab.id,
+      text: data.number || '',
     });
-  }
-  function getBadge() {
-    browser.tabs.query({ active: true })
-    .then(tabs => {
-      const currentTab = tabs[0];
-      clear(currentTab.id);
-      injectContent(`setBadge(${JSON.stringify(currentTab.id)})`);
-    });
-  }
-  function setBadge(data, src) {
-    let item = badges[src.id];
-    if (!item) {
-      item = { num: 0 };
-      badges[src.id] = item;
-    }
-    item.num += data.number;
-    if (getOption('showBadge')) {
-      browser.browserAction.setBadgeText({
-        tabId: data.tabId,
-        text: item.num || '',
-      });
-    }
-    if (item.timer) clearTimeout(item.timer);
-    item.timer = setTimeout(() => { delete badges[src.id]; });
   }
 }
+browser.tabs.onRemoved.addListener(id => {
+  delete badges[id];
+});
 
 function setIcon(isApplied) {
   browser.browserAction.setIcon(`icon${isApplied ? '' : 'w'}`);
 }
 setIcon(getOption('isApplied'));
-
-browser.notifications.onClicked.addListener(id => {
-  broadcast({
-    cmd: 'NotificationClick',
-    data: id,
-  });
-});
-
-browser.notifications.onClosed.addListener(id => {
-  broadcast({
-    cmd: 'NotificationClose',
-    data: id,
-  });
-});
 
 const URL_CLOSE = browser.runtime.getURL('close');
 
@@ -349,6 +311,7 @@ function onTabUpdate(tabId, changes) {
   // navigating to `/close`.
   if (changes.url === URL_CLOSE) {
     browser.tabs.remove(tabId);
+    return;
   }
   // file:/// URLs will not be injected on Maxthon 5
   if (/^file:\/\/\/.*?\.user\.js$/.test(changes.url)) {
@@ -356,7 +319,10 @@ function onTabUpdate(tabId, changes) {
       url: changes.url,
     });
     browser.tabs.remove(tabId);
+    return;
   }
+
+  injectContent(`window.setTabId(${JSON.stringify(tabId)})`, tabId);
 }
 
 browser.tabs.onUpdated.addListener(onTabUpdate);

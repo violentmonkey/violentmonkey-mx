@@ -53,7 +53,7 @@
 
 <script>
 import options from 'src/common/options';
-import { getLocaleString, sendMessage } from 'src/common';
+import { getLocaleString, sendMessage, injectContent } from 'src/common';
 import Icon from 'src/common/ui/icon';
 import { store } from '../utils';
 
@@ -116,7 +116,7 @@ export default {
       if (item) {
         domain = item.name;
       } else {
-        const matches = this.store.currentTab.url.match(/:\/\/(?:www\.)?([^/]*)/);
+        const matches = this.store.currentSrc.tab.url.match(/:\/\/(?:www\.)?([^/]*)/);
         domain = matches[1];
       }
       browser.tabs.create({
@@ -124,7 +124,7 @@ export default {
       });
     },
     onCommand(item) {
-      browser.tabs.sendMessage(this.store.currentTab.id, {
+      browser.__send(this.store.currentSrc.id, {
         cmd: 'Command',
         data: item.name,
       });
@@ -145,7 +145,10 @@ export default {
       });
     },
     checkReload() {
-      if (options.get('autoReload')) browser.tabs.reload(this.store.currentTab.id);
+      if (options.get('autoReload')) {
+        injectContent('location.reload()');
+        // browser.tabs.reload(this.store.currentTab.id);
+      }
     },
   },
 };

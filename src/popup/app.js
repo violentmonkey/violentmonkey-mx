@@ -24,10 +24,9 @@ new Vue({
     GetPopup: init,
     SetPopup(data, src) {
       cancelClear();
-      const tab = (src && src.tab) || {};
-      store.currentTab = tab;
-      if (/^https?:\/\//i.test(tab.url)) {
-        const matches = tab.url.match(/:\/\/(?:www\.)?([^/]*)/);
+      store.currentSrc = src;
+      if (/^https?:\/\//i.test(src.tab.url)) {
+        const matches = src.tab.url.match(/:\/\/(?:www\.)?([^/]*)/);
         const domain = matches[1];
         const domains = domain.split('.').reduceRight((res, part) => {
           const last = res[0];
@@ -46,7 +45,10 @@ new Vue({
       .then(scripts => { store.scripts = scripts; });
     },
   });
-  browser.tabs.onActivated.addListener(init);
+  browser.tabs.onActivated.addListener(({ tabId }) => {
+    store.currentTab = { tabId };
+    init();
+  });
   browser.tabs.onUpdated.addListener(init);
   init();
 

@@ -12,28 +12,20 @@ const menus = [];
 
 const badge = {
   number: 0,
-  ready: false,
 };
 
-function updateBadge() {
-  sendMessage({ cmd: 'GetBadge' });
+function setBadge() {
+  // delay setBadge in frames so that they can be added to the initial count
+  browser.__ensureTabId()
+  .then(() => new Promise(resolve => setTimeout(resolve, IS_TOP ? 0 : 300)))
+  .then(() => sendMessage({
+    cmd: 'SetBadge',
+    data: {
+      number: badge.number,
+      reset: IS_TOP,
+    },
+  }));
 }
-
-function setBadge(tabId) {
-  if (badge.ready) {
-    // XXX: only scripts run in top level window are counted
-    if (IS_TOP) {
-      sendMessage({
-        cmd: 'SetBadge',
-        data: {
-          tabId,
-          number: badge.number,
-        },
-      });
-    }
-  }
-}
-window.setBadge = setBadge;
 
 const bgHandlers = {
   Command(data) {
@@ -60,12 +52,15 @@ export default function initialize(contentId, webId) {
   browser.runtime.onMessage.addListener(handleMessage);
   window.handleTabMessage = ({ source, data }) => handleMessage(data, source);
 
-  browser.__ensureTabId().then(() => {
-    sendMessage({ cmd: 'Navigate' });
-  });
-  sendMessage({ cmd: 'GetTabId' });
+  browser.__ensureTabId().then(() => sendMessage({ cmd: 'Navigate' }));
 
-  return sendMessage({ cmd: 'GetInjected', data: window.location.href })
+  return sendMessage({
+    cmd: 'GetInjected',
+    data: {
+      url: window.location.href,
+      reset: IS_TOP,
+    },
+  })
   .then(data => {
     if (data.scripts) {
       data.scripts = data.scripts.filter(script => {
@@ -77,9 +72,8 @@ export default function initialize(contentId, webId) {
         return false;
       });
     }
-    badge.ready = true;
     getPopup();
-    updateBadge();
+    setBadge();
     const needInject = data.scripts && data.scripts.length;
     if (needInject) {
       bridge.ready.then(() => {

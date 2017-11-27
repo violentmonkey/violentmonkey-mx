@@ -54,7 +54,7 @@ import initialize from './content';
       })
       .then(() => {
         if (window.history.length > 1) window.history.go(-1);
-        else sendMessage({ cmd: 'TabClose' });
+        else browser.__ensureTabId().then(() => sendMessage({ cmd: 'TabClose' }));
       });
     }
   }
