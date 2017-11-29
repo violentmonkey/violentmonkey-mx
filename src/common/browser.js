@@ -320,7 +320,7 @@ if (typeof browser === 'undefined') {
         const data = message.replace(/\$(?:\{(\d+)\}|(\d+))/g, (_match, group1, group2) => {
           const index = (group1 || group2) - 1;
           const value = args[index];
-          return value || '';
+          return value == null ? '' : value;
         });
         return data;
       },
