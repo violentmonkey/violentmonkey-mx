@@ -316,7 +316,7 @@ if (typeof browser === 'undefined') {
             message = message.slice(1, -1);
           }
         }
-        const args = typeof arg === 'string' ? [arg] : arg;
+        const args = Array.isArray(arg) ? arg : [arg || ''];
         const data = message.replace(/\$(?:\{(\d+)\}|(\d+))/g, (_match, group1, group2) => {
           const index = (group1 || group2) - 1;
           const value = args[index];
