@@ -1,12 +1,10 @@
 import 'src/common/polyfills';
 import { injectContent } from 'src/common';
 
-const globalObj = typeof global !== 'undefined' ? global : window;
-
 if (typeof browser === 'undefined') {
   const EXTENSION = 'EXTENSION';
   const CONTENT = 'CONTENT';
-  const rt = globalObj.external.mxGetRuntime();
+  const rt = global.external.mxGetRuntime();
   const br = rt && rt.create('mx.browser');
   const ui = rt && rt.create('mx.app.ui');
   const sourceId = `RUNTIME_${getUniqId()}`;
@@ -30,12 +28,12 @@ if (typeof browser === 'undefined') {
         data[tabId] = text;
         update();
       };
-      // globalObj.browser.browserAction.setBadgeText = setBadgeText;
-      globalObj.browser.tabs.onActivated.addListener(({ tabId }) => {
+      // global.browser.browserAction.setBadgeText = setBadgeText;
+      global.browser.tabs.onActivated.addListener(({ tabId }) => {
         currentTabId = tabId;
         update();
       });
-      globalObj.browser.tabs.onRemoved.addListener(tabId => {
+      global.browser.tabs.onRemoved.addListener(tabId => {
         delete data[tabId];
       });
     },
@@ -99,7 +97,7 @@ if (typeof browser === 'undefined') {
     },
     ensureTabId() {
       messenger.ensureTabId = () => messenger.tabIdPromise;
-      // if (!messenger.data.tabId) globalObj.browser.runtime.sendMessage({ cmd: 'GetTabId' });
+      // if (!messenger.data.tabId) global.browser.runtime.sendMessage({ cmd: 'GetTabId' });
       return messenger.tabIdPromise;
     },
     init() {
@@ -166,7 +164,7 @@ if (typeof browser === 'undefined') {
           }
         });
       };
-      rt.listen(globalObj.browser.__isContent ? CONTENT : EXTENSION, onMessage);
+      rt.listen(global.browser.__isContent ? CONTENT : EXTENSION, onMessage);
       rt.listen(sourceId, res => {
         if (res && res.callback) {
           const promise = promises[res.callback];
@@ -482,7 +480,7 @@ if (typeof browser === 'undefined') {
   browser.__patched = true;
   browser.__ensureTabId = () => messenger.tabIdPromise;
   browser.__send = (target, data) => messenger.send(target, data);
-  globalObj.browser = browser;
+  global.browser = browser;
 }
 
 function getUniqId() {
