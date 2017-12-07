@@ -13,17 +13,18 @@ function parseIni(ini) {
   .reduce((data, line) => {
     line = line.trim();
     const i = line.indexOf('=');
-    if (i < 0) return;
-    const key = line.slice(0, i);
-    let value = line.slice(i + 1);
-    if (/^".*?"$/.test(value)) try {
-      value = JSON.parse(value);
-    } catch (e) {
-      value = value.slice(1, -1);
+    if (i >= 0) {
+      const key = line.slice(0, i);
+      let value = line.slice(i + 1);
+      if (/^".*?"$/.test(value)) try {
+        value = JSON.parse(value);
+      } catch (e) {
+        value = value.slice(1, -1);
+      }
+      data[key] = {
+        message: value,
+      };
     }
-    data[key] = {
-      message: value,
-    };
     return data;
   }, {});
 }
