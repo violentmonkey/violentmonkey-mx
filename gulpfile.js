@@ -21,7 +21,7 @@ const paths = {
     'src/icons/**',
   ],
   locales: [
-    'src/locale/**',
+    'src/_locales/**',
   ],
   templates: [
     'src/**/*.@(js|html|json|yml|vue)',
