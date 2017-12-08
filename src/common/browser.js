@@ -43,46 +43,35 @@ if (typeof browser === 'undefined') {
     },
   };
 
-  const tabEvents = {
-    init() {
-      const updatedListeners = [];
-      const activatedListeners = [];
-      const removedListeners = [];
-      tabEvents.update = listener => { updatedListeners.push(listener); };
-      tabEvents.activate = listener => { activatedListeners.push(listener); };
-      tabEvents.remove = listener => { removedListeners.push(listener); };
-      br.onBrowserEvent = data => {
-        const { type } = data;
-        if (type === 'ON_NAVIGATE') {
-          // ON_NAVIGATE is not triggered for 302
-          updatedListeners.forEach(listener => {
-            listener(data.id, data);
-          });
-        } else if (type === 'PAGE_LOADED') {
-          // PAGE_LOADED is triggered after URL redirected
-          const tab = getTabById(data.id);
-          updatedListeners.forEach(listener => {
-            listener(data.id, tab);
-          });
-        } else if (type === 'TAB_SWITCH') {
-          activatedListeners.forEach(listener => {
-            listener({ tabId: data.to });
-          });
-        } else if (type === 'PAGE_CLOSED') {
-          removedListeners.forEach(listener => {
-            listener(data.id);
-          });
-        }
-      };
-    },
-    update(listener) {
-      tabEvents.init();
-      return tabEvents.update(listener);
-    },
-    activate(listener) {
-      tabEvents.init();
-      return tabEvents.activate(listener);
-    },
+  const tabEvents = {};
+  const updatedListeners = [];
+  const activatedListeners = [];
+  const removedListeners = [];
+  tabEvents.update = listener => { updatedListeners.push(listener); };
+  tabEvents.activate = listener => { activatedListeners.push(listener); };
+  tabEvents.remove = listener => { removedListeners.push(listener); };
+  br.onBrowserEvent = data => {
+    const { type } = data;
+    if (type === 'ON_NAVIGATE') {
+      // ON_NAVIGATE is not triggered for 302
+      updatedListeners.forEach(listener => {
+        listener(data.id, data);
+      });
+    } else if (type === 'PAGE_LOADED') {
+      // PAGE_LOADED is triggered after URL redirected
+      const tab = getTabById(data.id);
+      updatedListeners.forEach(listener => {
+        listener(data.id, tab);
+      });
+    } else if (type === 'TAB_SWITCH') {
+      activatedListeners.forEach(listener => {
+        listener({ tabId: data.to });
+      });
+    } else if (type === 'PAGE_CLOSED') {
+      removedListeners.forEach(listener => {
+        listener(data.id);
+      });
+    }
   };
 
   const messenger = {
