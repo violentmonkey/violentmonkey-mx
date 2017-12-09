@@ -3,6 +3,7 @@ const webpack = require('webpack');
 const MinifyPlugin = require('babel-minify-webpack-plugin');
 const vueLoaderConfig = require('./vue-loader.conf');
 const { IS_DEV, styleRule, definitions } = require('./utils');
+
 const DIST = 'dist';
 const definePlugin = new webpack.DefinePlugin(definitions);
 
@@ -44,6 +45,11 @@ module.exports = {
         test: /\.js$/,
         loader: 'babel-loader',
         include: [resolve('src'), resolve('test')]
+      },
+      {
+        test: /\.svg$/,
+        loader: 'svg-sprite-loader',
+        include: [resolve('src/resources/icons')],
       },
       styleRule({
         fallback: 'vue-style-loader',
