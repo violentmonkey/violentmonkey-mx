@@ -13,10 +13,10 @@
         <span v-text="i18n('menuDashboard')"></span>
       </div>
     </div>
-    <div class="menu menu-domains" v-show="domains.length" :class="{expand:activeMenu==='domains'}">
-      <div class="menu-item" @click="toggleMenu('domains')">
+    <div class="menu menu-domains" v-show="domains.length" :class="{expand: activeMenu === 'domains'}">
+      <div class="menu-item" @click="onClickDomains">
         <icon name="search"></icon>
-        <icon name="more" class="icon-right icon-collapse"></icon>
+        <icon v-if="domains.length > 1" name="more" class="icon-right icon-collapse"></icon>
         <span v-text="i18n('menuFindScripts')"></span>
       </div>
       <div class="submenu">
@@ -25,7 +25,7 @@
         </div>
       </div>
     </div>
-    <div class="menu menu-commands" v-show="commands.length" :class="{expand:activeMenu==='commands'}">
+    <div class="menu menu-commands" v-show="commands.length" :class="{expand: activeMenu === 'commands'}">
       <div class="menu-item" @click="toggleMenu('commands')">
         <icon name="more" class="icon-right icon-collapse"></icon>
         <span v-text="i18n('menuCommands')"></span>
@@ -36,7 +36,7 @@
         </div>
       </div>
     </div>
-    <div class="menu menu-scripts" v-show="scripts.length" :class="{expand:activeMenu==='scripts'}">
+    <div class="menu menu-scripts" v-show="scripts.length" :class="{expand: activeMenu === 'scripts'}">
       <div class="menu-item" @click="toggleMenu('scripts')">
         <icon name="more" class="icon-right icon-collapse"></icon>
         <span v-text="i18n('menuMatchedScripts')"></span>
@@ -111,14 +111,7 @@ export default {
     onManage() {
       browser.runtime.openOptionsPage();
     },
-    onFindScripts(item) {
-      let domain;
-      if (item) {
-        domain = item.name;
-      } else {
-        const matches = this.store.currentSrc.tab.url.match(/:\/\/(?:www\.)?([^/]*)/);
-        domain = matches[1];
-      }
+    onFindScripts({ name: domain }) {
       browser.tabs.create({
         url: `https://greasyfork.org/scripts/search?q=${encodeURIComponent(domain)}`,
       });
@@ -148,6 +141,13 @@ export default {
       if (options.get('autoReload')) {
         injectContent('location.reload()');
         // browser.tabs.reload(this.store.currentTab.id);
+      }
+    },
+    onClickDomains() {
+      if (this.domains.length === 1) {
+        this.onFindScripts(this.domains[0]);
+      } else {
+        this.toggleMenu('domains');
       }
     },
   },
