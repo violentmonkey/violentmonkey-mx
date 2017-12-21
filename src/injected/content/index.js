@@ -8,11 +8,8 @@ import { getRequestId, httpRequest, abortRequest, httpRequested } from './reques
 const IS_TOP = window.top === window;
 
 const ids = [];
+const enabledIds = [];
 const menus = [];
-
-const badge = {
-  number: 0,
-};
 
 function setBadge() {
   // delay setBadge in frames so that they can be added to the initial count
@@ -21,7 +18,7 @@ function setBadge() {
   .then(() => sendMessage({
     cmd: 'SetBadge',
     data: {
-      number: badge.number,
+      ids: enabledIds,
       reset: IS_TOP,
     },
   }));
@@ -66,7 +63,7 @@ export default function initialize(contentId, webId) {
       data.scripts = data.scripts.filter(script => {
         ids.push(script.props.id);
         if ((IS_TOP || !script.meta.noframes) && script.config.enabled) {
-          badge.number += 1;
+          enabledIds.push(script.props.id);
           return true;
         }
         return false;
