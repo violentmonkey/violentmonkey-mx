@@ -1,4 +1,4 @@
-anchorAuthor:
+﻿anchorAuthor:
   description: Author shown on about tab.
   message: '<a href=mailto:i@gerald.top>Gerald</a>'
 anchorTranslator:
@@ -159,6 +159,18 @@ labelAutoReloadCurrentTab:
 labelAutoUpdate:
   description: Option to allow automatically checking scripts for updates every 24 hours.
   message: 每天自动更新脚本
+labelBadge:
+  description: Label for option to show number on badge.
+  message: 在扩展图标上显示：
+labelBadgeNone:
+  description: Option to display nothing on badge.
+  message: 无
+labelBadgeTotal:
+  description: Option to display total number of running scripts on badge.
+  message: 执行脚本次数
+labelBadgeUnique:
+  description: Option to display number of unique running scripts on badge.
+  message: 执行脚本个数
 labelBlacklist:
   description: Label for global blacklist settings in security section.
   message: 黑名单
@@ -270,6 +282,7 @@ labelSettings:
 labelShowBadge:
   description: Option to show number of running scripts on the badge.
   message: 在扩展图标上显示运行的脚本数
+  touched: false
 labelStartReload:
   description: Option to reload pages on extension start
   message: 扩展启动后重新加载页面
