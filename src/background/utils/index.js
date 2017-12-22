@@ -19,5 +19,5 @@ export function notify(options) {
 }
 
 export function broadcast(data) {
-  browser.tabs.sendMessage('CONTENT', data);
+  browser.__send('CONTENT', data);
 }
