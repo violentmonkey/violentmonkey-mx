@@ -6,7 +6,10 @@ import 'core-js/fn/array/find-index';
 import 'core-js/fn/string/includes';
 import 'core-js/fn/string/starts-with';
 import 'core-js/fn/string/ends-with';
-import 'core-js/fn/promise';
+// import 'core-js/fn/promise';
+import LitePromise from '@gera2ld/promise-lite';
+
+window.Promise = LitePromise.SyncLitePromise;
 
 // function polyfill(obj, name, value) {
 //   if (!obj[name]) {

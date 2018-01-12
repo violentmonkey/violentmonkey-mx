@@ -63,6 +63,7 @@
   "homepage": "https://github.com/violentmonkey/violentmonkey-mx",
   "license": "MIT",
   "dependencies": {
+    "@gera2ld/promise-lite": "^1.0.0",
     "codemirror": "^5.31.0",
     "core-js": "^2.4.1",
     "tldjs": "^2.2.0",
