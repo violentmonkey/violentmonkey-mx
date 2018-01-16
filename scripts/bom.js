@@ -1,4 +1,4 @@
-const gutil = require('gulp-util');
+const PluginError = require('plugin-error');
 const through = require('through2');
 
 const BOM = new Buffer([0xef, 0xbb, 0xbf]);
@@ -10,7 +10,7 @@ function dealWithBOM(ensure) {
       return cb();
     }
     if(file.isStream()) {
-			this.emit('error', new gutil.PluginError('VM-AddBOM', 'Stream not supported'));
+			this.emit('error', new PluginError('VM-AddBOM', 'Stream not supported'));
 			return cb();
 		}
     if (file.contents.slice(0, 3).compare(BOM)) {
