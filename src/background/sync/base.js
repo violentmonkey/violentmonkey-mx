@@ -1,5 +1,5 @@
 import { debounce, normalizeKeys, request, noop } from 'src/common';
-import { objectSet, objectPurify } from 'src/common/object';
+import { objectSet, objectPick, objectPurify } from 'src/common/object';
 import { getEventEmitter, getOption, setOption, hookOptions } from '../utils';
 import {
   getScripts,
@@ -111,6 +111,55 @@ export function getStates() {
   });
 }
 
+function getScriptData(script, syncVersion, extra) {
+  let data;
+  if (syncVersion === 2) {
+    data = {
+      version: syncVersion,
+      custom: script.custom,
+      config: script.config,
+      props: objectPick(script.props, ['lastUpdated']),
+    };
+  } else if (syncVersion === 1) {
+    data = {
+      version: syncVersion,
+      more: {
+        custom: script.custom,
+        enabled: script.config.enabled,
+        update: script.config.shouldUpdate,
+        lastUpdated: script.props.lastUpdated,
+      },
+    };
+  }
+  return Object.assign(data, extra);
+}
+function parseScriptData(raw) {
+  const data = {};
+  try {
+    const obj = JSON.parse(raw);
+    data.code = obj.code;
+    if (obj.version === 2) {
+      data.config = obj.config;
+      data.custom = obj.custom;
+      data.props = obj.props;
+    } else if (obj.version === 1) {
+      if (obj.more) {
+        data.custom = obj.more.custom;
+        data.config = objectPurify({
+          enabled: obj.more.enabled,
+          shouldUpdate: obj.more.update,
+        });
+        data.props = objectPurify({
+          lastUpdated: obj.more.lastUpdated,
+        });
+      }
+    }
+  } catch (e) {
+    data.code = raw;
+  }
+  return data;
+}
+
 function serviceFactory(base) {
   const Service = function constructor() {
     this.initialize();
@@ -210,12 +259,6 @@ export const BaseService = serviceFactory({
     }, err => {
       if (err && err.type === 'unauthorized') {
         this.authState.set('unauthorized');
-        if (this.config.get('token') && getOption('syncReauthorize') && !this.config.get('reauthorized')) {
-          this.config.set({
-            reauthorized: true,
-          });
-          this.authorize();
-        }
       } else {
         console.error(err);
         this.authState.set('error');
@@ -383,29 +426,7 @@ export const BaseService = serviceFactory({
           this.log('Download script:', remote.uri);
           return this.get(remote)
           .then(raw => {
-            const data = {};
-            try {
-              const obj = JSON.parse(raw);
-              data.code = obj.code;
-              if (obj.version === 2) {
-                data.config = obj.config;
-                data.custom = obj.custom;
-                data.props = obj.props;
-              } else if (obj.version === 1) {
-                if (obj.more) {
-                  data.custom = obj.more.custom;
-                  data.config = objectPurify({
-                    enabled: obj.more.enabled,
-                    shouldUpdate: obj.more.update,
-                  });
-                  data.props = objectPurify({
-                    lastUpdated: obj.more.lastUpdated,
-                  });
-                }
-              }
-            } catch (e) {
-              data.code = raw;
-            }
+            const data = parseScriptData(raw);
             // Invalid data
             if (!data.code) return;
             if (info.modified) objectSet(data, 'props.lastModified', info.modified);
@@ -422,24 +443,8 @@ export const BaseService = serviceFactory({
           this.log('Upload script:', local.props.uri);
           return getScriptCode(local.props.id)
           .then(code => {
-            // const data = {
-            //   version: 2,
-            //   code,
-            //   custom: script.custom,
-            //   config: script.config,
-            //   props: objectPick(script.props, ['lastUpdated']),
-            // };
             // XXX use version 1 to be compatible with Violentmonkey on other platforms
-            const data = {
-              version: 1,
-              code,
-              more: {
-                custom: local.custom,
-                enabled: local.config.enabled,
-                update: local.config.shouldUpdate,
-                lastUpdated: local.props.lastUpdated,
-              },
-            };
+            const data = getScriptData(local, 1, { code });
             remoteMetaData.info[local.props.uri] = {
               modified: local.props.lastModified,
               position: local.props.position,
@@ -542,11 +547,6 @@ export function checkAuthUrl(url) {
   return serviceNames.some(name => {
     const service = services[name];
     const authorized = service.checkAuth && service.checkAuth(url);
-    if (authorized) {
-      service.config.set({
-        reauthorized: false,
-      });
-    }
     return authorized;
   });
 }
