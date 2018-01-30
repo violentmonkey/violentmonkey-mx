@@ -29,16 +29,7 @@ Object.assign(handlers, {
     if (/^https?:\/\//i.test(src.tab.url)) {
       const matches = src.tab.url.match(/:\/\/([^/]*)/);
       const domain = matches[1];
-      const topLevelDomain = tld.getDomain(domain) || domain;
-      let domains = [topLevelDomain];
-      if (domain !== topLevelDomain) {
-        domains = domain.slice(0, -topLevelDomain.length - 1).split('.')
-        .reduceRight(
-          (res, part) => [`${part}.${res[0]}`, ...res],
-          domains,
-        );
-      }
-      store.domains = domains;
+      store.domain = tld.getDomain(domain) || domain;
     }
     store.commands = data.menus;
     sendMessage({
@@ -58,7 +49,7 @@ init();
 function clear() {
   store.scripts = [];
   store.commands = [];
-  store.domains = [];
+  store.domain = '';
   delayedClear = null;
 }
 function cancelClear() {

@@ -5,30 +5,24 @@
     </div>
     <div class="menu-item" :class="{disabled:!options.isApplied}" @click="onToggle">
       <icon :name="getSymbolCheck(options.isApplied)"></icon>
-      <span v-text="options.isApplied ? i18n('menuScriptEnabled') : i18n('menuScriptDisabled')"></span>
+      <div class="flex-auto" v-text="options.isApplied ? i18n('menuScriptEnabled') : i18n('menuScriptDisabled')"></div>
     </div>
     <div class="menu">
       <div class="menu-item" @click="onManage">
         <icon name="cog"></icon>
-        <span v-text="i18n('menuDashboard')"></span>
+        <div class="flex-auto" v-text="i18n('menuDashboard')"></div>
       </div>
     </div>
-    <div class="menu menu-domains" v-show="domains.length" :class="{expand: activeMenu === 'domains'}">
-      <div class="menu-item" @click="onClickDomains">
+    <div class="menu" v-show="store.domain">
+      <div class="menu-item" @click="onFindSameDomainScripts">
         <icon name="search"></icon>
-        <icon v-if="domains.length > 1" name="more" class="icon-right icon-collapse"></icon>
-        <span v-text="i18n('menuFindScripts')"></span>
-      </div>
-      <div class="submenu">
-        <div class="menu-item" v-for="item in domains" @click="onFindScripts(item)">
-          <span v-text="item.name"></span>
-        </div>
+        <div class="flex-auto" v-text="i18n('menuFindScripts')"></div>
       </div>
     </div>
     <div class="menu menu-commands" v-show="commands.length" :class="{expand: activeMenu === 'commands'}">
       <div class="menu-item" @click="toggleMenu('commands')">
-        <icon name="more" class="icon-right icon-collapse"></icon>
-        <span v-text="i18n('menuCommands')"></span>
+        <div class="flex-auto" v-text="i18n('menuCommands')"></div>
+        <icon name="arrow" class="icon-collapse"></icon>
       </div>
       <div class="submenu">
         <div class="menu-item" v-for="item in commands" @click="onCommand(item)">
@@ -38,13 +32,20 @@
     </div>
     <div class="menu menu-scripts" v-show="scripts.length" :class="{expand: activeMenu === 'scripts'}">
       <div class="menu-item" @click="toggleMenu('scripts')">
-        <icon name="more" class="icon-right icon-collapse"></icon>
-        <span v-text="i18n('menuMatchedScripts')"></span>
+        <div class="flex-auto" v-text="i18n('menuMatchedScripts')"></div>
+        <icon name="arrow" class="icon-collapse"></icon>
       </div>
       <div class="submenu">
-        <div class="menu-item" v-for="item in scripts" @click="onToggleScript(item)" :class="{disabled:!item.data.config.enabled}">
-          <icon :name="getSymbolCheck(item.data.config.enabled)" class="icon-right"></icon>
-          <span v-text="item.name"></span>
+        <div v-for="item in scripts">
+          <div class="menu-item" @click="onToggleScript(item)" :class="{disabled:!item.data.config.enabled}">
+            <icon :name="getSymbolCheck(item.data.config.enabled)"></icon>
+            <div class="flex-auto ellipsis" v-text="item.name"></div>
+          </div>
+          <div class="submenu-buttons">
+            <div class="submenu-button" @click="onEditScript(item)">
+              <icon name="code"></icon>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -78,12 +79,6 @@ export default {
     };
   },
   computed: {
-    domains() {
-      return this.store.domains.map(item => ({
-        name: item,
-        data: item,
-      }));
-    },
     commands() {
       return this.store.commands.map(item => ({
         name: item[0],
@@ -111,9 +106,14 @@ export default {
     onManage() {
       browser.runtime.openOptionsPage();
     },
-    onFindScripts({ name: domain }) {
+    onEditScript(item) {
       browser.tabs.create({
-        url: `https://greasyfork.org/scripts/search?q=${encodeURIComponent(domain)}`,
+        url: browser.runtime.getURL(`/options/index.html#scripts/${item.data.props.id}`),
+      });
+    },
+    onFindSameDomainScripts() {
+      browser.tabs.create({
+        url: `https://greasyfork.org/scripts/by-site/${encodeURIComponent(this.store.domain)}`,
       });
     },
     onCommand(item) {
@@ -141,13 +141,6 @@ export default {
       if (options.get('autoReload')) {
         injectContent('location.reload()');
         // browser.tabs.reload(this.store.currentTab.id);
-      }
-    },
-    onClickDomains() {
-      if (this.domains.length === 1) {
-        this.onFindScripts(this.domains[0]);
-      } else {
-        this.toggleMenu('domains');
       }
     },
   },
