@@ -1,4 +1,6 @@
-import { getUniqId, bindEvents, attachFunction } from '../utils';
+import {
+  getUniqId, bindEvents, attachFunction,
+} from '../utils';
 import {
   includes, forEach, map, utf8decode, jsonDump, jsonLoad,
   Promise, console,
@@ -178,6 +180,7 @@ function wrapGM(script, code, cache) {
     GM_info: {
       get() {
         const obj = {
+          uuid: script.props.uuid,
           scriptMetaStr: metaStr,
           scriptWillUpdate: !!script.config.shouldUpdate,
           scriptHandler: 'Violentmonkey',
