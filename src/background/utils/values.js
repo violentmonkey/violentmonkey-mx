@@ -60,8 +60,9 @@ export function addValueOpener() {}
 
 function updateLater() {
   if (!timer) {
-    timer = Promise.resolve().then(doUpdate);
-    // timer = setTimeout(doUpdate);
+    // timer = Promise.resolve().then(doUpdate);
+    // use `setTimeout` since `Promise` is synchronous now
+    timer = setTimeout(doUpdate);
   }
 }
 
