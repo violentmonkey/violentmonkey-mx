@@ -212,6 +212,9 @@ labelFilterSort:
 labelGeneral:
   description: Label for general settings.
   message: ''
+labelHomepage:
+  description: Label for home page in about tab.
+  message: ''
 labelHomepageURL:
   description: Label of script @homepageURL in custom meta data.
   message: 'Domovská stránka:'
@@ -447,4 +450,7 @@ sideMenuSettings:
   message: Nastavení
 titleScriptUpdated:
   description: Notification title for script updates.
+  message: ''
+warnScriptTooLarge:
+  description: Warning message shown when script is too large to be edited.
   message: ''

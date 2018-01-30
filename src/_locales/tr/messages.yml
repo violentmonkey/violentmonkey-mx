@@ -218,6 +218,9 @@ labelFilterSort:
 labelGeneral:
   description: Label for general settings.
   message: Genel
+labelHomepage:
+  description: Label for home page in about tab.
+  message: ''
 labelHomepageURL:
   description: Label of script @homepageURL in custom meta data.
   message: 'Ana sayfa:'
@@ -456,3 +459,6 @@ sideMenuSettings:
 titleScriptUpdated:
   description: Notification title for script updates.
   message: Güncelleme
+warnScriptTooLarge:
+  description: Warning message shown when script is too large to be edited.
+  message: ''
