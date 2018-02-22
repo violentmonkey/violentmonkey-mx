@@ -71,17 +71,6 @@ function getHandler(key) {
     return handle && handle();
   };
 }
-function indentWithTab(cm) {
-  if (cm.somethingSelected()) {
-    cm.indentSelection('add');
-  } else {
-    cm.replaceSelection(
-      cm.getOption('indentWithTabs') ? '\t' : ' '.repeat(cm.getOption('indentUnit')),
-      'end',
-      '+input',
-    );
-  }
-}
 
 [
   'save', 'cancel', 'close',
@@ -89,12 +78,13 @@ function indentWithTab(cm) {
 ].forEach(key => {
   CodeMirror.commands[key] = getHandler(key);
 });
+Object.assign(CodeMirror.keyMap.default, {
+  Tab: 'indentMore',
+  'Shift-Tab': 'indentLess',
+});
 
 const cmOptions = {
   continueComments: true,
-  matchBrackets: true,
-  autoCloseBrackets: true,
-  highlightSelectionMatches: true,
   styleActiveLine: true,
   foldGutter: true,
   gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
@@ -221,10 +211,13 @@ export default {
       cm.setOption('mode', lineTooLong ? 'null' : 'javascript');
       cm.setOption('lineNumbers', !lineTooLong);
       cm.setOption('lineWrapping', !lineTooLong);
+      cm.setOption('matchBrackets', !lineTooLong);
+      cm.setOption('autoCloseBrackets', !lineTooLong);
+      cm.setOption('highlightSelectionMatches', !lineTooLong);
     },
     getCutContent(value) {
       const lines = value.split('\n');
-      const cut = lines.some(line => line.length > 10 * 1024);
+      const cut = lines.some(line => line.length > 50000);
       const cutLines = [];
       if (cut) {
         const maxLength = 3 * 1024;
@@ -268,7 +261,6 @@ export default {
       }, this.commands);
       cm.setOption('extraKeys', {
         Esc: 'cancel',
-        Tab: indentWithTab,
       });
       cm.on('keyHandled', (_cm, _name, e) => {
         e.stopPropagation();
