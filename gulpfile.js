@@ -10,7 +10,7 @@ const webpackConfig = require('./scripts/webpack.conf');
 const i18n = require('./scripts/i18n');
 const string = require('./scripts/string');
 const bom = require('./scripts/bom');
-const { IS_DEV, definitions } = require('./scripts/utils');
+const { isDev, isProd, definitions } = require('./scripts/utils');
 const pkg = require('./package.json');
 
 const DIST = 'dist';
@@ -82,7 +82,7 @@ function manifest() {
   .pipe(string((input, file) => {
     const data = yaml.safeLoad(input);
     data[0].version = pkg.version;
-    data[0].service.debug = IS_DEV;
+    data[0].service.debug = isDev;
     definitions['process.env'].manifest = JSON.stringify(data[0]);
     file.path = file.path.replace(/\.yml$/, '.json');
     return JSON.stringify(data);
@@ -94,7 +94,7 @@ function manifest() {
 function copyFiles() {
   const jsFilter = gulpFilter(['**/*.js'], { restore: true });
   let stream = gulp.src(paths.copy, { base: 'src' });
-  if (!IS_DEV) stream = stream
+  if (isProd) stream = stream
   .pipe(jsFilter)
   .pipe(uglify())
   .pipe(jsFilter.restore);

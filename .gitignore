@@ -1,6 +1,4 @@
-dist/
+/dist/
 node_modules/
-*.bat
-*.mxaddon
 *.log
 *.lock
