@@ -12,9 +12,6 @@ Development
 ``` sh
 $ yarn
 $ yarn dev
-# or
-$ npm i
-$ npm run dev
 ```
 
 Build
@@ -23,8 +20,5 @@ Build
 ``` sh
 $ yarn
 $ yarn build
-# or
-$ npm i
-$ npm run build
 # Then pack with the official packaging tool
 ```
