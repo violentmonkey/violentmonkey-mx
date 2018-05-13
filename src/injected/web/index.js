@@ -150,9 +150,11 @@ function wrapGM(script, code, cache) {
   const gm = {};
   const grant = script.meta.grant || [];
   const urls = {};
+  const unsafeWindow = window;
   if (!grant.length || (grant.length === 1 && grant[0] === 'none')) {
     // @grant none
     grant.pop();
+    gm.window = unsafeWindow;
   } else {
     gm.window = getWrapper();
   }
@@ -160,48 +162,40 @@ function wrapGM(script, code, cache) {
   if (!includes(grant, 'GM_info')) grant.push('GM_info');
   if (includes(grant, 'window.close')) gm.window.close = () => { bridge.post({ cmd: 'TabClose' }); };
   const resources = script.meta.resources || {};
-  const dataEncoders = {
-    o: val => jsonDump(val),
-    '': val => val.toString(),
-  };
   const dataDecoders = {
+    o: val => jsonLoad(val),
+    // deprecated
     n: val => Number(val),
     b: val => val === 'true',
-    o: val => jsonLoad(val),
-    '': val => val,
   };
   const pathMap = script.custom.pathMap || {};
   const matches = code.match(/\/\/\s+==UserScript==\s+([\s\S]*?)\/\/\s+==\/UserScript==\s/);
   const metaStr = matches ? matches[1] : '';
-  const gmFunctions = {
-    unsafeWindow: { value: window },
-    GM_info: {
-      get() {
-        const obj = {
-          uuid: script.props.uuid,
-          scriptMetaStr: metaStr,
-          scriptWillUpdate: !!script.config.shouldUpdate,
-          scriptHandler: 'Violentmonkey',
-          version: bridge.version,
-          script: {
-            description: script.meta.description || '',
-            excludes: script.meta.exclude.concat(),
-            includes: script.meta.include.concat(),
-            matches: script.meta.match.concat(),
-            name: script.meta.name || '',
-            namespace: script.meta.namespace || '',
-            resources: Object.keys(resources).map(name => ({
-              name,
-              url: resources[name],
-            })),
-            runAt: script.meta.runAt || '',
-            unwrap: false, // deprecated, always `false`
-            version: script.meta.version || '',
-          },
-        };
-        return obj;
-      },
+  const gmInfo = {
+    uuid: script.props.uuid,
+    scriptMetaStr: metaStr,
+    scriptWillUpdate: !!script.config.shouldUpdate,
+    scriptHandler: 'Violentmonkey',
+    version: bridge.version,
+    script: {
+      description: script.meta.description || '',
+      excludes: script.meta.exclude.concat(),
+      includes: script.meta.include.concat(),
+      matches: script.meta.match.concat(),
+      name: script.meta.name || '',
+      namespace: script.meta.namespace || '',
+      resources: Object.keys(resources).map(name => ({
+        name,
+        url: resources[name],
+      })),
+      runAt: script.meta.runAt || '',
+      unwrap: false, // deprecated, always `false`
+      version: script.meta.version || '',
     },
+  };
+  const gmFunctions = {
+    unsafeWindow: { value: unsafeWindow },
+    GM_info: { value: gmInfo },
     GM_deleteValue: {
       value(key) {
         const value = loadValues();
@@ -215,10 +209,10 @@ function wrapGM(script, code, cache) {
         const raw = value[key];
         if (raw) {
           const type = raw[0];
-          const handle = dataDecoders[type] || dataDecoders[''];
+          const handle = dataDecoders[type];
           let val = raw.slice(1);
           try {
-            val = handle(val);
+            if (handle) val = handle(val);
           } catch (e) {
             if (process.env.DEBUG) console.warn(e);
           }
@@ -234,9 +228,8 @@ function wrapGM(script, code, cache) {
     },
     GM_setValue: {
       value(key, val) {
-        const type = (typeof val)[0];
-        const handle = dataEncoders[type] || dataEncoders[''];
-        const raw = type + handle(val);
+        const dumped = jsonDump(val);
+        const raw = dumped ? `o${dumped}` : null;
         const value = loadValues();
         value[key] = raw;
         dumpValue(key, raw);
@@ -304,9 +297,19 @@ function wrapGM(script, code, cache) {
       },
     },
     GM_registerMenuCommand: {
-      value(cap, func, acc) {
-        store.commands[cap] = func;
-        bridge.post({ cmd: 'RegisterMenu', data: [cap, acc] });
+      value(cap, func) {
+        const { id } = script.props;
+        const key = `${id}:${cap}`;
+        store.commands[key] = func;
+        bridge.post({ cmd: 'RegisterMenu', data: [key, cap] });
+      },
+    },
+    GM_unregisterMenuCommand: {
+      value(cap) {
+        const { id } = script.props;
+        const key = `${id}:${cap}`;
+        delete store.commands[key];
+        bridge.post({ cmd: 'UnregisterMenu', data: [key, cap] });
       },
     },
     GM_xmlhttpRequest: {
@@ -370,6 +373,12 @@ function getWrapper() {
   // http://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects
   // http://developer.mozilla.org/docs/Web/API/Window
   const wrapper = {};
+  // Block special objects
+  forEach([
+    'browser',
+  ], name => {
+    wrapper[name] = undefined;
+  });
   forEach([
     // `eval` should be called directly so that it is run in current scope
     'eval',

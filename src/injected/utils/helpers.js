@@ -66,14 +66,14 @@ export function encodeBody(body) {
     }, {}))
     .then(value => ({ cls, value }));
   } else if (includes(['blob', 'file'], cls)) {
-    const bufsize = 8192;
     result = new Promise(resolve => {
       const reader = new FileReader();
       reader.onload = () => {
-        let value = '';
+        // In Firefox, Uint8Array cannot be sliced if its data is read by FileReader
         const array = new Uint8Array(reader.result);
-        for (let i = 0; i < array.length; i += bufsize) {
-          value += fromCharCode(...array.subarray(i, i + bufsize));
+        let value = '';
+        for (let i = 0; i < array.length; i += 1) {
+          value += fromCharCode(array[i]);
         }
         resolve({
           cls,
@@ -143,7 +143,7 @@ const escMap = {
   '\r': '\\r',
   '\t': '\\t',
 };
-const escRE = /[\\"\u0000-\u001F\u2028\u2029]/g;
+const escRE = /[\\"\u0000-\u001F\u2028\u2029]/g; // eslint-disable-line no-control-regex
 const escFunc = m => escMap[m] || `\\u${stringSlice(numberToString(stringCharCodeAt(m, 0) + 0x10000, 16), 1)}`;
 export const jsonLoad = JSON.parse;
 export function jsonDump(value) {

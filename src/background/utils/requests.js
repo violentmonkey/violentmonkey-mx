@@ -70,6 +70,7 @@ export function httpRequest(details, cb) {
         xhr.setRequestHeader(key, details.headers[key]);
       });
     }
+    if (details.timeout) xhr.timeout = details.timeout;
     if (details.responseType) xhr.responseType = 'arraybuffer';
     if (details.overrideMimeType) xhr.overrideMimeType(details.overrideMimeType);
     const callback = xhrCallbackWrapper(req);

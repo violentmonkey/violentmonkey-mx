@@ -114,6 +114,15 @@ editNavCode:
 editNavSettings:
   description: Label of settings tab in script editor.
   message: ''
+editNavValues:
+  description: Label of values tab in script editor.
+  message: ''
+editValueCancel:
+  description: Button to cancel modification of a script value.
+  message: ''
+editValueSave:
+  description: Button to save modification of a script value.
+  message: ''
 extDescription:
   description: Description for this extension.
   message: 為傲游提供用戶腳本支持。
@@ -147,6 +156,9 @@ installOptionTrack:
 labelAbout:
   description: Label shown on top of the about page.
   message: 关于暴力猴
+labelAdvanced:
+  description: Label for button to show advanced settings.
+  message: ''
 labelAllowUpdate:
   description: Option to allow checking updates for a script.
   message: 允許更新
@@ -192,6 +204,9 @@ labelDonate:
 labelDownloadURL:
   description: Label of script @downloadURL in custom meta data.
   message: 下載更新網址：
+labelEditValue:
+  description: Label shown in the panel to edit a script value.
+  message: ''
 labelExclude:
   description: Label of @exclude rules.
   message: 排除規則
@@ -222,6 +237,9 @@ labelImportSettings:
 labelInclude:
   description: Label of @include rules.
   message: 包含規則
+labelIndentUnit:
+  description: Label for editor option of indent unit size.
+  message: ''
 labelInstall:
   description: Shown in the title of the confirm page while trying to install a script.
   message: 安装脚本
@@ -233,6 +251,9 @@ labelLastUpdatedAt:
   message: ''
 labelLineNumber:
   description: Label for line number jumper.
+  message: ''
+labelLineWrapping:
+  description: Label for editor option of line wrapping.
   message: ''
 labelMatch:
   description: Label of @match rules.
@@ -306,6 +327,7 @@ labelSyncDisabled:
 labelSyncReauthorize:
   description: Option to reauthorize sync service when expired.
   message: ''
+  touched: false
 labelSyncRevoke:
   description: Label for button to revoke authorization for a service.
   message: ''
@@ -430,6 +452,9 @@ msgUpdated:
 msgUpdating:
   description: Message shown when a new version of script is being fetched.
   message: 正在更新...
+noValues:
+  description: Label shown when there is no value for current script.
+  message: ''
 optionShowEnabledFirst:
   description: Option to show enabled scripts first in alphabetical order.
   message: ''
@@ -451,6 +476,12 @@ sideMenuSettings:
 titleScriptUpdated:
   description: Notification title for script updates.
   message: ''
-warnScriptTooLarge:
-  description: Warning message shown when script is too large to be edited.
+valueLabelKey:
+  description: Label for key of a script value.
+  message: ''
+valueLabelValue:
+  description: Label for value of a script value.
+  message: ''
+warnScriptLongLines:
+  description: Warning message shown when script has lines that are too long to be edited.
   message: ''

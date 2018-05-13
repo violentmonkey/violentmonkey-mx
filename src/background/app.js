@@ -16,7 +16,7 @@ import {
   getScripts, removeScript, getData, checkRemove, getScriptsByURL,
   updateScriptInfo, getExportData, getScriptCode,
   getScriptByIds, moveScript, vacuum, parseScript, getScript,
-  sortScripts,
+  sortScripts, getValueStoresByIds,
 } from './utils/db';
 import { resetBlacklist } from './utils/tester';
 import { setValueStore, updateValueStore, resetValueOpener, addValueOpener } from './utils/values';
@@ -106,6 +106,9 @@ const commands = {
         },
       });
     });
+  },
+  GetValueStore(id) {
+    return getValueStoresByIds([id]).then(res => res[id] || {});
   },
   SetValueStore({ where, valueStore }) {
     // Value store will be replaced soon.
@@ -263,6 +266,7 @@ initialize()
         });
       }
     }
+    // undefined will be ignored
     return res || null;
   });
   setTimeout(autoUpdate, 2e4);

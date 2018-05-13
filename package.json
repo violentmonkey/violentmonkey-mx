@@ -11,9 +11,7 @@
     "i18n": "gulp i18n",
     "lint": "eslint --ext .js,.vue .",
     "svgo": "svgo --config .svgo.yml icons",
-    "transform": "node scripts/transform-lock",
-    "precommit": "yarn transform =yarn",
-    "prepush": "npm run lint"
+    "transform": "node scripts/transform-lock"
   },
   "devDependencies": {
     "babel-core": "^6.25.0",
@@ -27,7 +25,7 @@
     "css-loader": "^0.28.10",
     "del": "^3.0.0",
     "eslint": "^4.18.1",
-    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-config-airbnb-base": "^12.0.0",
     "eslint-friendly-formatter": "^3.0.0",
     "eslint-import-resolver-webpack": "^0.8.3",
     "eslint-loader": "^1.9.0",
@@ -41,7 +39,7 @@
     "gulp-plumber": "^1.1.0",
     "gulp-uglify": "^3.0.0",
     "html-webpack-plugin": "^2.29.0",
-    "husky": "^0.14.3",
+    "husky": "^0.15.0-rc.13",
     "plugin-error": "^1.0.1",
     "postcss-loader": "^2.1.0",
     "postcss-scss": "^1.0.4",
@@ -68,13 +66,19 @@
   "license": "MIT",
   "dependencies": {
     "@gera2ld/promise-lite": "^1.1.0",
-    "codemirror": "^5.35.0",
-    "core-js": "^2.4.1",
+    "codemirror": "^5.37.0",
+    "core-js": "^2.5.6",
     "tldjs": "^2.3.1",
-    "vue": "^2.5.3",
+    "vue": "^2.5.16",
     "vueleton": "^0.6.1"
   },
   "engines": {
     "node": ">=8"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn transform \"=yarn\"",
+      "pre-push": "yarn lint"
+    }
   }
 }

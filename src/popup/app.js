@@ -36,7 +36,9 @@ Object.assign(handlers, {
       cmd: 'GetMetas',
       data: data.ids,
     })
-    .then(scripts => { store.scripts = scripts; });
+    .then(scripts => {
+      store.scripts = scripts;
+    });
   },
 });
 browser.tabs.onActivated.addListener(({ tabId }) => {

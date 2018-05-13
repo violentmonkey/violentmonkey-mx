@@ -8,16 +8,22 @@ export function postData(destId, data) {
   document.dispatchEvent(e);
 }
 
+function removeElement(id) {
+  const el = document.querySelector(`#${id}`);
+  if (el) {
+    el.parentNode.removeChild(el);
+    return true;
+  }
+}
+
 export function inject(code) {
   const script = document.createElement('script');
-  const doc = document.body || document.documentElement;
-  script.textContent = code;
-  doc.appendChild(script);
-  try {
-    doc.removeChild(script);
-  } catch (e) {
-    // ignore if body is changed and script is detached
-  }
+  const id = getUniqId('VM-');
+  script.id = id;
+  script.textContent = `!${removeElement.toString()}(${JSON.stringify(id)});${code}`;
+  document.documentElement.appendChild(script);
+  // in case the script is blocked by CSP
+  removeElement(id);
 }
 
 export function getUniqId() {

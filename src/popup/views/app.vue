@@ -80,10 +80,13 @@ export default {
   },
   computed: {
     commands() {
-      return this.store.commands.map(item => ({
-        name: item[0],
-        data: item,
-      }));
+      return this.store.commands.map(item => {
+        const [key, name] = item;
+        return {
+          name,
+          key,
+        };
+      });
     },
     scripts() {
       return this.store.scripts.map(script => ({
@@ -119,7 +122,7 @@ export default {
     onCommand(item) {
       browser.__send(this.store.currentSrc.id, {
         cmd: 'Command',
-        data: item.name,
+        data: item.key,
       });
     },
     onToggleScript(item) {

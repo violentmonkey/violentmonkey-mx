@@ -10,6 +10,7 @@ import initialize from './content';
   if (window.VM) return;
   window.VM = 1;
 
+  const VMInitInjection = window[process.env.INIT_FUNC_NAME];
   browser.__isContent = true;
 
   function initBridge() {
@@ -31,11 +32,12 @@ import initialize from './content';
       keys.forEach(key => { props[key] = 1; });
     });
     const args = [
-      JSON.stringify(webId),
-      JSON.stringify(contentId),
-      JSON.stringify(Object.keys(props)),
+      webId,
+      contentId,
+      Object.keys(props),
     ];
-    inject(`(${window.VM_initializeWeb.toString()}())(${args.join(',')})`);
+    // Avoid using Function::apply in case it is shimmed
+    inject(`(${VMInitInjection.toString()}())(${args.map(arg => JSON.stringify(arg)).join(',')})`);
   }
 
   initBridge();
