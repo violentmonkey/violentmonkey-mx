@@ -1,0 +1,35 @@
+- type: extension
+  frameworkVersion: 1.0.6
+  version: __VERSION__
+  guid: '{7732dc50-47c1-9be5-6ea9-f85c38172974}'
+  author:
+    name: Gerald
+    email: i@gerald.top
+  name: Violentmonkey
+  title:
+    _t: extName
+  description:
+    _t: extDescription
+  permissions:
+    httpRequest:
+      - '*'
+    notifications: true
+  config: options/index.html
+  service:
+    main: background/index.html
+  actions:
+    - type: script
+      entryPoints:
+        - doc_start
+      js:
+        - browser.js
+        - injected-web.js
+        - injected.js
+      includeFrames: true
+    - name: icon
+      type: panel
+      icon: iconw
+      entryPoints:
+        - sidebar
+        - toolbar
+      main: popup/index.html

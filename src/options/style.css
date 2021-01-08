@@ -1,0 +1,94 @@
+html,
+body {
+  height: 100%;
+}
+aside {
+  flex: 0 0 14rem;
+  padding: 4rem 1rem 0;
+  text-align: right;
+  background: #fafafa;
+  img {
+    width: 5rem;
+  }
+}
+.sidemenu {
+  border-top: 1px solid #bbb;
+  > a {
+    display: block;
+    padding-top: .6rem;
+    padding-bottom: .6rem;
+    font-size: 1rem;
+    font-weight: 500;
+    text-decoration: none;
+    color: gray;
+    &.active,
+    &:hover {
+      color: black;
+    }
+  }
+}
+.text-red {
+  color: red;
+}
+.text-green {
+  color: green;
+}
+.text-right {
+  text-align: right;
+}
+section {
+  position: relative;
+  margin-top: 2rem;
+  padding: 1.2rem .8rem .8rem;
+  border: none;
+  border-top: 1px solid silver;
+  > h3 {
+    position: absolute;
+    padding: 0 .2rem;
+    top: -.6em;
+    left: .8rem;
+    line-height: 1;
+    background: white;
+  }
+  > h4 {
+    margin-bottom: .3rem;
+  }
+  > p {
+    margin-bottom: .3rem;
+  }
+}
+
+.tab {
+  position: relative;
+  padding: 1.2rem;
+  background: white;
+  border-left: 1px solid darkgray;
+}
+
+input[type=checkbox] {
+  margin-right: .5em;
+}
+
+.in-out {
+  &-appear,
+  &-enter,
+  &-leave-active {
+    > .modal-content {
+      transform: translateY(-120%);
+    }
+    > .vl-modal-backdrop {
+      opacity: 0;
+    }
+  }
+  &-appear-active,
+  &-enter-active,
+  &-leave-active {
+    &,
+    > .modal-content {
+      transition: transform .5s;
+    }
+    > .vl-modal-backdrop {
+      transition: opacity .5s;
+    }
+  }
+}
